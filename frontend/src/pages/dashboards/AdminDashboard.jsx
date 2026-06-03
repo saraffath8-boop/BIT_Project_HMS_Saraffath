@@ -50,9 +50,7 @@ const managementSections = [
 ];
 
 const getNumber = (value) => Number(value || 0);
-
 const formatCount = (value) => getNumber(value).toLocaleString();
-
 const formatAmount = (value) => getNumber(value).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -135,11 +133,14 @@ const AdminDashboard = () => {
                         </div>
                     </section>
 
-                    <section style={styles.section}>
+                    {/* CORRECTED: The quick actions section container now handles the sticky placement */}
+                    <section style={styles.stickySection}>
                         <h2 style={styles.sectionTitle}>Quick Actions</h2>
                         <div style={styles.actionGrid}>
                             {quickActions.map((action) => (
-                                <Link key={action.label} to={action.to} style={styles.actionLink}>{action.label}</Link>
+                                <Link key={action.label} to={action.to} style={styles.actionLink}>
+                                    {action.label}
+                                </Link>
                             ))}
                         </div>
                     </section>
@@ -236,6 +237,18 @@ const styles = {
         padding: '24px',
         marginBottom: '24px',
         boxShadow: '0 12px 30px rgba(15, 23, 42, 0.06)',
+    },
+    // NEW: Clean implementation of the sticky layout container wrapper
+    stickySection: {
+        position: 'sticky',
+        top: '16px',
+        zIndex: 100,
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '22px',
+        padding: '24px',
+        marginBottom: '24px',
+        boxShadow: '0 20px 40px rgba(15, 23, 42, 0.1)', // Increased shadow depth when scrolling over elements
     },
     sectionHeader: {
         display: 'flex',
