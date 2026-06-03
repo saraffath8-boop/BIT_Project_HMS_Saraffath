@@ -80,8 +80,8 @@ const QueueCreatePage = () => {
                             {patients.map((patient) => <option key={getPatientId(patient)} value={getPatientId(patient)}>{getPatientLabel(patient)}</option>)}
                         </select>
                     </label>
-                    <label style={styles.label}>Appointment ObjectId
-                        <input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional existing appointment ObjectId" />
+                    <label style={styles.label}>Related Appointment
+                        <input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional linked appointment reference" />
                     </label>
                     <label style={styles.label}>Department
                         <input style={styles.input} name="department" value={formData.department} onChange={handleChange} required />

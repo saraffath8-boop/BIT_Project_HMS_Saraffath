@@ -51,7 +51,7 @@ const LabRequestCreatePage = () => {
                 <div style={styles.grid}>
                     <label style={styles.label}>Patient<select style={styles.input} name="patient" value={formData.patient} onChange={handleChange} required><option value="">Select patient</option>{patients.map((patient) => <option key={getPatientId(patient)} value={getPatientId(patient)}>{getPatientLabel(patient)}</option>)}</select></label>
                     {user?.role !== 'doctor' && <label style={styles.label}>Doctor<select style={styles.input} name="doctor" value={formData.doctor} onChange={handleChange} required><option value="">Select doctor</option>{doctors.map((doctor) => <option key={doctor.id} value={doctor.id}>{getUserLabel(doctor)}</option>)}</select></label>}
-                    <label style={styles.label}>Medical Record ObjectId<input style={styles.input} name="medicalRecord" value={formData.medicalRecord} onChange={handleChange} placeholder="Optional existing medical record ObjectId" /></label>
+                    <label style={styles.label}>Related Medical Record<input style={styles.input} name="medicalRecord" value={formData.medicalRecord} onChange={handleChange} placeholder="Optional linked medical record reference" /></label>
                     <label style={styles.label}>Test Name<input style={styles.input} name="testName" value={formData.testName} onChange={handleChange} required /></label>
                     <label style={styles.label}>Priority<select style={styles.input} name="priority" value={formData.priority} onChange={handleChange}><option value="routine">Routine</option><option value="urgent">Urgent</option></select></label>
                 </div>

@@ -111,8 +111,8 @@ const MedicalRecordCreatePage = () => {
                             </select>
                         </label>
                     )}
-                    <label style={styles.label}>Appointment ObjectId
-                        <input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional existing appointment ObjectId" />
+                    <label style={styles.label}>Related Appointment
+                        <input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional linked appointment reference" />
                     </label>
                     <label style={styles.label}>Follow Up Date
                         <input style={styles.input} type="date" name="followUpDate" value={formData.followUpDate} onChange={handleChange} />

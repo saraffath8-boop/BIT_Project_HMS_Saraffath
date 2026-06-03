@@ -20,7 +20,6 @@ import reportRoutes from './routes/reportRoutes.js';
 import userService from './services/userService.js';
 import dns from 'dns';
 
-
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 dotenv.config();

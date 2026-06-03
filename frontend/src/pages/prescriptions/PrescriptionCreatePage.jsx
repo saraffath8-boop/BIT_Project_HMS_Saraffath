@@ -97,14 +97,14 @@ const PrescriptionCreatePage = () => {
                         </select>
                     </label>
                     {user?.role !== 'doctor' && <label style={styles.label}>Doctor<select style={styles.input} name="doctor" value={formData.doctor} onChange={handleChange} required><option value="">Select doctor</option>{doctors.map((doctor) => <option key={doctor.id} value={doctor.id}>{getUserLabel(doctor)}</option>)}</select></label>}
-                    <label style={styles.label}>Medical Record ObjectId<input style={styles.input} name="medicalRecord" value={formData.medicalRecord} onChange={handleChange} placeholder="Optional existing medical record ObjectId" /></label>
+                    <label style={styles.label}>Related Medical Record<input style={styles.input} name="medicalRecord" value={formData.medicalRecord} onChange={handleChange} placeholder="Optional linked medical record reference" /></label>
                 </div>
                 <label style={styles.label}>Notes<textarea style={styles.textarea} name="notes" value={formData.notes} onChange={handleChange} /></label>
                 <section style={styles.section}>
                     <h2 style={styles.sectionTitle}>Prescription Items</h2>
                     {items.map((item, index) => (
                         <div key={index} style={styles.row}>
-                            <input style={styles.input} name="medicine" value={item.medicine} onChange={(event) => handleItemChange(index, event)} placeholder="Optional medicine ObjectId" />
+                            <input style={styles.input} name="medicine" value={item.medicine} onChange={(event) => handleItemChange(index, event)} placeholder="Optional inventory medicine reference" />
                             <input style={styles.input} name="medicineName" value={item.medicineName} onChange={(event) => handleItemChange(index, event)} placeholder="Medicine name" required />
                             <input style={styles.input} name="dosage" value={item.dosage} onChange={(event) => handleItemChange(index, event)} placeholder="Dosage" required />
                             <input style={styles.input} name="frequency" value={item.frequency} onChange={(event) => handleItemChange(index, event)} placeholder="Frequency" required />

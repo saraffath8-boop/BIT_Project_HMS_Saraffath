@@ -33,7 +33,7 @@ const BillCreatePage = () => {
             <form style={styles.form} onSubmit={handleSubmit}>
                 <div style={styles.grid}>
                     <label style={styles.label}>Patient<select style={styles.input} name="patient" value={formData.patient} onChange={handleChange} required><option value="">Select patient</option>{patients.map((patient) => <option key={getPatientId(patient)} value={getPatientId(patient)}>{getPatientLabel(patient)}</option>)}</select></label>
-                    <label style={styles.label}>Appointment ObjectId<input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional existing appointment ObjectId" /></label>
+                    <label style={styles.label}>Related Appointment<input style={styles.input} name="appointment" value={formData.appointment} onChange={handleChange} placeholder="Optional linked appointment reference" /></label>
                     <label style={styles.label}>Discount<input style={styles.input} type="number" min="0" step="0.01" name="discount" value={formData.discount} onChange={handleChange} /></label>
                 </div>
                 <section style={styles.section}>
