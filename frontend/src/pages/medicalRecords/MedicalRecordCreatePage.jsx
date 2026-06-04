@@ -14,7 +14,7 @@ const MedicalRecordCreatePage = () => {
     const navigate = useNavigate();
     const [patients, setPatients] = useState([]);
     const [doctors, setDoctors] = useState([]);
-    const [formData, setFormData] = useState({ patient: '', doctor: '', appointment: '', chiefComplaint: '', diagnosis: '', consultationNotes: '', followUpDate: '', status: 'open', temperature: '', bloodPressure: '', pulse: '', respiratoryRate: '', oxygenSaturation: '', weight: '' });
+    const [formData, setFormData] = useState({ patient: '', doctor: '', appointment: '', chiefComplaint: '', diagnosis: '', consultationNotes: '', followUpDate: '', doctorComment: '', status: 'open', temperature: '', bloodPressure: '', pulse: '', respiratoryRate: '', oxygenSaturation: '', weight: '' });
     const [loadingPatients, setLoadingPatients] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState('');
@@ -53,6 +53,7 @@ const MedicalRecordCreatePage = () => {
             diagnosis: getOptionalValue(formData.diagnosis),
             consultationNotes: getOptionalValue(formData.consultationNotes),
             followUpDate: getOptionalValue(formData.followUpDate),
+			doctorComment: getOptionalValue(formData.doctorComment),
             status: formData.status,
             vitalSigns: {
                 temperature: formData.temperature,
@@ -134,6 +135,10 @@ const MedicalRecordCreatePage = () => {
                 <label style={styles.label}>Consultation Notes
                     <textarea style={styles.textarea} name="consultationNotes" value={formData.consultationNotes} onChange={handleChange} />
                 </label>
+				<label style={styles.label}> Doctor's Comment
+                    <textarea style={styles.textarea} name="doctorComment" value={formData.doctorComment} onChange={handleChange} />
+                </label>
+				
                 <section style={styles.section}>
                     <h2 style={styles.sectionTitle}>Vital Signs</h2>
                     <div style={styles.grid}>

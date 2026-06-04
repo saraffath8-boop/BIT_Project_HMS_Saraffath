@@ -135,7 +135,7 @@ const AdminDashboard = () => {
                         </div>
                     </section>
 
-                    <section style={styles.section}>
+                    <section style={{ ...styles.section, ...styles.stickyQuickActions }}>
                         <h2 style={styles.sectionTitle}>Quick Actions</h2>
                         <div style={styles.actionGrid}>
                             {quickActions.map((action) => (
@@ -258,6 +258,12 @@ const styles = {
         fontWeight: 800,
         cursor: 'pointer',
     },
+    stickyQuickActions: {
+    position: 'sticky',
+    top: '16px',
+    zIndex: 10,
+    boxShadow: '0 14px 34px rgba(15, 23, 42, 0.12)',
+},
     summaryGrid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',

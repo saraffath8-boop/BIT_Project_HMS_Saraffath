@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import notificationDao from '../dao/notificationDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
+import smsService from './smsService.js';
 
 const NOTIFICATION_TYPES = ['appointment', 'billing', 'laboratory', 'radiology', 'pharmacy', 'system'];
 
@@ -33,11 +34,13 @@ const validateUserExists = async (userId) => {
     if (!user) {
         throw new Error('Recipient user not found');
     }
+
+    return user;
 };
 
 const validatePatientExists = async (patientId) => {
     if (!patientId) {
-        return;
+        return null;
     }
 
     requireObjectId(patientId, 'patient id');
@@ -46,6 +49,8 @@ const validatePatientExists = async (patientId) => {
     if (!patient) {
         throw new Error('Patient not found');
     }
+
+    return patient;
 };
 
 const buildNotificationQuery = (queryParams, user) => {
@@ -91,8 +96,8 @@ const createNotification = async (data) => {
         throw new Error('Invalid notification type');
     }
 
-    await validateUserExists(recipient);
-    await validatePatientExists(relatedPatient);
+    const recipientUser = await validateUserExists(recipient);
+    const selectedPatient = await validatePatientExists(relatedPatient);
 
     const notification = await notificationDao.createNotification({
         recipient,
@@ -104,6 +109,15 @@ const createNotification = async (data) => {
     });
 
     const populatedNotification = await notificationDao.getNotificationById(notification._id);
+    const patientForSms = selectedPatient || (recipientUser.role === 'patient' ? await patientDao.getPatientByUserAccount(recipient) : null);
+
+    if (patientForSms?.phone) {
+        await smsService.sendSms({
+            to: patientForSms.phone,
+            message: `${title}: ${message}`,
+        });
+    }
+
     return sanitizeNotification(populatedNotification);
 };
 

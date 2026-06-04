@@ -4,6 +4,7 @@ import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import medicineDao from '../dao/medicineDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
+import smsService from './smsService.js';
 
 const PRESCRIPTION_STATUSES = ['pending', 'partially_issued', 'issued', 'cancelled'];
 
@@ -133,6 +134,33 @@ const buildPrescriptionItems = async (items) => {
     return prescriptionItems;
 };
 
+const getMedicineSummary = (items = []) => {
+    const names = items
+        .map((item) => item.medicineName)
+        .filter(Boolean)
+        .slice(0, 3);
+
+    if (names.length === 0) {
+        return 'your prescribed medicines';
+    }
+
+    return names.join(', ');
+};
+
+const sendPrescriptionIssuedSms = async (prescription) => {
+    if (!prescription?.patient?.phone) {
+        return;
+    }
+
+    const patientName = prescription.patient.fullName || 'Patient';
+    const medicineSummary = getMedicineSummary(prescription.items);
+
+    await smsService.sendSms({
+        to: prescription.patient.phone,
+        message: `Hello ${patientName}, your prescription is ready for pickup. Medicines: ${medicineSummary}.`,
+    });
+};
+
 const createPrescription = async (data, user) => {
     const patient = toCleanString(data.patient);
     const doctor = user.role === 'doctor' ? user.id : toCleanString(data.doctor);
@@ -192,7 +220,7 @@ const getPrescriptionById = async (id, user) => {
 };
 
 const updatePrescription = async (id, data, user) => {
-    await getPrescriptionById(id, user);
+    const existingPrescription = await getPrescriptionById(id, user);
 
     const updateData = {};
 
@@ -238,6 +266,11 @@ const updatePrescription = async (id, data, user) => {
     }
 
     const prescription = await prescriptionDao.updatePrescription(id, updateData);
+
+    if (updateData.status === 'issued' && existingPrescription.status !== 'issued') {
+        await sendPrescriptionIssuedSms(prescription);
+    }
+
     return sanitizePrescription(prescription);
 };
 

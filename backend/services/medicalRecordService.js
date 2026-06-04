@@ -16,6 +16,7 @@ const sanitizeMedicalRecord = (record) => ({
     consultationNotes: record.consultationNotes,
     vitalSigns: record.vitalSigns,
     followUpDate: record.followUpDate,
+    doctorComment: record.doctorComment,
     status: record.status,
     createdBy: record.createdBy,
     createdAt: record.createdAt,
@@ -141,6 +142,7 @@ const createMedicalRecord = async (data, user) => {
         consultationNotes: toCleanString(data.consultationNotes) || '',
         vitalSigns: pickVitalSigns(data.vitalSigns),
         followUpDate: validateDate(data.followUpDate, 'followUpDate'),
+		doctorComment: toCleanString(data.doctorComment) || '',
         status: data.status || 'open',
         createdBy: user.id,
     });

@@ -57,6 +57,12 @@ const medicalRecordSchema = new mongoose.Schema(
             enum: ['open', 'completed', 'archived'],
             default: 'open',
         },
+		doctorComment: {
+            type: String,
+            trim: true,
+            maxlength: 5000,
+            default: '',
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
