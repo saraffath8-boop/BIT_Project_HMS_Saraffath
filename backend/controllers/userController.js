@@ -1,32 +1,21 @@
 import userService, { ADMIN_CREATABLE_ROLES } from '../services/userService.js';
-
-const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+import { validateUserCreateInput } from '../utils/userValidation.js';
 
 const sendError = (res, statusCode, message) => res.status(statusCode).json({
     success: false,
     message,
 });
 
-const validateUserInput = ({ name, email, password }) => {
-    if (!name || !email || !password) {
-        return 'Name, email, and password are required';
-    }
-
-    if (!isValidEmail(email)) {
-        return 'Please provide a valid email address';
-    }
-
-    if (password.length < 8) {
-        return 'Password must be at least 8 characters long';
-    }
-
-    return null;
+const getErrorStatusCode = (error) => {
+    if (error.code === 11000 || error.message.includes('already exists')) return 409;
+    if (error.name === 'ValidationError' || /required|must|valid|invalid|characters/i.test(error.message)) return 400;
+    return 500;
 };
 
 export const createUserByAdmin = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
-        const validationError = validateUserInput({ name, email, password });
+        const { firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar } = req.body;
+        const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role });
 
         if (validationError) {
             return sendError(res, 400, validationError);
@@ -40,7 +29,7 @@ export const createUserByAdmin = async (req, res) => {
             return sendError(res, 400, `Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`);
         }
 
-        const user = await userService.createUserByAdmin({ name, email, password, role });
+        const user = await userService.createUserByAdmin({ firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar });
 
         return res.status(201).json({
             success: true,
@@ -48,7 +37,20 @@ export const createUserByAdmin = async (req, res) => {
             user,
         });
     } catch (error) {
-        const statusCode = error.message.includes('already exists') ? 409 : 500;
+        return sendError(res, getErrorStatusCode(error), error.message);
+    }
+};
+
+export const getUsers = async (req, res) => {
+    try {
+        const users = await userService.getUsers(req.query);
+
+        return res.status(200).json({
+            success: true,
+            users,
+        });
+    } catch (error) {
+        const statusCode = error.message.includes('Invalid') ? 400 : 500;
         return sendError(res, statusCode, error.message);
     }
 };

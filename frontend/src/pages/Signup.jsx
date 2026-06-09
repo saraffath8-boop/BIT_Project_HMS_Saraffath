@@ -1,75 +1,54 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
+import { HeartPulse, UserRoundPlus } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { Alert } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import { getDashboardPath, useAuth } from '../context/AuthContext';
+import { genderOptions, signupSchema } from '../schemas/userSchema';
 
-const roleOptions = [
-    { value: 'admin', label: 'Admin' }, { value: 'doctor', label: 'Doctor' }, { value: 'nurse', label: 'Nurse' },
-    { value: 'patient', label: 'Patient' }, { value: 'pharmacist', label: 'Pharmacist' },
-    { value: 'lab_technician', label: 'Lab Technician' }, { value: 'radiologist', label: 'Radiologist' },
-];
-
-function Signup() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('patient');
+export default function Signup() {
     const [error, setError] = useState('');
-    const [submitting, setSubmitting] = useState(false);
     const { isAuthenticated, loading, signup, user } = useAuth();
     const navigate = useNavigate();
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+        resolver: zodResolver(signupSchema),
+        defaultValues: { firstName: '', lastName: '', email: '', phone: '', nic: '', dob: '', gender: 'Other', password: '' },
+    });
 
     useEffect(() => {
         if (!loading && isAuthenticated && user) navigate(getDashboardPath(user.role), { replace: true });
     }, [isAuthenticated, loading, navigate, user]);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault(); setError(''); setSubmitting(true);
+    const submit = async (formData) => {
+        setError('');
         try {
-            const signedUpUser = await signup({ name, email, password, role });
+            const signedUpUser = await signup(formData);
             navigate(getDashboardPath(signedUpUser.role), { replace: true });
         } catch (err) { setError(err.message || 'Signup failed. Please try again.'); }
-        finally { setSubmitting(false); }
     };
 
-    return (
-        <main style={styles.page}>
-            <section style={styles.card}>
-                <div style={styles.brandBadge}>HMS</div>
-                <h1 style={styles.title}>Create HMS Account</h1>
-                <p style={styles.subtitle}>Register a user and open the correct dashboard automatically.</p>
-                {error && <div style={styles.error}>{error}</div>}
-                <form onSubmit={handleSubmit} style={styles.form}>
-                    <label style={styles.label} htmlFor="name">Full name</label>
-                    <input id="name" style={styles.input} type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Smith" autoComplete="name" required />
-                    <label style={styles.label} htmlFor="email">Email address</label>
-                    <input id="email" style={styles.input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@hospital.com" autoComplete="email" required />
-                    <label style={styles.label} htmlFor="password">Password</label>
-                    <input id="password" style={styles.input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" minLength={8} required />
-                    <label style={styles.label} htmlFor="role">Role</label>
-                    <select id="role" style={styles.input} value={role} onChange={(e) => setRole(e.target.value)} required>
-                        {roleOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                    <button style={styles.submitButton} type="submit" disabled={submitting}>{submitting ? 'Creating account...' : 'Create Account'}</button>
-                </form>
-                <p style={styles.footerText}>Already registered? <Link style={styles.link} to="/login">Login</Link></p>
-            </section>
-        </main>
-    );
+    return <main className="grid min-h-screen place-items-center bg-slate-50 p-5"><Card className="w-full max-w-2xl shadow-lg shadow-slate-200/60">
+        <CardHeader><div className="mb-3 flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl bg-cyan-700 text-white"><HeartPulse /></span><span className="font-bold text-slate-900">MediCore</span></div><CardTitle className="text-2xl">Create patient account</CardTitle><CardDescription>Register for secure access to your appointments, prescriptions, reports, and bills.</CardDescription></CardHeader>
+        <CardContent>{error && <Alert variant="destructive" className="mb-5">{error}</Alert>}<form onSubmit={handleSubmit(submit)} className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="First Name" error={errors.firstName?.message}><Input {...register('firstName')} autoComplete="given-name" /></Field>
+                <Field label="Last Name" error={errors.lastName?.message}><Input {...register('lastName')} autoComplete="family-name" /></Field>
+                <Field label="Email Address" error={errors.email?.message}><Input {...register('email')} type="email" autoComplete="email" /></Field>
+                <Field label="Phone Number" error={errors.phone?.message}><Input {...register('phone')} type="text" inputMode="numeric" maxLength={10} autoComplete="tel" /></Field>
+                <Field label="NIC" error={errors.nic?.message}><Input {...register('nic')} type="text" maxLength={12} /></Field>
+                <Field label="Date of Birth" error={errors.dob?.message}><Input {...register('dob')} type="date" /></Field>
+                <Field label="Gender" error={errors.gender?.message}><select {...register('gender')} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm">{genderOptions.map((gender) => <option key={gender} value={gender}>{gender}</option>)}</select></Field>
+                <Field label="Password" error={errors.password?.message}><Input {...register('password')} type="password" autoComplete="new-password" /></Field>
+            </div>
+            <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-3 text-sm text-cyan-800"><strong>Account type:</strong> Patient</div>
+            <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}><UserRoundPlus className="size-4" />{isSubmitting ? 'Creating account...' : 'Create patient account'}</Button>
+        </form><p className="mt-6 text-center text-sm text-slate-500">Already registered? <Link className="font-semibold text-cyan-700 hover:underline" to="/login">Sign in</Link></p></CardContent>
+    </Card></main>;
 }
 
-const styles = {
-    page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #052e16 0%, #155e75 55%, #2563eb 100%)', padding: '24px', fontFamily: 'Arial, sans-serif' },
-    card: { width: '100%', maxWidth: '480px', background: '#ffffff', borderRadius: '24px', padding: '34px', boxShadow: '0 24px 80px rgba(2, 6, 23, 0.35)' },
-    brandBadge: { width: '64px', height: '64px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0891b2', color: '#ffffff', fontWeight: 800, marginBottom: '18px' },
-    title: { margin: 0, color: '#0f172a', fontSize: '30px' },
-    subtitle: { color: '#64748b', marginTop: '8px', marginBottom: '24px' },
-    error: { background: '#fee2e2', color: '#991b1b', borderRadius: '12px', padding: '12px', marginBottom: '16px', fontWeight: 600 },
-    form: { display: 'flex', flexDirection: 'column', gap: '10px' },
-    label: { color: '#334155', fontWeight: 700, fontSize: '14px' },
-    input: { border: '1px solid #cbd5e1', borderRadius: '12px', padding: '13px 14px', fontSize: '15px', marginBottom: '8px', background: '#ffffff' },
-    submitButton: { border: 'none', borderRadius: '12px', padding: '14px 18px', background: '#0891b2', color: '#ffffff', fontWeight: 800, fontSize: '16px', cursor: 'pointer', marginTop: '8px' },
-    footerText: { textAlign: 'center', color: '#64748b', marginTop: '22px' },
-    link: { color: '#0891b2', fontWeight: 800, textDecoration: 'none' },
-};
-
-export default Signup;
+const Field = ({ label, error, children }) => <div className="space-y-2"><Label>{label}</Label>{children}{error && <p className="text-xs font-medium text-red-600">{error}</p>}</div>;

@@ -1,4 +1,5 @@
 import authService from '../services/authService.js';
+import { validateUserCreateInput } from '../utils/userValidation.js';
 
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -7,32 +8,22 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
     message,
 });
 
-const validateSignupInput = ({ name, email, password }) => {
-    if (!name || !email || !password) {
-        return 'Name, email, and password are required';
-    }
-
-    if (!isValidEmail(email)) {
-        return 'Please provide a valid email address';
-    }
-
-    if (password.length < 8) {
-        return 'Password must be at least 8 characters long';
-    }
-
-    return null;
+const getErrorStatusCode = (error) => {
+    if (error.code === 11000 || error.message.includes('already exists')) return 409;
+    if (error.name === 'ValidationError' || /required|must|valid|invalid|characters/i.test(error.message)) return 400;
+    return 500;
 };
 
 export const signupUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        const validationError = validateSignupInput({ name, email, password });
+        const { firstName, lastName, email, phone, nic, dob, gender, password } = req.body;
+        const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role: 'patient' });
 
         if (validationError) {
             return sendError(res, 400, validationError);
         }
 
-        const result = await authService.signupUser({ name, email, password });
+        const result = await authService.signupUser({ firstName, lastName, email, phone, nic, dob, gender, password });
 
         return res.status(201).json({
             success: true,
@@ -41,8 +32,7 @@ export const signupUser = async (req, res) => {
             user: result.user,
         });
     } catch (error) {
-        const statusCode = error.message.includes('already exists') ? 409 : 500;
-        return sendError(res, statusCode, error.message);
+        return sendError(res, getErrorStatusCode(error), error.message);
     }
 };
 

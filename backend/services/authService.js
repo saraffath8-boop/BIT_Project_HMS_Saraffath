@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import userDao from '../dao/userDao.js';
 import { USER_ROLES } from '../models/user.js';
+import { normalizeNic, validateUserCreateInput } from '../utils/userValidation.js';
 
 const SALT_ROUNDS = 12;
 const PUBLIC_SIGNUP_ROLE = 'patient';
@@ -12,9 +13,17 @@ export const normalizeEmail = (email) => email.toLowerCase().trim();
 export const sanitizeUser = (user) => ({
     id: user._id.toString(),
     name: user.name,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
+    phone: user.phone,
+    nic: user.nic,
+    dob: user.dob,
+    gender: user.gender,
     role: user.role,
     isActive: user.isActive,
+    avatar: user.avatar,
+    lastLogin: user.lastLogin,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
 });
@@ -36,17 +45,31 @@ const generateToken = (user) => {
     );
 };
 
-const signupUser = async ({ name, email, password }) => {
+const signupUser = async ({ firstName, lastName, email, phone, nic, dob, gender, password }) => {
+    const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role: PUBLIC_SIGNUP_ROLE });
+    if (validationError) throw new Error(validationError);
     const normalizedEmail = normalizeEmail(email);
-    const existingUser = await userDao.getUserByEmail(normalizedEmail);
+    const normalizedNic = normalizeNic(nic);
+    const [existingUser, existingPhone, existingNic] = await Promise.all([
+        userDao.getUserByEmail(normalizedEmail),
+        userDao.getUserByPhone(phone.trim()),
+        userDao.getUserByNic(normalizedNic),
+    ]);
 
     if (existingUser) {
         throw new Error('User already exists with this email');
     }
+    if (existingPhone) throw new Error('User already exists with this phone number');
+    if (existingNic) throw new Error('User already exists with this NIC');
 
     const user = await userDao.createUser({
-        name: name.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         email: normalizedEmail,
+        phone: phone.trim(),
+        nic: normalizedNic,
+        dob,
+        gender,
         password: await hashPassword(password),
         role: PUBLIC_SIGNUP_ROLE,
     });
@@ -73,6 +96,9 @@ const loginUser = async ({ email, password }) => {
     if (!isPasswordCorrect) {
         throw new Error('Invalid email or password');
     }
+
+    user.lastLogin = new Date();
+    await userDao.updateUser(user._id, { lastLogin: user.lastLogin });
 
     return {
         token: generateToken(user),

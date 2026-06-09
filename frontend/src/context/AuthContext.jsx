@@ -10,6 +10,7 @@ export const dashboardPathByRole = {
     admin: '/dashboard/admin', doctor: '/dashboard/doctor', nurse: '/dashboard/nurse',
     patient: '/dashboard/patient', pharmacist: '/dashboard/pharmacist',
     lab_technician: '/dashboard/lab', radiologist: '/dashboard/radiology',
+    receptionist: '/dashboard/nurse',
 };
 
 export const getDashboardPath = (role) => dashboardPathByRole[role] || '/unauthorized';
