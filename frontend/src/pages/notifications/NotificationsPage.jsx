@@ -52,7 +52,7 @@ const NotificationsPage = () => {
                 </div>
                 <div style={styles.actions}>
                     <Link style={styles.secondaryLink} to="/dashboard">Dashboard</Link>
-                    {user?.role === 'admin' && <Link style={styles.primaryLink} to="/notifications/new">Create Notification</Link>}
+                    {(user?.role === 'admin' || user?.role === 'receptionist') && <Link style={styles.primaryLink} to="/notifications/new">Create Notification</Link>}
                 </div>
             </section>
 

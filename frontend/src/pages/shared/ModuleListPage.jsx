@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 
 const getNestedValue = (item, path) => path?.split('.').reduce((value, key) => value?.[key], item) ?? '';
 const EMPTY_FILTERS = {};
-const statusWords = ['active', 'scheduled', 'completed', 'paid', 'available', 'approved', 'waiting', 'pending', 'cancelled', 'inactive', 'unpaid'];
+const statusWords = ['active', 'scheduled', 'completed', 'paid', 'available', 'approved', 'waiting', 'pending', 'pending_patient_decision', 'rejected_by_patient', 'cancelled', 'inactive', 'unpaid'];
 
 const CellValue = ({ value }) => {
     const clean = value || 'Not recorded';
@@ -37,6 +37,7 @@ const ModuleListPage = ({ title, kicker, description, loadData, itemsKey, column
 
     useEffect(() => { const id = setTimeout(loadItems, 0); return () => clearTimeout(id); }, [loadItems]);
     const canCreate = createAction?.allowedRoles?.includes(user?.role);
+    const visibleColumns = columns.filter((column) => !column.allowedRoles || column.allowedRoles.includes(user?.role));
 
     return (
         <main className="space-y-6">
@@ -54,8 +55,8 @@ const ModuleListPage = ({ title, kicker, description, loadData, itemsKey, column
             {!loading && !error && items.length > 0 && (
                 <Card className="overflow-hidden">
                     <div className="border-b border-slate-100 px-5 py-4"><p className="text-sm font-semibold text-slate-800">{items.length} record{items.length === 1 ? '' : 's'}</p><p className="text-xs text-slate-500">Current hospital system records</p></div>
-                    <Table><TableHeader><TableRow>{columns.map((column) => <TableHead key={column.label}>{column.label}</TableHead>)}</TableRow></TableHeader>
-                        <TableBody>{items.map((item) => <TableRow key={item.id || item._id}>{columns.map((column) => <TableCell key={`${item.id || item._id}-${column.label}`}><CellValue value={column.render ? column.render(item) : getNestedValue(item, column.key)} /></TableCell>)}</TableRow>)}</TableBody>
+                    <Table><TableHeader><TableRow>{visibleColumns.map((column) => <TableHead key={column.label}>{column.label}</TableHead>)}</TableRow></TableHeader>
+                        <TableBody>{items.map((item) => <TableRow key={item.id || item._id}>{visibleColumns.map((column) => <TableCell key={`${item.id || item._id}-${column.label}`}><CellValue value={column.render ? column.render(item) : getNestedValue(item, column.key)} /></TableCell>)}</TableRow>)}</TableBody>
                     </Table>
                     <div className="flex items-center justify-end gap-1 border-t border-slate-100 px-5 py-3 text-xs font-medium text-slate-500">End of records <ArrowRight className="size-3" /></div>
                 </Card>

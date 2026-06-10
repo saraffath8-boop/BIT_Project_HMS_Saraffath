@@ -96,7 +96,7 @@ const PatientsPage = () => {
 
                     <Link style={styles.secondaryLink} to="/dashboard">Dashboard</Link>
 
-                    {user?.role === 'admin' && <Link style={styles.primaryLink} to="/patients/new">Add Patient</Link>}
+                    {(user?.role === 'admin' || user?.role === 'receptionist')&& <Link style={styles.primaryLink} to="/patients/new">Add Patient</Link>}
 
                 </div>
 
@@ -148,7 +148,7 @@ const PatientsPage = () => {
 
                                 <th style={styles.th}>Phone</th>
 
-                                <th style={styles.th}>Blood Group</th>
+                                {user?.role !== 'receptionist' && <th style={styles.th}>Blood Group</th>}
 
                                 <th style={styles.th}>Status</th>
 
@@ -172,7 +172,7 @@ const PatientsPage = () => {
 
                                     <td style={styles.td}>{patient.phone}</td>
 
-                                    <td style={styles.td}>{patient.bloodGroup}</td>
+                                    {user?.role !== 'receptionist' && <td style={styles.td}>{patient.bloodGroup}</td>}
 
                                     <td style={styles.td}>{patient.status}</td>
 
@@ -180,7 +180,7 @@ const PatientsPage = () => {
 
                                         <Link style={styles.inlineLink} to={`/patients/${patient.id}`}>View</Link>
 
-                                        {(user?.role === 'admin' || user?.role === 'nurse') && (
+                                        {(user?.role === 'admin' || user?.role === 'nurse' || user?.role === 'receptionist') && (
 
                                             <Link style={styles.inlineLink} to={`/patients/${patient.id}/edit`}>Edit</Link>
 
@@ -196,7 +196,7 @@ const PatientsPage = () => {
 
                                 <tr>
 
-                                    <td style={styles.emptyCell} colSpan="7">No patients found.</td>
+                                    <td style={styles.emptyCell} colSpan={user?.role === 'receptionist' ? 6 : 7}>No patients found.</td>
 
                                 </tr>
 

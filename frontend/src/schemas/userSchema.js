@@ -30,11 +30,17 @@ export const signupSchema = commonUserSchema.extend({
 export const staffUserSchema = signupSchema.extend({
     role: z.enum(staffRoles, { error: 'Please select a valid staff role.' }),
     isActive: z.boolean(),
+    department: z.string().optional(),
+    specialization: z.string().trim().max(160, 'Specialization is too long').optional(),
+    consultationFee: z.coerce.number().min(0, 'Consultation fee cannot be negative').optional(),
 }).superRefine((data, context) => {
     const birthDate = new Date(data.dob);
     const adultThreshold = new Date();
     adultThreshold.setFullYear(adultThreshold.getFullYear() - 18);
     if (birthDate > adultThreshold) {
         context.addIssue({ code: 'custom', path: ['dob'], message: 'Staff users must be at least 18 years old' });
+    }
+    if (data.role === 'doctor' && !data.department) {
+        context.addIssue({ code: 'custom', path: ['department'], message: 'Department is required for doctors' });
     }
 });

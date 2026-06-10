@@ -5,6 +5,8 @@ import {
     getBillById,
     getBills,
     getMyBills,
+    getPendingPatientDecisions,
+    processPatientDecisions,
     updateBill,
 } from '../controllers/billController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -16,11 +18,14 @@ router.use(protect);
 
 router
     .route('/')
-    .get(authorizeRoles('admin'), getBills)
+    .get(authorizeRoles('admin', 'receptionist'), getBills)
     .post(authorizeRoles('admin'), createBill);
 
 router
     .get('/my', authorizeRoles('patient'), getMyBills);
+
+router.get('/pending-decisions', authorizeRoles('admin', 'receptionist'), getPendingPatientDecisions);
+router.post('/patient-decisions', authorizeRoles('admin', 'receptionist'), processPatientDecisions);
 
 router
     .route('/:id')

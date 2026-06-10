@@ -18,8 +18,8 @@ export default function Login() {
     const location = useLocation();
 
     useEffect(() => {
-        if (!loading && isAuthenticated && user) navigate(getDashboardPath(user.role), { replace: true });
-    }, [isAuthenticated, loading, navigate, user]);
+        if (!loading && isAuthenticated && user) navigate(location.state?.from?.pathname || getDashboardPath(user.role), { replace: true });
+    }, [isAuthenticated, loading, location.state, navigate, user]);
 
     const handleSubmit = async (event) => {
         event.preventDefault(); setError(''); setSubmitting(true);
@@ -40,7 +40,7 @@ export default function Login() {
             </section>
             <section className="grid place-items-center p-5 sm:p-10"><Card className="w-full max-w-md shadow-lg shadow-slate-200/60">
                 <CardHeader><div className="mb-3 lg:hidden"><Brand dark /></div><CardTitle className="text-2xl">Welcome back</CardTitle><CardDescription>Sign in to your secure hospital workspace.</CardDescription></CardHeader>
-                <CardContent>{error && <Alert variant="destructive" className="mb-5">{error}</Alert>}
+                <CardContent>{location.state?.message && <Alert className="mb-5">{location.state.message}</Alert>}{error && <Alert variant="destructive" className="mb-5">{error}</Alert>}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <Field icon={Mail} label="Email address"><Input id="email" className="pl-9" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@hospital.com" autoComplete="email" required /></Field>
                         <Field icon={LockKeyhole} label="Password"><Input id="password" className="pl-9" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required /></Field>

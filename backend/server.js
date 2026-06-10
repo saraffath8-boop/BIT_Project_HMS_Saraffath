@@ -17,7 +17,10 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import doctorRoutes from './routes/doctorRoutes.js';
 import userService from './services/userService.js';
+import departmentService from './services/departmentService.js';
 import dns from 'dns';
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -45,6 +48,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/doctors', doctorRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({
@@ -62,6 +67,7 @@ const startServer = async () => {
     console.log('Database connected');
 
     await userService.ensureDefaultAdmin();
+    await departmentService.ensureDefaultDepartments();
 
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);

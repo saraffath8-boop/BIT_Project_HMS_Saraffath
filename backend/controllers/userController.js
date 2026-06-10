@@ -14,7 +14,7 @@ const getErrorStatusCode = (error) => {
 
 export const createUserByAdmin = async (req, res) => {
     try {
-        const { firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar } = req.body;
+        const { firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar, department, specialization, consultationFee, availableDays, availableTimeSlots } = req.body;
         const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role });
 
         if (validationError) {
@@ -29,7 +29,7 @@ export const createUserByAdmin = async (req, res) => {
             return sendError(res, 400, `Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`);
         }
 
-        const user = await userService.createUserByAdmin({ firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar });
+        const user = await userService.createUserByAdmin({ firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar, department, specialization, consultationFee, availableDays, availableTimeSlots });
 
         return res.status(201).json({
             success: true,
@@ -43,7 +43,7 @@ export const createUserByAdmin = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await userService.getUsers(req.query);
+        const users = await userService.getUsers(req.query, req.user);
 
         return res.status(200).json({
             success: true,
@@ -51,6 +51,16 @@ export const getUsers = async (req, res) => {
         });
     } catch (error) {
         const statusCode = error.message.includes('Invalid') ? 400 : 500;
+        return sendError(res, statusCode, error.message);
+    }
+};
+
+export const updateDoctorBookingProfile = async (req, res) => {
+    try {
+        const user = await userService.updateDoctorBookingProfile(req.params.id, req.body);
+        return res.status(200).json({ success: true, message: 'Doctor booking profile updated successfully', user });
+    } catch (error) {
+        const statusCode = error.message === 'Doctor not found' ? 404 : getErrorStatusCode(error);
         return sendError(res, statusCode, error.message);
     }
 };

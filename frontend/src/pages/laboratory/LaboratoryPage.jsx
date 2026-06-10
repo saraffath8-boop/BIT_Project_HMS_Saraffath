@@ -1,6 +1,7 @@
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getLabRequests } from '../../services/labRequestService';
+import { Link } from 'react-router-dom';
 
 const LaboratoryPage = () => (
     <ModuleListPage
@@ -17,7 +18,9 @@ const LaboratoryPage = () => (
             { label: 'Tests', render: (item) => `${item.tests?.length || 0} test(s)` },
             { label: 'Priority', key: 'priority' },
             { label: 'Status', key: 'status' },
+            { label: 'Patient Decision', key: 'patientDecisionStatus' },
             { label: 'Completed', render: (item) => formatDateTime(item.completedAt) },
+            { label: 'Report', allowedRoles: ['admin', 'doctor', 'lab_technician'], render: (item) => <Link className="font-semibold text-cyan-700" to={`/laboratory/${item.id}/process`}>{item.status === 'completed' ? 'View Results' : 'Process'}</Link> },
         ]}
     />
 );

@@ -30,7 +30,7 @@ export const createPatient = async (req, res) => {
 
     try {
 
-        const patient = await patientService.createPatient(req.body, req.user.id);
+        const patient = await patientService.createPatient(req.body, req.user.id, req.user.role);
 
 
 
@@ -58,7 +58,7 @@ export const getPatients = async (req, res) => {
 
     try {
 
-        const result = await patientService.getPatients(req.query);
+        const result = await patientService.getPatients(req.query, req.user.role);
 
 
 
@@ -84,7 +84,7 @@ export const getPatientById = async (req, res) => {
 
     try {
 
-        const patient = await patientService.getPatientById(req.params.id);
+        const patient = await patientService.getPatientById(req.params.id, req.user.role);
 
 
 

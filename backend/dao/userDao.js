@@ -8,7 +8,8 @@ class UserDao {
 
     async getUsers(query = {}) {
         return User.find(query)
-            .select('name firstName lastName email phone nic dob gender role isActive avatar lastLogin')
+            .select('name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee availableDays availableTimeSlots')
+            .populate('department', 'name description status')
             .sort({ name: 1 })
             .exec();
     }
@@ -22,7 +23,15 @@ class UserDao {
     }
 
     async getUserById(userId) {
-        return User.findById(userId).exec();
+        return User.findById(userId).populate('department', 'name description status').exec();
+    }
+
+    async getActiveDoctorsByDepartment(departmentId) {
+        return User.find({ role: 'doctor', isActive: true, department: departmentId })
+            .select('name firstName lastName department specialization consultationFee availableDays availableTimeSlots')
+            .populate('department', 'name description status')
+            .sort({ name: 1 })
+            .exec();
     }
 
     async countUsersByRole(role) {

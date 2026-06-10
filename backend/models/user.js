@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema(
         password: { type: String, required: [true, 'Password is required'], minlength: [8, 'Password must be at least 8 characters long'], select: false },
         role: { type: String, enum: ALL_USER_ROLES, default: USER_ROLE_VALUES.PATIENT, required: true },
         isActive: { type: Boolean, default: true },
+        department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', default: null },
+        specialization: { type: String, trim: true, maxlength: 160, default: '' },
+        consultationFee: { type: Number, min: 0, default: 0 },
+        availableDays: { type: [Number], default: [1, 2, 3, 4, 5] },
+        availableTimeSlots: { type: [String], default: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
         avatar: {
             public_id: { type: String, default: null },
             url: { type: String, default: 'https://ui-avatars.com/api/?name=User&background=0e7490&color=fff' },

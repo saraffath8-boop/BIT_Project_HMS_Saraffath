@@ -51,7 +51,7 @@ const MyAppointmentsPage = () => {
                     <h1 style={styles.title}>My Appointments</h1>
                     <p style={styles.subtitle}>View appointments linked to your patient profile.</p>
                 </div>
-                <Link style={styles.dashboardButton} to="/dashboard">Dashboard</Link>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}><Link style={styles.dashboardButton} to="/book-appointment">Book Appointment</Link><Link style={styles.dashboardButton} to="/dashboard">Dashboard</Link></div>
             </section>
 
             {loading && <div style={styles.notice}>Loading appointments...</div>}
@@ -69,6 +69,7 @@ const MyAppointmentsPage = () => {
                                 <th style={styles.th}>Doctor</th>
                                 <th style={styles.th}>Department</th>
                                 <th style={styles.th}>Status</th>
+                                <th style={styles.th}>Payment</th>
                                 <th style={styles.th}>Reason</th>
                             </tr>
                         </thead>
@@ -79,6 +80,7 @@ const MyAppointmentsPage = () => {
                                     <td style={styles.td}>{formatDoctor(appointment.doctor)}</td>
                                     <td style={styles.td}>{appointment.department || 'N/A'}</td>
                                     <td style={styles.td}>{formatStatus(appointment.status)}</td>
+                                    <td style={styles.td}>{formatStatus(appointment.paymentStatus)}</td>
                                     <td style={styles.td}>{appointment.reason || 'N/A'}</td>
                                 </tr>
                             ))}

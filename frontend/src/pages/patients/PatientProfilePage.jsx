@@ -214,7 +214,7 @@ const PatientProfilePage = () => {
 
                     <Link style={styles.secondaryLink} to="/patients">Back</Link>
 
-                    {(user?.role === 'admin' || user?.role === 'nurse') && <Link style={styles.primaryLink} to={`/patients/${patient.id}/edit`}>Edit</Link>}
+                    {(user?.role === 'admin' || user?.role === 'nurse' || user?.role === 'receptionist') && <Link style={styles.primaryLink} to={`/patients/${patient.id}/edit`}>Edit</Link>}
 
                     {user?.role === 'admin' && <button style={styles.deleteButton} onClick={handleDelete}>Delete</button>}
 
@@ -234,7 +234,7 @@ const PatientProfilePage = () => {
 
                 <Info label="Phone" value={patient.phone} />
 
-                <Info label="Blood Group" value={patient.bloodGroup} />
+                {user?.role !== 'receptionist' && <Info label="Blood Group" value={patient.bloodGroup} />}
 
                 <Info label="Status" value={patient.status} />
 
@@ -306,9 +306,9 @@ const PatientProfilePage = () => {
 
             )}
 
-            <section style={styles.card}><h2>Allergies</h2><p>{patient.allergies || 'None recorded'}</p></section>
+            {user?.role !== 'receptionist' && <section style={styles.card}><h2>Allergies</h2><p>{patient.allergies || 'None recorded'}</p></section>}
 
-            <section style={styles.card}><h2>Medical Notes</h2><p>{patient.medicalNotes || 'No notes recorded'}</p></section>
+            {user?.role !== 'receptionist' && <section style={styles.card}><h2>Medical Notes</h2><p>{patient.medicalNotes || 'No notes recorded'}</p></section>}
 
         </main>
 

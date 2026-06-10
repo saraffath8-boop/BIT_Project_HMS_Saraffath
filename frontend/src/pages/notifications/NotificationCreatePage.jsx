@@ -7,7 +7,7 @@ import { getUsers } from '../../services/userService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
-const getUserLabel = (user) => `${user.name || 'Unnamed User'} (${user.email}) - ${user.role}`;
+const getUserLabel = (user) => `${user.name || 'Unnamed User'}${user.email ? ` (${user.email})` : ''} - ${user.role}`;
 
 const NotificationCreatePage = () => {
     const { token } = useAuth();

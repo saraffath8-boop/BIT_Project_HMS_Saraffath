@@ -81,7 +81,7 @@ const buildNotificationQuery = (queryParams, user) => {
     return query;
 };
 
-const createNotification = async (data) => {
+const createNotification = async (data, user = {}) => {
     const recipient = toCleanString(data.recipient);
     const title = toCleanString(data.title);
     const message = toCleanString(data.message);
@@ -97,6 +97,9 @@ const createNotification = async (data) => {
     }
 
     const recipientUser = await validateUserExists(recipient);
+    if (user.role === 'receptionist' && recipientUser.role !== 'patient') {
+        throw new Error('Receptionists can only send notifications to patients');
+    }
     const selectedPatient = await validatePatientExists(relatedPatient);
 
     const notification = await notificationDao.createNotification({
@@ -109,7 +112,7 @@ const createNotification = async (data) => {
     });
 
     const populatedNotification = await notificationDao.getNotificationById(notification._id);
-    const patientForSms = selectedPatient || (recipientUser.role === 'patient' ? await patientDao.getPatientByUserAccount(recipient) : null);
+    const patientForSms = data.sendSms === false ? null : selectedPatient || (recipientUser.role === 'patient' ? await patientDao.getPatientByUserAccount(recipient) : null);
 
     if (patientForSms?.phone) {
         await smsService.sendSms({

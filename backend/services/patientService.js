@@ -34,55 +34,65 @@ const ADMIN_UPDATE_FIELDS = [
 
 
 
-const NURSE_UPDATE_FIELDS = ['phone', 'address', 'emergencyContactName', 'emergencyContactPhone', 'allergies', 'medicalNotes', 'status'];
+const NURSE_UPDATE_FIELDS = [
+    'phone',
+    'address',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'allergies',
+    'medicalNotes',
+    'status',
+];
+
+const RECEPTIONIST_UPDATE_FIELDS = [
+    'fullName',
+    'dateOfBirth',
+    'gender',
+    'phone',
+    'address',
+    'emergencyContactName',
+    'emergencyContactPhone',
+];
 
 
 
-const sanitizePatient = (patient) => ({
+const sanitizePatient = (patient, userRole) => {
+    const sanitized = {
+        id: patient._id.toString(),
+        patientId: patient.patientId,
+        fullName: patient.fullName,
+        dateOfBirth: patient.dateOfBirth,
+        gender: patient.gender,
+        phone: patient.phone,
+        address: patient.address,
+        emergencyContactName: patient.emergencyContactName,
+        emergencyContactPhone: patient.emergencyContactPhone,
+        bloodGroup: patient.bloodGroup,
+        allergies: patient.allergies,
+        medicalNotes: patient.medicalNotes,
+        status: patient.status,
+        createdBy: patient.createdBy,
+        userAccount: patient.userAccount
+            ? {
+                  id: patient.userAccount._id.toString(),
+                  name: patient.userAccount.name,
+                  email: patient.userAccount.email,
+                  role: patient.userAccount.role,
+                  isActive: patient.userAccount.isActive,
+              }
+            : null,
+        createdAt: patient.createdAt,
+        updatedAt: patient.updatedAt,
+    };
 
-    id: patient._id.toString(),
+    if (userRole === 'receptionist') {
+        delete sanitized.bloodGroup;
+        delete sanitized.allergies;
+        delete sanitized.medicalNotes;
+    }
 
-    patientId: patient.patientId,
-
-    fullName: patient.fullName,
-
-    dateOfBirth: patient.dateOfBirth,
-
-    gender: patient.gender,
-
-    phone: patient.phone,
-
-    address: patient.address,
-
-    emergencyContactName: patient.emergencyContactName,
-
-    emergencyContactPhone: patient.emergencyContactPhone,
-
-    bloodGroup: patient.bloodGroup,
-
-    allergies: patient.allergies,
-
-    medicalNotes: patient.medicalNotes,
-
-    status: patient.status,
-
-    createdBy: patient.createdBy,
-
-    userAccount: patient.userAccount
-        ? {
-              id: patient.userAccount._id.toString(),
-              name: patient.userAccount.name,
-              email: patient.userAccount.email,
-              role: patient.userAccount.role,
-              isActive: patient.userAccount.isActive,
-          }
-        : null,
-
-    createdAt: patient.createdAt,
-
-    updatedAt: patient.updatedAt,
-
-});
+    return sanitized;
+};
 
 
 
@@ -241,7 +251,7 @@ const getPatientOrThrow = async (id) => {
 
 
 
-const createPatient = async (patientData, createdByUserId) => {
+const createPatient = async (patientData, createdByUserId, userRole) => {
 
     const payload = buildPatientPayload(patientData);
 
@@ -263,13 +273,13 @@ const createPatient = async (patientData, createdByUserId) => {
 
 
 
-    return sanitizePatient(patient);
+    return sanitizePatient(patient, userRole);
 
 };
 
 
 
-const getPatients = async ({ search, page, limit }) => {
+const getPatients = async ({ search, page, limit }, userRole) => {
 
     const safePage = Math.max(Number(page) || 1, 1);
 
@@ -293,7 +303,7 @@ const getPatients = async ({ search, page, limit }) => {
 
         ...result,
 
-        patients: result.patients.map(sanitizePatient),
+        patients: result.patients.map((patient) => sanitizePatient(patient, userRole)),
 
     };
 
@@ -301,11 +311,11 @@ const getPatients = async ({ search, page, limit }) => {
 
 
 
-const getPatientById = async (id) => {
+const getPatientById = async (id, userRole) => {
 
     const patient = await getPatientOrThrow(id);
 
-    return sanitizePatient(patient);
+    return sanitizePatient(patient, userRole);
 
 };
 
@@ -321,7 +331,7 @@ const getMyPatientProfile = async (userId) => {
 
     }
 
-    return sanitizePatient(patient);
+    return sanitizePatient(patient, 'patient');
 
 };
 
@@ -333,7 +343,11 @@ const updatePatient = async (id, updateData, userRole) => {
 
 
 
-    const allowedFields = userRole === 'nurse' ? NURSE_UPDATE_FIELDS : ADMIN_UPDATE_FIELDS;
+    const allowedFields = userRole === 'nurse'
+        ? NURSE_UPDATE_FIELDS
+        : userRole === 'receptionist'
+            ? RECEPTIONIST_UPDATE_FIELDS
+            : ADMIN_UPDATE_FIELDS;
 
     const payload = pickAllowedFields(updateData, allowedFields);
 
@@ -379,7 +393,7 @@ const updatePatient = async (id, updateData, userRole) => {
 
     const patient = await patientDao.updatePatient(id, payload);
 
-    return sanitizePatient(patient);
+    return sanitizePatient(patient, userRole);
 
 };
 

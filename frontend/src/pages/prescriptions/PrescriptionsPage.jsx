@@ -135,6 +135,7 @@ const PrescriptionsPage = () => {
                                 <th style={styles.th}>Doctor</th>
                                 <th style={styles.th}>Medicines</th>
                                 <th style={styles.th}>Status</th>
+                                <th style={styles.th}>Patient Decision</th>
                                 <th style={styles.th}>Created</th>
                                 <th style={styles.th}>Actions</th>
                             </tr>
@@ -146,6 +147,7 @@ const PrescriptionsPage = () => {
                                     <td style={styles.td}>{getPersonName(prescription.doctor)}</td>
                                     <td style={styles.td}>{prescription.items?.length || 0} item(s)</td>
                                     <td style={styles.td}>{statusLabels[prescription.status] || prescription.status}</td>
+                                    <td style={styles.td}>{prescription.patientDecisionStatus?.replaceAll('_', ' ') || 'Not required'}</td>
                                     <td style={styles.td}>{formatDateTime(prescription.createdAt)}</td>
                                     <td style={styles.td}>{renderActions(prescription)}</td>
                                 </tr>

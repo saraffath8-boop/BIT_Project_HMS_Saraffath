@@ -1,6 +1,7 @@
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getRadiologyRequests } from '../../services/radiologyRequestService';
+import { Link } from 'react-router-dom';
 
 const RadiologyPage = () => (
     <ModuleListPage
@@ -17,7 +18,9 @@ const RadiologyPage = () => (
             { label: 'Scan Type', key: 'scanType' },
             { label: 'Body Part', key: 'bodyPart' },
             { label: 'Status', key: 'status' },
+            { label: 'Patient Decision', key: 'patientDecisionStatus' },
             { label: 'Scheduled', render: (item) => formatDateTime(item.scheduledAt) },
+            { label: 'Report', allowedRoles: ['admin', 'doctor', 'radiologist'], render: (item) => <Link className="font-semibold text-cyan-700" to={`/radiology/${item.id}/process`}>{item.status === 'completed' ? 'View Report' : 'Process'}</Link> },
         ]}
     />
 );

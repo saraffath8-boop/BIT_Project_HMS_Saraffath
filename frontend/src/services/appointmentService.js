@@ -18,6 +18,10 @@ export const createAppointment = async (appointmentData, token) => {
     return apiPost(APPOINTMENTS_URL, appointmentData, token, 'Unable to create appointment');
 };
 
+export const createConsultation = async (appointmentId, consultationData, token) => {
+    return apiPost(`${APPOINTMENTS_URL}/${appointmentId}/consultation`, consultationData, token, 'Unable to complete consultation');
+};
+
 export const updateAppointment = async (id, appointmentData, token) => {
     return apiPatch(`${APPOINTMENTS_URL}/${id}`, appointmentData, token, 'Unable to update appointment');
 };

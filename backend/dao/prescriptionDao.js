@@ -10,7 +10,7 @@ class PrescriptionDao {
         return Prescription.find(query)
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .sort({ createdAt: -1 })
@@ -21,7 +21,7 @@ class PrescriptionDao {
         return Prescription.findById(id)
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .exec();
@@ -31,7 +31,7 @@ class PrescriptionDao {
         return Prescription.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .exec();

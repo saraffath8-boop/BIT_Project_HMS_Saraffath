@@ -16,7 +16,7 @@ router.use(protect);
 router
     .route('/')
     .get(getNotifications)
-    .post(authorizeRoles('admin'), createNotification);
+    .post(authorizeRoles('admin', 'receptionist'), createNotification);
 
 router
     .route('/:id')

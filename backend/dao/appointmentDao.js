@@ -10,7 +10,9 @@ class AppointmentDao {
         return Appointment.find(query)
             .populate('patient', 'patientId fullName phone gender')
             .populate('doctor', 'name email role')
+            .populate('departmentRef', 'name description status')
             .populate('createdBy', 'name email role')
+            .populate('requestedBy', 'name email role')
             .sort({ appointmentDate: 1 })
             .exec();
     }
@@ -19,7 +21,9 @@ class AppointmentDao {
         return Appointment.findById(id)
             .populate('patient', 'patientId fullName phone gender')
             .populate('doctor', 'name email role')
+            .populate('departmentRef', 'name description status')
             .populate('createdBy', 'name email role')
+            .populate('requestedBy', 'name email role')
             .exec();
     }
 
@@ -27,8 +31,18 @@ class AppointmentDao {
         return Appointment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone gender')
             .populate('doctor', 'name email role')
+            .populate('departmentRef', 'name description status')
             .populate('createdBy', 'name email role')
+            .populate('requestedBy', 'name email role')
             .exec();
+    }
+
+    async findDoctorSlotConflict(doctorId, appointmentDate) {
+        return Appointment.findOne({
+            doctor: doctorId,
+            appointmentDate,
+            status: { $ne: 'cancelled' },
+        }).exec();
     }
 
     async deleteAppointment(id) {

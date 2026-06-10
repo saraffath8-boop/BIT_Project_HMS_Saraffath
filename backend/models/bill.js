@@ -29,6 +29,15 @@ const billItemSchema = new mongoose.Schema(
             required: true,
             min: 0,
         },
+        sourceType: {
+            type: String,
+            enum: ['prescription', 'laboratory', 'radiology', 'manual'],
+            default: 'manual',
+        },
+        sourceId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: null,
+        },
     },
     { _id: true }
 );

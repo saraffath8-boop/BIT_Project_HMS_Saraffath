@@ -3,6 +3,7 @@ import radiologyRequestDao from '../dao/radiologyRequestDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
+import clinicalCompletionService from './clinicalCompletionService.js';
 
 const RADIOLOGY_STATUSES = ['requested', 'scheduled', 'in_progress', 'completed', 'cancelled'];
 
@@ -18,6 +19,7 @@ const sanitizeRadiologyRequest = (request) => ({
     imageUrl: request.imageUrl,
     report: request.report,
     status: request.status,
+    patientDecisionStatus: request.patientDecisionStatus,
     radiologist: request.radiologist,
     completedAt: request.completedAt,
     createdAt: request.createdAt,
@@ -123,6 +125,7 @@ const buildRadiologyQuery = (queryParams, user) => {
     }
 
     if (user.role === 'radiologist') {
+        query.patientDecisionStatus = 'paid';
         query.$or = [{ radiologist: user.id }, { radiologist: null }];
     }
 
@@ -154,6 +157,7 @@ const createRadiologyRequest = async (data, user) => {
         imageUrl: '',
         report: '',
         status: data.scheduledAt ? 'scheduled' : 'requested',
+        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
         radiologist: null,
     });
 
@@ -192,8 +196,10 @@ const getRadiologyRequestById = async (id, user) => {
 
     if (
         user.role === 'radiologist'
-        && request.radiologist
-        && request.radiologist._id.toString() !== user.id
+        && (
+            request.patientDecisionStatus !== 'paid'
+            || (request.radiologist && request.radiologist._id.toString() !== user.id)
+        )
     ) {
         throw new Error('Radiology request not found');
     }
@@ -202,7 +208,7 @@ const getRadiologyRequestById = async (id, user) => {
 };
 
 const updateRadiologyRequest = async (id, data, user) => {
-    await getRadiologyRequestById(id, user);
+    const existingRequest = await getRadiologyRequestById(id, user);
 
     const updateData = {};
 
@@ -222,7 +228,8 @@ const updateRadiologyRequest = async (id, data, user) => {
         updateData.medicalRecord = medicalRecord;
     }
 
-    ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report'].forEach((field) => {
+    const editableTextFields = user.role === 'radiologist' ? ['imageUrl', 'report'] : ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report'];
+    editableTextFields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(data, field)) {
             updateData[field] = toCleanString(data[field]) || '';
         }
@@ -246,6 +253,9 @@ const updateRadiologyRequest = async (id, data, user) => {
         updateData.status = status;
 
         if (status === 'completed') {
+            if (!toCleanString(updateData.report ?? data.report ?? existingRequest.report)) {
+                throw new Error('Radiology report is required before completion');
+            }
             updateData.completedAt = new Date();
             if (!updateData.radiologist && user.role === 'radiologist') {
                 updateData.radiologist = user.id;
@@ -258,6 +268,14 @@ const updateRadiologyRequest = async (id, data, user) => {
     }
 
     const request = await radiologyRequestDao.updateRadiologyRequest(id, updateData);
+    if (updateData.status === 'completed' && existingRequest.status !== 'completed') {
+        await clinicalCompletionService.notifyClinicalCompletion({
+            request,
+            title: 'Radiology report completed',
+            message: `Radiology results for ${request.patient.fullName} are complete and ready for review.`,
+            type: 'radiology',
+        });
+    }
     return sanitizeRadiologyRequest(request);
 };
 

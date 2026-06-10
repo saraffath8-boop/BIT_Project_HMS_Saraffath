@@ -25,3 +25,11 @@ export const updateBill = async (id, billData, token) => {
 export const deleteBill = async (id, token) => {
     return apiDelete(`${BILLS_URL}/${id}`, token, 'Unable to delete bill');
 };
+
+export const getPendingPatientDecisions = async (token) => {
+    return apiGet(`${BILLS_URL}/pending-decisions`, token, {}, 'Unable to load pending patient decisions');
+};
+
+export const processPatientDecisions = async (data, token) => {
+    return apiPost(`${BILLS_URL}/patient-decisions`, data, token, 'Unable to process patient decisions');
+};

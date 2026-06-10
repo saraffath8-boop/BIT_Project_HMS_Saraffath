@@ -25,6 +25,10 @@ class MedicalRecordDao {
             .exec();
     }
 
+    async getMedicalRecordByAppointment(appointmentId) {
+        return MedicalRecord.findOne({ appointment: appointmentId }).exec();
+    }
+
     async updateMedicalRecord(id, updateData) {
         return MedicalRecord.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone')

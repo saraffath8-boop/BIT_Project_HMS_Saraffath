@@ -11,7 +11,7 @@ class LabRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('technician', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .sort({ createdAt: -1 })
             .exec();
     }
@@ -21,7 +21,7 @@ class LabRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('technician', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .exec();
     }
 
@@ -30,7 +30,7 @@ class LabRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('technician', 'name email role')
-            .populate('medicalRecord', 'diagnosis createdAt')
+            .populate('medicalRecord', 'diagnosis createdAt appointment')
             .exec();
     }
 

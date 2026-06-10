@@ -9,7 +9,7 @@ import { createPatient } from '../../services/patientService';
 const defaults = { fullName: '', dateOfBirth: '', gender: 'male', phone: '', address: '', emergencyContactName: '', emergencyContactPhone: '', bloodGroup: 'unknown', allergies: '', medicalNotes: '', status: 'active' };
 
 export default function PatientCreatePage() {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(patientSchema), defaultValues: defaults });
@@ -17,7 +17,10 @@ export default function PatientCreatePage() {
     const submit = async (formData) => {
         setError('');
         try {
-            const response = await createPatient(formData, token);
+            const payload = user?.role === 'receptionist'
+                ? { fullName: formData.fullName, dateOfBirth: formData.dateOfBirth, gender: formData.gender, phone: formData.phone, address: formData.address, emergencyContactName: formData.emergencyContactName, emergencyContactPhone: formData.emergencyContactPhone }
+                : formData;
+            const response = await createPatient(payload, token);
             navigate(`/patients/${response.patient.id}`, { replace: true });
         } catch (err) { setError(err.message || 'Unable to create patient'); }
     };
@@ -31,12 +34,12 @@ export default function PatientCreatePage() {
             <Field label="Phone Number" error={errors.phone?.message}><input style={styles.input} type="text" inputMode="numeric" maxLength={10} {...register('phone')} /></Field>
             <Field label="Emergency Contact Name" error={errors.emergencyContactName?.message}><input style={styles.input} {...register('emergencyContactName')} /></Field>
             <Field label="Emergency Contact Phone" error={errors.emergencyContactPhone?.message}><input style={styles.input} type="text" inputMode="numeric" maxLength={10} {...register('emergencyContactPhone')} /></Field>
-            <Field label="Blood Group" error={errors.bloodGroup?.message}><Select {...register('bloodGroup')}>{bloodGroupOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
-            <Field label="Status" error={errors.status?.message}><Select {...register('status')}>{patientStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
+            {user?.role !== 'receptionist' && <Field label="Blood Group" error={errors.bloodGroup?.message}><Select {...register('bloodGroup')}>{bloodGroupOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>}
+            {user?.role !== 'receptionist' && <Field label="Status" error={errors.status?.message}><Select {...register('status')}>{patientStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>}
         </div>
         <Field label="Address" error={errors.address?.message}><textarea style={styles.textarea} {...register('address')} /></Field>
-        <Field label="Allergies" error={errors.allergies?.message}><textarea style={styles.textarea} {...register('allergies')} /></Field>
-        <Field label="Medical Notes" error={errors.medicalNotes?.message}><textarea style={styles.textarea} {...register('medicalNotes')} /></Field>
+        {user?.role !== 'receptionist' && <Field label="Allergies" error={errors.allergies?.message}><textarea style={styles.textarea} {...register('allergies')} /></Field>}
+        {user?.role !== 'receptionist' && <Field label="Medical Notes" error={errors.medicalNotes?.message}><textarea style={styles.textarea} {...register('medicalNotes')} /></Field>}
         <button style={styles.submitButton} type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Create Patient'}</button></form>
     </main>;
 }

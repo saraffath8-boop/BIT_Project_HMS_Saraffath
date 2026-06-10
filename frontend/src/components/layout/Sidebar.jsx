@@ -1,5 +1,6 @@
 import { Activity, Bell, CalendarDays, ClipboardList, CreditCard, FileChartColumn, FlaskConical, HeartPulse, LayoutDashboard, Menu, MessageSquare, Package, Pill, ScanLine, Stethoscope, Users, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { getDashboardPath } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 
 const navItems = [
@@ -12,7 +13,8 @@ const navItems = [
     { label: 'Pharmacy', to: '/pharmacy', icon: Activity, roles: ['admin', 'doctor', 'pharmacist'] },
     { label: 'Laboratory', to: '/laboratory', icon: FlaskConical, roles: ['admin', 'doctor', 'nurse', 'lab_technician'] },
     { label: 'Radiology', to: '/radiology', icon: ScanLine, roles: ['admin', 'doctor', 'nurse', 'radiologist'] },
-    { label: 'Billing', to: '/billing', icon: CreditCard, roles: ['admin'] },
+    { label: 'Billing', to: '/billing', icon: CreditCard, roles: ['admin', 'receptionist'] },
+    { label: 'Patient Decisions', to: '/billing/patient-decisions', icon: CreditCard, roles: ['admin', 'receptionist'] },
     { label: 'Inventory', to: '/inventory', icon: Package, roles: ['admin'] },
     { label: 'Feedback', to: '/feedback', icon: MessageSquare, roles: ['admin', 'patient'] },
     { label: 'Notifications', to: '/notifications', icon: Bell, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'patient', 'pharmacist', 'lab_technician', 'radiologist'] },
@@ -25,13 +27,17 @@ const navItems = [
 ];
 
 export default function Sidebar({ open, onClose, role }) {
+    const dashboardPath = getDashboardPath(role);
+
     return (
         <>
             {open && <button aria-label="Close navigation" className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" onClick={onClose} />}
             <aside className={cn('fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0', open && 'translate-x-0')}>
                 <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
-                    <div className="grid size-10 place-items-center rounded-xl bg-cyan-700 text-white"><HeartPulse className="size-6" /></div>
-                    <div><p className="font-bold text-slate-950">MediCore</p><p className="text-xs text-slate-500">Hospital Management</p></div>
+                    <Link to={dashboardPath} onClick={onClose} className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700" title="Go to my dashboard">
+                        <div className="grid size-10 place-items-center rounded-xl bg-cyan-700 text-white"><HeartPulse className="size-6" /></div>
+                        <div><p className="font-bold text-slate-950">MediCore</p><p className="text-xs text-slate-500">Hospital Management</p></div>
+                    </Link>
                     <button className="ml-auto text-slate-500 lg:hidden" onClick={onClose}><X className="size-5" /></button>
                 </div>
                 <nav className="flex-1 space-y-1 overflow-y-auto p-4">

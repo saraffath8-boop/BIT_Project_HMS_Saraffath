@@ -61,6 +61,11 @@ const labRequestSchema = new mongoose.Schema(
             enum: ['requested', 'sample_collected', 'in_progress', 'completed', 'cancelled'],
             default: 'requested',
         },
+        patientDecisionStatus: {
+            type: String,
+            enum: ['not_required', 'pending_patient_decision', 'accepted', 'declined', 'paid', 'rejected_by_patient'],
+            default: 'not_required',
+        },
         technician: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

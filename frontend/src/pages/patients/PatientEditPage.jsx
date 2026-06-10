@@ -16,6 +16,7 @@ export default function PatientEditPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const isNurse = user?.role === 'nurse';
+    const isReceptionist = user?.role === 'receptionist';
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(patientSchema), defaultValues: defaults });
 
     useEffect(() => {
@@ -32,14 +33,18 @@ export default function PatientEditPage() {
     const submit = async (formData) => {
         setError('');
         try {
-            const payload = isNurse ? { phone: formData.phone, address: formData.address, emergencyContactName: formData.emergencyContactName, emergencyContactPhone: formData.emergencyContactPhone, allergies: formData.allergies, medicalNotes: formData.medicalNotes, status: formData.status } : formData;
+            const payload = isNurse
+                ? { phone: formData.phone, address: formData.address, emergencyContactName: formData.emergencyContactName, emergencyContactPhone: formData.emergencyContactPhone, allergies: formData.allergies, medicalNotes: formData.medicalNotes, status: formData.status }
+                : isReceptionist
+                    ? { fullName: formData.fullName, dateOfBirth: formData.dateOfBirth, gender: formData.gender, phone: formData.phone, address: formData.address, emergencyContactName: formData.emergencyContactName, emergencyContactPhone: formData.emergencyContactPhone }
+                    : formData;
             const response = await updatePatient(id, payload, token);
             navigate(`/patients/${response.patient.id}`, { replace: true });
         } catch (err) { setError(err.message || 'Unable to update patient'); }
     };
 
     if (loading) return <main style={styles.page}><div style={styles.card}>Loading patient...</div></main>;
-    return <main style={styles.page}><section style={styles.header}><div><p style={styles.kicker}>Patient Management</p><h1 style={styles.title}>Edit Patient</h1><p style={styles.subtitle}>{isNurse ? 'Nurses can update contact, status, allergies, and notes.' : 'Update patient demographic and clinical summary fields.'}</p></div><Link style={styles.secondaryLink} to={`/patients/${id}`}>Back to Profile</Link></section>
+    return <main style={styles.page}><section style={styles.header}><div><p style={styles.kicker}>Patient Management</p><h1 style={styles.title}>Edit Patient</h1><p style={styles.subtitle}>{isNurse ? 'Nurses can update contact, status, allergies, and notes.' : isReceptionist ? 'Update basic patient and emergency contact details.' : 'Update patient demographic and clinical summary fields.'}</p></div><Link style={styles.secondaryLink} to={`/patients/${id}`}>Back to Profile</Link></section>
         {error && <div style={styles.error}>{error}</div>}
         <form onSubmit={handleSubmit(submit)} style={styles.formCard}><div style={styles.grid}>
             <Field label="Full Name" error={errors.fullName?.message}><input style={styles.input} readOnly={isNurse} {...register('fullName')} /></Field>
@@ -48,12 +53,12 @@ export default function PatientEditPage() {
             <Field label="Phone Number" error={errors.phone?.message}><input style={styles.input} type="text" inputMode="numeric" maxLength={10} {...register('phone')} /></Field>
             <Field label="Emergency Contact Name" error={errors.emergencyContactName?.message}><input style={styles.input} {...register('emergencyContactName')} /></Field>
             <Field label="Emergency Contact Phone" error={errors.emergencyContactPhone?.message}><input style={styles.input} type="text" inputMode="numeric" maxLength={10} {...register('emergencyContactPhone')} /></Field>
-            <Field label="Blood Group" error={errors.bloodGroup?.message}><Select aria-disabled={isNurse} style={{ ...styles.input, pointerEvents: isNurse ? 'none' : 'auto' }} {...register('bloodGroup')}>{bloodGroupOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
-            <Field label="Status" error={errors.status?.message}><Select {...register('status')}>{patientStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
+            {!isReceptionist && <Field label="Blood Group" error={errors.bloodGroup?.message}><Select aria-disabled={isNurse} style={{ ...styles.input, pointerEvents: isNurse ? 'none' : 'auto' }} {...register('bloodGroup')}>{bloodGroupOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>}
+            {!isReceptionist && <Field label="Status" error={errors.status?.message}><Select {...register('status')}>{patientStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>}
         </div>
         <Field label="Address" error={errors.address?.message}><textarea style={styles.textarea} {...register('address')} /></Field>
-        <Field label="Allergies" error={errors.allergies?.message}><textarea style={styles.textarea} {...register('allergies')} /></Field>
-        <Field label="Medical Notes" error={errors.medicalNotes?.message}><textarea style={styles.textarea} {...register('medicalNotes')} /></Field>
+        {!isReceptionist && <Field label="Allergies" error={errors.allergies?.message}><textarea style={styles.textarea} {...register('allergies')} /></Field>}
+        {!isReceptionist && <Field label="Medical Notes" error={errors.medicalNotes?.message}><textarea style={styles.textarea} {...register('medicalNotes')} /></Field>}
         <button style={styles.submitButton} type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Changes'}</button></form>
     </main>;
 }

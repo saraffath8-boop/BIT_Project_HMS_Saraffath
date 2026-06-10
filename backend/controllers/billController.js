@@ -6,10 +6,29 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
 });
 
 const getStatusCode = (error) => {
+    if (error.message.includes('no longer pending')) return 409;
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('greater than') || error.message.includes('cannot be greater')) return 400;
+    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('greater than') || error.message.includes('cannot be greater') || error.message.includes('must belong') || error.message.includes('Process every') || error.message.includes('Duplicate')) return 400;
     return 500;
+};
+
+export const getPendingPatientDecisions = async (_req, res) => {
+    try {
+        const requests = await billService.getPendingPatientDecisions();
+        return res.status(200).json({ success: true, requests });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const processPatientDecisions = async (req, res) => {
+    try {
+        const result = await billService.processPatientDecisions(req.body, req.user);
+        return res.status(201).json({ success: true, message: result.bill ? 'Patient decisions processed and paid bill created successfully' : 'Patient decisions processed successfully. No bill was required.', ...result });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
 };
 
 export const createBill = async (req, res) => {
@@ -28,7 +47,7 @@ export const createBill = async (req, res) => {
 
 export const getBills = async (req, res) => {
     try {
-        const bills = await billService.getBills(req.query);
+        const bills = await billService.getBills(req.query, req.user);
 
         return res.status(200).json({
             success: true,

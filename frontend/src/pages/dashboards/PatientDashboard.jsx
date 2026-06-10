@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getMyPatientProfile } from '../../services/patientService';
 
 const linkedCards = [
+    { title: 'Book Appointment', description: 'Choose a doctor and request an available appointment time.', to: '/book-appointment' },
     { title: 'Feedback', description: 'Submit feedback, complaints, and service requests.', to: '/feedback' },
     { title: 'Notifications', description: 'View hospital notifications assigned to your account.', to: '/notifications' },
     { title: 'Appointments', description: 'View appointments linked to your patient profile.', to: '/my/appointments' },

@@ -9,9 +9,11 @@ const cards = [
     { title: 'Laboratory', description: 'View laboratory request status for patient support.', to: '/laboratory' },
     { title: 'Radiology', description: 'View radiology request status for patient support.', to: '/radiology' },
     { title: 'Notifications', description: 'View internal care coordination notifications.', to: '/notifications' },
+    { title: 'Billing', description: 'View patient payment status and outstanding balances.', to: '/billing' },
+    { title: 'Patient Decisions', description: 'Select patient-approved requests, collect payment, and route paid work.', to: '/billing/patient-decisions' },
 ];
 
-const receptionistCards = cards.filter((card) => ['Patients', 'Queue', 'Appointments', 'Notifications'].includes(card.title));
+const receptionistCards = cards.filter((card) => ['Patients', 'Queue', 'Appointments', 'Notifications', 'Billing', 'Patient Decisions'].includes(card.title));
 
 const NurseDashboard = () => {
     const { user } = useAuth();

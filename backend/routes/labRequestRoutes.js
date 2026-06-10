@@ -25,7 +25,7 @@ router
 router
     .route('/:id')
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'lab_technician'), getLabRequestById)
-    .patch(authorizeRoles('admin', 'doctor', 'lab_technician'), updateLabRequest)
+    .patch(authorizeRoles('admin', 'lab_technician'), updateLabRequest)
     .delete(authorizeRoles('admin'), deleteLabRequest);
 
 export default router;

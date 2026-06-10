@@ -73,6 +73,11 @@ const prescriptionSchema = new mongoose.Schema(
             enum: ['pending', 'partially_issued', 'issued', 'cancelled'],
             default: 'pending',
         },
+        patientDecisionStatus: {
+            type: String,
+            enum: ['not_required', 'pending_patient_decision', 'accepted', 'declined', 'paid', 'rejected_by_patient'],
+            default: 'not_required',
+        },
         issuedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

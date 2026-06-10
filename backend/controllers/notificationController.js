@@ -13,7 +13,7 @@ const getStatusCode = (error) => {
 
 export const createNotification = async (req, res) => {
     try {
-        const notification = await notificationService.createNotification(req.body);
+        const notification = await notificationService.createNotification(req.body, req.user);
 
         return res.status(201).json({
             success: true,

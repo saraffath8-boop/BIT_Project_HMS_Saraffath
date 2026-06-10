@@ -8,7 +8,7 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No lab request')) return 400;
+    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No lab request') || error.message.includes('cannot change')) return 400;
     return 500;
 };
 

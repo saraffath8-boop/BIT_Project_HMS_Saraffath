@@ -3,7 +3,8 @@ import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
-import { createStaffUser, getUsers } from '../../services/userService';
+import { createStaffUser, getUsers, updateDoctorBookingProfile } from '../../services/userService';
+import { getDepartments } from '../../services/bookingService';
 import { staffRoles, staffUserSchema, genderOptions } from '../../schemas/userSchema';
 import { Alert } from '../../components/ui/alert';
 import { Badge } from '../../components/ui/badge';
@@ -14,7 +15,7 @@ import { Label } from '../../components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 
 const formatRole = (role = '') => role.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-const defaults = { firstName: '', lastName: '', email: '', phone: '', nic: '', dob: '', gender: 'Other', password: '', role: 'doctor', isActive: true };
+const defaults = { firstName: '', lastName: '', email: '', phone: '', nic: '', dob: '', gender: 'Other', password: '', role: 'doctor', isActive: true, department: '', specialization: '', consultationFee: 0 };
 
 export default function UsersPage() {
     const { token } = useAuth();
@@ -23,14 +24,17 @@ export default function UsersPage() {
     const [submitError, setSubmitError] = useState('');
     const [success, setSuccess] = useState('');
     const [loadingUsers, setLoadingUsers] = useState(false);
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(staffUserSchema), defaultValues: defaults });
+    const [departments, setDepartments] = useState([]);
+    const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(staffUserSchema), defaultValues: defaults });
+    const selectedRole = watch('role');
 
     const loadStaffUsers = useCallback(async () => {
         if (!token) return;
         setLoadingUsers(true); setLoadError('');
         try {
-            const response = await getUsers({ token, filters: {} });
+            const [response, departmentResponse] = await Promise.all([getUsers({ token, filters: {} }), getDepartments()]);
             setStaffUsers((response.users || []).filter((user) => staffRoles.includes(user.role)));
+            setDepartments(departmentResponse.departments || []);
         } catch (err) { setLoadError(err.message || 'Unable to load staff users'); }
         finally { setLoadingUsers(false); }
     }, [token]);
@@ -61,6 +65,9 @@ export default function UsersPage() {
                     <Field label="Date of Birth" error={errors.dob?.message}><Input {...register('dob')} type="date" /></Field>
                     <Field label="Gender" error={errors.gender?.message}><Select {...register('gender')}>{genderOptions.map((gender) => <option key={gender} value={gender}>{gender}</option>)}</Select></Field>
                     <Field label="Role" error={errors.role?.message}><Select {...register('role')}>{staffRoles.map((role) => <option key={role} value={role}>{formatRole(role)}</option>)}</Select></Field>
+                    {selectedRole === 'doctor' && <Field label="Department" error={errors.department?.message}><Select {...register('department')}><option value="">Select department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</Select></Field>}
+                    {selectedRole === 'doctor' && <Field label="Specialization" error={errors.specialization?.message}><Input {...register('specialization')} placeholder="e.g. Cardiology" /></Field>}
+                    {selectedRole === 'doctor' && <Field label="Consultation Fee" error={errors.consultationFee?.message}><Input {...register('consultationFee')} type="number" min="0" step="0.01" /></Field>}
                     <Field label="Password" error={errors.password?.message}><Input {...register('password')} type="password" /></Field>
                     <label className="flex items-center gap-3 self-end rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700"><input {...register('isActive')} type="checkbox" className="size-4 accent-cyan-700" />Active Account</label>
                 </div><Button type="submit" disabled={isSubmitting}><UserPlus className="size-4" />{isSubmitting ? 'Creating user...' : 'Create staff user'}</Button></form>
@@ -69,8 +76,8 @@ export default function UsersPage() {
                 {loadingUsers && <p className="text-sm text-slate-500">Loading staff users...</p>}
                 {loadError && <Alert variant="destructive">{loadError}</Alert>}
                 {!loadingUsers && !loadError && staffUsers.length === 0 && <p className="text-sm text-slate-500">No staff users found.</p>}
-                {!loadingUsers && !loadError && staffUsers.length > 0 && <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Phone Number</TableHead><TableHead>Role</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>
-                    {staffUsers.map((staffUser) => <TableRow key={staffUser.id || staffUser.email}><TableCell className="font-medium">{staffUser.name || `${staffUser.firstName || ''} ${staffUser.lastName || ''}`.trim()}</TableCell><TableCell>{staffUser.email}</TableCell><TableCell>{staffUser.phone || 'Not recorded'}</TableCell><TableCell>{formatRole(staffUser.role)}</TableCell><TableCell><Badge variant={staffUser.isActive ? 'success' : 'secondary'}>{staffUser.isActive ? 'Active' : 'Inactive'}</Badge></TableCell></TableRow>)}
+                {!loadingUsers && !loadError && staffUsers.length > 0 && <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead>Status</TableHead><TableHead>Booking Setup</TableHead></TableRow></TableHeader><TableBody>
+                    {staffUsers.map((staffUser) => <TableRow key={staffUser.id || staffUser.email}><TableCell className="font-medium">{staffUser.name || `${staffUser.firstName || ''} ${staffUser.lastName || ''}`.trim()}</TableCell><TableCell>{staffUser.email}</TableCell><TableCell>{formatRole(staffUser.role)}</TableCell><TableCell><Badge variant={staffUser.isActive ? 'success' : 'secondary'}>{staffUser.isActive ? 'Active' : 'Inactive'}</Badge></TableCell><TableCell>{staffUser.role === 'doctor' ? <DoctorBookingSetup doctor={staffUser} departments={departments} token={token} onSaved={loadStaffUsers} /> : 'Not applicable'}</TableCell></TableRow>)}
                 </TableBody></Table>}
             </CardContent></Card>
         </div>
@@ -81,3 +88,28 @@ const Select = forwardRef(function Select(props, ref) {
     return <select ref={ref} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm" {...props} />;
 });
 const Field = ({ label, error, children }) => <div className="space-y-2"><Label>{label}</Label>{children}{error && <p className="text-xs font-medium text-red-600">{error}</p>}</div>;
+
+const DoctorBookingSetup = ({ doctor, departments, token, onSaved }) => {
+    const [department, setDepartment] = useState(doctor.department?._id || doctor.department?.id || '');
+    const [specialization, setSpecialization] = useState(doctor.specialization || '');
+    const [consultationFee, setConsultationFee] = useState(doctor.consultationFee || 0);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const save = async () => {
+        setSaving(true); setMessage('');
+        try {
+            await updateDoctorBookingProfile(doctor.id, { department, specialization, consultationFee }, token);
+            setMessage('Saved');
+            await onSaved();
+        } catch (err) { setMessage(err.message); }
+        finally { setSaving(false); }
+    };
+
+    return <div className="min-w-64 space-y-2">
+        <Select value={department} onChange={(event) => setDepartment(event.target.value)}><option value="">Select department</option>{departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
+        <Input value={specialization} onChange={(event) => setSpecialization(event.target.value)} placeholder="Specialization" />
+        <Input type="number" min="0" step="0.01" value={consultationFee} onChange={(event) => setConsultationFee(event.target.value)} placeholder="Consultation fee" />
+        <div className="flex items-center gap-2"><Button type="button" size="sm" onClick={save} disabled={!department || saving}>{saving ? 'Saving...' : 'Save'}</Button>{message && <span className="text-xs text-slate-500">{message}</span>}</div>
+    </div>;
+};

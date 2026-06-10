@@ -16,12 +16,12 @@ router.use(protect);
 router
     .route('/')
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getQueueEntries)
-    .post(authorizeRoles('admin', 'nurse'), createQueueEntry);
+    .post(authorizeRoles('admin', 'nurse', 'receptionist'), createQueueEntry);
 
 router
     .route('/:id')
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getQueueEntryById)
-    .patch(authorizeRoles('admin', 'nurse'), updateQueueEntry)
+    .patch(authorizeRoles('admin', 'nurse', 'receptionist'), updateQueueEntry)
     .delete(authorizeRoles('admin'), deleteQueueEntry);
 
 export default router;

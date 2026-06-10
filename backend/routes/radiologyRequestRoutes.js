@@ -25,7 +25,7 @@ router
 router
     .route('/:id')
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist'), getRadiologyRequestById)
-    .patch(authorizeRoles('admin', 'doctor', 'radiologist'), updateRadiologyRequest)
+    .patch(authorizeRoles('admin', 'radiologist'), updateRadiologyRequest)
     .delete(authorizeRoles('admin'), deleteRadiologyRequest);
 
 export default router;

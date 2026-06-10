@@ -3,6 +3,7 @@ import labRequestDao from '../dao/labRequestDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
+import clinicalCompletionService from './clinicalCompletionService.js';
 
 const LAB_PRIORITIES = ['routine', 'urgent'];
 const LAB_STATUSES = ['requested', 'sample_collected', 'in_progress', 'completed', 'cancelled'];
@@ -15,6 +16,7 @@ const sanitizeLabRequest = (labRequest) => ({
     tests: labRequest.tests,
     priority: labRequest.priority,
     status: labRequest.status,
+    patientDecisionStatus: labRequest.patientDecisionStatus,
     technician: labRequest.technician,
     completedAt: labRequest.completedAt,
     createdAt: labRequest.createdAt,
@@ -110,6 +112,7 @@ const buildLabRequestQuery = (queryParams, user) => {
     }
 
     if (user.role === 'lab_technician') {
+        query.patientDecisionStatus = 'paid';
         query.$or = [{ technician: user.id }, { technician: null }];
     }
 
@@ -162,6 +165,7 @@ const createLabRequest = async (data, user) => {
         tests: buildTests(data.tests),
         priority,
         status: 'requested',
+        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
         technician: null,
     });
 
@@ -200,8 +204,10 @@ const getLabRequestById = async (id, user) => {
 
     if (
         user.role === 'lab_technician'
-        && labRequest.technician
-        && labRequest.technician._id.toString() !== user.id
+        && (
+            labRequest.patientDecisionStatus !== 'paid'
+            || (labRequest.technician && labRequest.technician._id.toString() !== user.id)
+        )
     ) {
         throw new Error('Lab request not found');
     }
@@ -210,7 +216,7 @@ const getLabRequestById = async (id, user) => {
 };
 
 const updateLabRequest = async (id, data, user) => {
-    await getLabRequestById(id, user);
+    const existingRequest = await getLabRequestById(id, user);
 
     const updateData = {};
 
@@ -239,7 +245,13 @@ const updateLabRequest = async (id, data, user) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(data, 'tests')) {
-        updateData.tests = buildTests(data.tests);
+        const updatedTests = buildTests(data.tests);
+        if (user.role === 'lab_technician') {
+            if (updatedTests.length !== existingRequest.tests.length || updatedTests.some((test, index) => test.testName !== existingRequest.tests[index].testName)) {
+                throw new Error('Lab technicians cannot change requested test names');
+            }
+        }
+        updateData.tests = updatedTests;
     }
 
     if (Object.prototype.hasOwnProperty.call(data, 'technician')) {
@@ -256,6 +268,10 @@ const updateLabRequest = async (id, data, user) => {
         updateData.status = status;
 
         if (status === 'completed') {
+            const completedTests = updateData.tests || existingRequest.tests;
+            if (!completedTests.every((test) => toCleanString(test.result) || toCleanString(test.remarks))) {
+                throw new Error('A result or remarks is required for every lab test before completion');
+            }
             updateData.completedAt = new Date();
             if (!updateData.technician && user.role === 'lab_technician') {
                 updateData.technician = user.id;
@@ -268,6 +284,14 @@ const updateLabRequest = async (id, data, user) => {
     }
 
     const labRequest = await labRequestDao.updateLabRequest(id, updateData);
+    if (updateData.status === 'completed' && existingRequest.status !== 'completed') {
+        await clinicalCompletionService.notifyClinicalCompletion({
+            request: labRequest,
+            title: 'Laboratory report completed',
+            message: `Laboratory results for ${labRequest.patient.fullName} are complete and ready for review.`,
+            type: 'laboratory',
+        });
+    }
     return sanitizeLabRequest(labRequest);
 };
 

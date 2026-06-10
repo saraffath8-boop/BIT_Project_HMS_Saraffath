@@ -7,7 +7,7 @@ import { getUsers } from '../../services/userService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
-const getUserLabel = (user) => `${user.name || 'Unnamed User'} (${user.email})`;
+const getUserLabel = (user) => `${user.name || 'Unnamed User'}${user.email ? ` (${user.email})` : ''}`;
 
 const AppointmentCreatePage = () => {
     const { token } = useAuth();

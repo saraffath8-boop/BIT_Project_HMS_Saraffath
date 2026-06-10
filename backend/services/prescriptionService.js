@@ -5,6 +5,7 @@ import userDao from '../dao/userDao.js';
 import medicineDao from '../dao/medicineDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import smsService from './smsService.js';
+import clinicalCompletionService from './clinicalCompletionService.js';
 
 const PRESCRIPTION_STATUSES = ['pending', 'partially_issued', 'issued', 'cancelled'];
 
@@ -16,6 +17,7 @@ const sanitizePrescription = (prescription) => ({
     items: prescription.items,
     notes: prescription.notes,
     status: prescription.status,
+    patientDecisionStatus: prescription.patientDecisionStatus,
     issuedBy: prescription.issuedBy,
     issuedAt: prescription.issuedAt,
     createdAt: prescription.createdAt,
@@ -96,6 +98,10 @@ const buildPrescriptionQuery = (queryParams, user) => {
 
     if (user.role === 'doctor') {
         query.doctor = user.id;
+    }
+
+    if (user.role === 'pharmacist') {
+        query.patientDecisionStatus = 'paid';
     }
 
     return query;
@@ -181,6 +187,7 @@ const createPrescription = async (data, user) => {
         items: await buildPrescriptionItems(data.items),
         notes: toCleanString(data.notes) || '',
         status: 'pending',
+        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
     });
 
     const populatedPrescription = await prescriptionDao.getPrescriptionById(prescription._id);
@@ -213,6 +220,9 @@ const getPrescriptionById = async (id, user) => {
     }
 
     if (user.role === 'doctor' && prescription.doctor._id.toString() !== user.id) {
+        throw new Error('Prescription not found');
+    }
+    if (user.role === 'pharmacist' && prescription.patientDecisionStatus !== 'paid') {
         throw new Error('Prescription not found');
     }
 
@@ -269,6 +279,12 @@ const updatePrescription = async (id, data, user) => {
 
     if (updateData.status === 'issued' && existingPrescription.status !== 'issued') {
         await sendPrescriptionIssuedSms(prescription);
+        await clinicalCompletionService.notifyClinicalCompletion({
+            request: prescription,
+            title: 'Prescription issued',
+            message: `Prescription for ${prescription.patient.fullName} has been issued by pharmacy.`,
+            type: 'pharmacy',
+        });
     }
 
     return sanitizePrescription(prescription);

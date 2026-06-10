@@ -38,7 +38,7 @@ router
 
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getPatients)
 
-    .post(authorizeRoles('admin'), createPatient);
+    .post(authorizeRoles('admin', 'receptionist'), createPatient);
 
 
 
@@ -60,7 +60,7 @@ router
 
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getPatientById)
 
-    .patch(authorizeRoles('admin', 'nurse'), updatePatient)
+    .patch(authorizeRoles('admin', 'nurse', 'receptionist'), updatePatient)
 
     .delete(authorizeRoles('admin'), deletePatient);
 
