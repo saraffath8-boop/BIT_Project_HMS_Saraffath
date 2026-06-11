@@ -11,6 +11,7 @@ class PrescriptionDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
+            .populate('paidBy', 'name email role')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .sort({ createdAt: -1 })
@@ -22,6 +23,7 @@ class PrescriptionDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
+            .populate('paidBy', 'name email role')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .exec();
@@ -32,6 +34,7 @@ class PrescriptionDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
+            .populate('paidBy', 'name email role')
             .populate('issuedBy', 'name email role')
             .populate('items.medicine', 'name sku unitPrice stockQuantity')
             .exec();

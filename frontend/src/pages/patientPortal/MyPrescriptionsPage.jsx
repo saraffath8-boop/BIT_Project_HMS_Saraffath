@@ -75,6 +75,10 @@ const MyPrescriptionsPage = () => {
                                     <span style={styles.label}>Status</span>
                                     <strong style={styles.value}>{formatStatus(prescription.status)}</strong>
                                 </div>
+                                <div>
+                                    <span style={styles.label}>Payment</span>
+                                    <strong style={styles.value}>{formatStatus(prescription.paymentStatus || 'unpaid')}</strong>
+                                </div>
                             </div>
 
                             <div style={styles.detailGrid}>

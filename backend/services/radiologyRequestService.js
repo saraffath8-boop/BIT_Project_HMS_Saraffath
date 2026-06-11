@@ -125,7 +125,7 @@ const buildRadiologyQuery = (queryParams, user) => {
     }
 
     if (user.role === 'radiologist') {
-        query.patientDecisionStatus = 'paid';
+        query.patientDecisionStatus = { $in: ['paid', 'not_required'] };
         query.$or = [{ radiologist: user.id }, { radiologist: null }];
     }
 
@@ -197,7 +197,7 @@ const getRadiologyRequestById = async (id, user) => {
     if (
         user.role === 'radiologist'
         && (
-            request.patientDecisionStatus !== 'paid'
+            !['paid', 'not_required'].includes(request.patientDecisionStatus)
             || (request.radiologist && request.radiologist._id.toString() !== user.id)
         )
     ) {

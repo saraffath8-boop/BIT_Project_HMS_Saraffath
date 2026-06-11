@@ -22,6 +22,10 @@ export const markAppointmentPaid = async (id, token) => {
     return apiPatch(`${APPOINTMENTS_URL}/${id}/mark-paid`, {}, token, 'Unable to mark appointment as paid');
 };
 
+export const markAppointmentChecked = async (id, token) => {
+    return apiPatch(`${APPOINTMENTS_URL}/${id}/mark-checked`, {}, token, 'Unable to mark patient as checked');
+};
+
 export const getAppointmentById = async (id, token) => {
     return apiGet(`${APPOINTMENTS_URL}/${id}`, token, {}, 'Unable to load appointment');
 };

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { UserPlus } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
 import { createStaffUser, getUsers, updateDoctorBookingProfile } from '../../services/userService';
 import { getDepartments } from '../../services/bookingService';
@@ -25,7 +25,8 @@ export default function UsersPage() {
     const [success, setSuccess] = useState('');
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [departments, setDepartments] = useState([]);
-    const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(staffUserSchema), defaultValues: defaults });
+    const [showPassword, setShowPassword] = useState(false);
+    const { control, register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(staffUserSchema), defaultValues: defaults });
     const selectedRole = watch('role');
 
     const loadStaffUsers = useCallback(async () => {
@@ -68,7 +69,18 @@ export default function UsersPage() {
                     {selectedRole === 'doctor' && <Field label="Department" error={errors.department?.message}><Select {...register('department')}><option value="">Select department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</Select></Field>}
                     {selectedRole === 'doctor' && <Field label="Specialization" error={errors.specialization?.message}><Input {...register('specialization')} placeholder="e.g. Cardiology" /></Field>}
                     {selectedRole === 'doctor' && <Field label="Consultation Fee" error={errors.consultationFee?.message}><Input {...register('consultationFee')} type="number" min="0" step="0.01" /></Field>}
-                    <Field label="Password" error={errors.password?.message}><Input {...register('password')} type="password" /></Field>
+                    <Field label="Password" error={errors.password?.message}>
+                        <div className="relative">
+                            <Controller
+                                name="password"
+                                control={control}
+                                render={({ field }) => <Input {...field} id="staff-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="pr-10" />}
+                            />
+                            <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute inset-y-0 right-0 grid w-10 place-items-center text-slate-500 hover:text-slate-800" onClick={() => setShowPassword((visible) => !visible)}>
+                                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                            </button>
+                        </div>
+                    </Field>
                     <label className="flex items-center gap-3 self-end rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700"><input {...register('isActive')} type="checkbox" className="size-4 accent-cyan-700" />Active Account</label>
                 </div><Button type="submit" disabled={isSubmitting}><UserPlus className="size-4" />{isSubmitting ? 'Creating user...' : 'Create staff user'}</Button></form>
             </CardContent></Card>

@@ -1,6 +1,7 @@
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getMedicalRecords } from '../../services/medicalRecordService';
+import { downloadMedicalRecordPdf } from '../../lib/medicalRecordPdf';
 
 const MedicalRecordsPage = () => (
     <ModuleListPage
@@ -17,6 +18,7 @@ const MedicalRecordsPage = () => (
             { label: 'Diagnosis', key: 'diagnosis' },
             { label: 'Status', key: 'status' },
             { label: 'Follow Up', render: (item) => formatDateTime(item.followUpDate) },
+            { label: 'Report', render: (item) => <button className="font-semibold text-cyan-700" type="button" onClick={() => downloadMedicalRecordPdf(item)}>Download PDF</button> },
         ]}
     />
 );

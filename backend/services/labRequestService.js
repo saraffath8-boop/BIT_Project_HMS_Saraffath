@@ -112,7 +112,7 @@ const buildLabRequestQuery = (queryParams, user) => {
     }
 
     if (user.role === 'lab_technician') {
-        query.patientDecisionStatus = 'paid';
+        query.patientDecisionStatus = { $in: ['paid', 'not_required'] };
         query.$or = [{ technician: user.id }, { technician: null }];
     }
 
@@ -205,7 +205,7 @@ const getLabRequestById = async (id, user) => {
     if (
         user.role === 'lab_technician'
         && (
-            labRequest.patientDecisionStatus !== 'paid'
+            !['paid', 'not_required'].includes(labRequest.patientDecisionStatus)
             || (labRequest.technician && labRequest.technician._id.toString() !== user.id)
         )
     ) {

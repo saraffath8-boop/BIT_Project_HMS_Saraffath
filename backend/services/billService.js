@@ -40,6 +40,7 @@ const sanitizeBillingStatus = (bill) => ({
         id: bill.patient._id.toString(),
         patientId: bill.patient.patientId,
         fullName: bill.patient.fullName,
+        phone: bill.patient.phone,
     },
     totalAmount: bill.totalAmount,
     paidAmount: bill.paidAmount,
@@ -48,6 +49,7 @@ const sanitizeBillingStatus = (bill) => ({
     billType: bill.billType,
     doctor: bill.doctor,
     roomNumber: bill.roomNumber,
+    items: bill.items,
     payments: bill.payments,
     createdAt: bill.createdAt,
 });
@@ -390,6 +392,51 @@ const createPaidAppointmentBill = async (appointment, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
+const createPaidPrescriptionBill = async (prescription, amount, user) => {
+    const prescriptionId = prescription._id?.toString() || prescription.id;
+    const existingBill = await billDao.getPharmacyBillByPrescription(prescriptionId);
+    if (existingBill) return sanitizeBill(existingBill);
+
+    const totalAmount = toNumber(amount, 'prescription payment amount', 0.01);
+    const patientId = prescription.patient?._id?.toString() || prescription.patient?.id || prescription.patient?.toString();
+    const doctorId = prescription.doctor?._id?.toString() || prescription.doctor?.id || prescription.doctor?.toString();
+    const appointmentId = prescription.medicalRecord?.appointment?._id?.toString()
+        || prescription.medicalRecord?.appointment?.toString()
+        || null;
+    const payment = {
+        amount: totalAmount,
+        method: 'cash',
+        reference: '',
+        paidAt: new Date(),
+        receivedBy: user.id,
+    };
+    const medicineNames = prescription.items.map((item) => item.medicineName).join(', ');
+    const bill = await billDao.createBill({
+        billNumber: await billDao.getNextBillNumber(),
+        patient: patientId,
+        appointment: appointmentId,
+        billType: 'pharmacy',
+        doctor: doctorId,
+        items: [{
+            description: `Prescription medicines: ${medicineNames}`.slice(0, 250),
+            category: 'medicine',
+            quantity: 1,
+            unitPrice: totalAmount,
+            total: totalAmount,
+            sourceType: 'prescription',
+            sourceId: prescriptionId,
+        }],
+        subtotal: totalAmount,
+        discount: 0,
+        totalAmount,
+        paidAmount: totalAmount,
+        status: 'paid',
+        payments: [payment],
+        createdBy: user.id,
+    });
+    return sanitizeBill(await billDao.getBillById(bill._id));
+};
+
 const ensureDoctorRoomNumbers = async () => {
     const doctors = await userDao.getUsers({ role: 'doctor' });
     let assignedCount = 0;
@@ -555,6 +602,7 @@ const billService = {
     getPendingPatientDecisions,
     processPatientDecisions,
     createPaidAppointmentBill,
+    createPaidPrescriptionBill,
     ensureDoctorRoomNumbers,
     ensurePaidAppointmentBills,
 };

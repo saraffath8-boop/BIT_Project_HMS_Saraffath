@@ -298,8 +298,8 @@ const requestAppointment = async (data, user) => {
 
 const createConsultation = async (appointmentId, data, user) => {
     const appointment = await getAppointmentById(appointmentId, user);
-    if (!['scheduled', 'confirmed', 'paid', 'checked_in', 'in_consultation'].includes(appointment.status)) {
-        throw serviceError('Appointment is not ready for consultation');
+    if (appointment.status !== 'in_consultation') {
+        throw serviceError('Patient must be marked as checked before creating the diagnosis report');
     }
     const existingRecord = await medicalRecordDao.getMedicalRecordByAppointment(appointmentId);
     if (existingRecord) throw serviceError('A medical record already exists for this appointment', 409);
@@ -326,7 +326,7 @@ const createConsultation = async (appointmentId, data, user) => {
             ...data.prescription,
             patient: patientId,
             medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'pending_patient_decision',
+            patientDecisionStatus: 'not_required',
         }, user);
     }
     if (data.labRequest?.tests?.length) {
@@ -334,7 +334,7 @@ const createConsultation = async (appointmentId, data, user) => {
             ...data.labRequest,
             patient: patientId,
             medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'pending_patient_decision',
+            patientDecisionStatus: 'not_required',
         }, user);
     }
     if (data.radiologyRequest?.scanType?.trim()) {
@@ -342,25 +342,26 @@ const createConsultation = async (appointmentId, data, user) => {
             ...data.radiologyRequest,
             patient: patientId,
             medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'pending_patient_decision',
+            patientDecisionStatus: 'not_required',
         }, user);
     }
 
-    const requestNames = Object.keys(requests);
-    const status = requestNames.length ? 'pending_patient_decision' : 'completed';
-    const updatedAppointment = sanitizeAppointment(await appointmentDao.updateAppointment(appointmentId, { status }));
-
-    if (requestNames.length) {
-        const receptionists = await userDao.getUsers({ role: 'receptionist', isActive: true });
-        await Promise.all(receptionists.map((receptionist) => notificationService.createNotification({
-            recipient: receptionist._id.toString(),
-            title: 'Patient decision required',
-            message: `${appointment.patient.fullName} has ${requestNames.join(', ')} request(s) awaiting a patient decision.`,
-            type: 'appointment',
+    const updatedAppointment = sanitizeAppointment(await appointmentDao.updateAppointment(appointmentId, { status: 'completed' }));
+    const directRequests = [
+        requests.labRequest && { role: 'lab_technician', type: 'laboratory', label: 'laboratory request' },
+        requests.radiologyRequest && { role: 'radiologist', type: 'radiology', label: 'scan request' },
+    ].filter(Boolean);
+    await Promise.all(directRequests.map(async ({ role, type, label }) => {
+        const recipients = await userDao.getUsers({ role, isActive: true });
+        await Promise.all(recipients.map((recipient) => notificationService.createNotification({
+            recipient: recipient._id.toString(),
+            title: `New ${label}`,
+            message: `${appointment.patient.fullName} has a new ${label} ready for processing.`,
+            type,
             relatedPatient: patientId,
             sendSms: false,
-        }, user)));
-    }
+        }, {})));
+    }));
 
     return { appointment: updatedAppointment, medicalRecord, requests };
 };
@@ -379,18 +380,32 @@ const getReceptionistPendingAppointments = async () => {
 };
 
 const getReceptionistConfirmedQueue = async (user = {}) => {
-    const appointments = await appointmentDao.getAppointments({ status: { $in: ['confirmed', 'paid'] } });
-    const queue = appointments
+    // Older paid appointments used "paid" as the clinical status. Keep them
+    // visible until they move into consultation, while new payments remain confirmed.
+    const statuses = user.role === 'doctor' ? ['confirmed', 'paid', 'in_consultation'] : ['confirmed', 'paid'];
+    const [appointments, reportedAppointmentIds] = await Promise.all([
+        appointmentDao.getAppointments({ status: { $in: statuses } }),
+        medicalRecordDao.getAppointmentIdsWithRecords(),
+    ]);
+    const reportedIds = new Set(reportedAppointmentIds.map((id) => id.toString()));
+    const eligibleAppointments = appointments.filter((appointment) => !reportedIds.has(appointment._id.toString()));
+    const roleAppointments = user.role === 'doctor'
+        ? eligibleAppointments.filter((appointment) => appointment.doctor?._id.toString() === user.id)
+        : eligibleAppointments;
+    return roleAppointments
         .sort((first, second) => new Date(first.appointmentDate) - new Date(second.appointmentDate))
         .map((appointment, index) => ({
             ...sanitizeAppointment(appointment),
             queueNumber: index + 1,
         }));
+};
 
-    if (user.role === 'doctor') {
-        return queue.filter((appointment) => appointment.doctor?._id?.toString() === user.id);
+const markAppointmentChecked = async (id, user) => {
+    const appointment = await getAppointmentById(id, user);
+    if (!['confirmed', 'paid'].includes(appointment.status)) {
+        throw serviceError('Only confirmed appointments can be marked as checked', 409);
     }
-    return queue;
+    return sanitizeAppointment(await appointmentDao.updateAppointment(id, { status: 'in_consultation' }));
 };
 
 const confirmAppointment = async (id, user) => {
@@ -412,7 +427,7 @@ const markAppointmentPaid = async (id, user) => {
 
     const bill = await billService.createPaidAppointmentBill(appointment, user);
     const paidAppointment = await appointmentDao.updateAppointment(id, {
-        status: 'paid',
+        status: 'confirmed',
         paymentStatus: 'paid',
         confirmedAt: appointment.confirmedAt || appointment.updatedAt || appointment.createdAt,
     });
@@ -503,6 +518,7 @@ const appointmentService = {
     getAppointments,
     getReceptionistPendingAppointments,
     getReceptionistConfirmedQueue,
+    markAppointmentChecked,
     confirmAppointment,
     markAppointmentPaid,
     getMyAppointments,

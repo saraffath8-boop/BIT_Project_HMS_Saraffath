@@ -10,6 +10,7 @@ import {
     getReceptionistConfirmedQueue,
     getMyAppointments,
     markAppointmentPaid,
+    markAppointmentChecked,
     requestPublicAppointment,
     requestAppointment,
     updateAppointment,
@@ -36,12 +37,13 @@ router.get('/receptionist/pending', authorizeRoles('receptionist'), getReception
 router.get('/receptionist/confirmed-queue', authorizeRoles('receptionist', 'doctor'), getReceptionistConfirmedQueue);
 router.patch('/:id/confirm', authorizeRoles('receptionist'), confirmAppointment);
 router.patch('/:id/mark-paid', authorizeRoles('receptionist'), markAppointmentPaid);
+router.patch('/:id/mark-checked', authorizeRoles('doctor'), markAppointmentChecked);
 router.post('/:id/consultation', authorizeRoles('doctor'), createConsultation);
 
 router
     .route('/:id')
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getAppointmentById)
-    .patch(authorizeRoles('admin', 'doctor', 'receptionist'), updateAppointment)
+    .patch(authorizeRoles('admin', 'receptionist'), updateAppointment)
     .delete(authorizeRoles('admin'), deleteAppointment);
 
 export default router;

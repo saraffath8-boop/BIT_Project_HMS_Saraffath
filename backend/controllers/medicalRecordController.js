@@ -6,6 +6,7 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
 });
 
 const getStatusCode = (error) => {
+    if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
     if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('valid date') || error.message.includes('No medical record')) return 400;
     return 500;
@@ -33,6 +34,15 @@ export const getMedicalRecords = async (req, res) => {
             success: true,
             medicalRecords,
         });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const getMyMedicalRecords = async (req, res) => {
+    try {
+        const medicalRecords = await medicalRecordService.getMyMedicalRecords(req.user.id);
+        return res.status(200).json({ success: true, medicalRecords });
     } catch (error) {
         return sendError(res, getStatusCode(error), error.message);
     }

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getMyLabRequests } from '../../services/labRequestService';
 import { getMyRadiologyRequests } from '../../services/radiologyRequestService';
+import { getMyMedicalRecords } from '../../services/medicalRecordService';
+import { downloadMedicalRecordPdf } from '../../lib/medicalRecordPdf';
 
 const formatDate = (dateValue) => {
     if (!dateValue) return 'N/A';
@@ -35,6 +37,7 @@ const MyReportsPage = () => {
     const { token } = useAuth();
     const [labRequests, setLabRequests] = useState([]);
     const [radiologyRequests, setRadiologyRequests] = useState([]);
+    const [medicalRecords, setMedicalRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -44,13 +47,15 @@ const MyReportsPage = () => {
             setError('');
 
             try {
-                const [labResponse, radiologyResponse] = await Promise.all([
+                const [labResponse, radiologyResponse, medicalRecordResponse] = await Promise.all([
                     getMyLabRequests(token),
                     getMyRadiologyRequests(token),
+                    getMyMedicalRecords(token),
                 ]);
 
                 setLabRequests(labResponse.labRequests || []);
                 setRadiologyRequests(radiologyResponse.radiologyRequests || []);
+                setMedicalRecords(medicalRecordResponse.medicalRecords || []);
             } catch (err) {
                 setError(err.message || 'Unable to load your reports');
             } finally {
@@ -63,7 +68,7 @@ const MyReportsPage = () => {
         }
     }, [token]);
 
-    const hasReports = labRequests.length > 0 || radiologyRequests.length > 0;
+    const hasReports = labRequests.length > 0 || radiologyRequests.length > 0 || medicalRecords.length > 0;
 
     return (
         <main style={styles.page}>
@@ -84,6 +89,10 @@ const MyReportsPage = () => {
 
             {!loading && !error && hasReports && (
                 <>
+                    <section style={styles.section}>
+                        <h2 style={styles.sectionTitle}>Diagnosis Reports</h2>
+                        {medicalRecords.length === 0 ? <p style={styles.emptyText}>No diagnosis reports available.</p> : <div style={styles.tableWrap}><table style={styles.table}><thead><tr><th style={styles.th}>Date</th><th style={styles.th}>Doctor</th><th style={styles.th}>Diagnosis</th><th style={styles.th}>Report</th></tr></thead><tbody>{medicalRecords.map((record) => <tr key={record.id}><td style={styles.td}>{formatDate(record.createdAt)}</td><td style={styles.td}>{formatPerson(record.doctor)}</td><td style={styles.td}>{record.diagnosis || 'N/A'}</td><td style={styles.td}><button style={styles.downloadButton} type="button" onClick={() => downloadMedicalRecordPdf(record)}>Download PDF</button></td></tr>)}</tbody></table></div>}
+                    </section>
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Lab Reports</h2>
                         {labRequests.length === 0 ? (
@@ -173,6 +182,7 @@ const styles = {
     table: { width: '100%', borderCollapse: 'collapse' },
     th: { textAlign: 'left', background: '#eff6ff', color: '#1e3a8a', padding: '14px', borderBottom: '1px solid #bfdbfe', fontSize: '14px' },
     td: { padding: '14px', borderBottom: '1px solid #e2e8f0', color: '#0f172a', verticalAlign: 'top' },
+    downloadButton: { border: 0, borderRadius: '10px', background: '#0e7490', color: '#ffffff', padding: '8px 12px', fontWeight: 700, cursor: 'pointer' },
 };
 
 export default MyReportsPage;

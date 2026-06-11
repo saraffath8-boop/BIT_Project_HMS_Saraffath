@@ -10,6 +10,10 @@ export const getMedicalRecordById = async (id, token) => {
     return apiGet(`${MEDICAL_RECORDS_URL}/${id}`, token, {}, 'Unable to load medical record');
 };
 
+export const getMyMedicalRecords = async (token) => {
+    return apiGet(`${MEDICAL_RECORDS_URL}/my`, token, {}, 'Unable to load your diagnosis reports');
+};
+
 export const createMedicalRecord = async (recordData, token) => {
     return apiPost(MEDICAL_RECORDS_URL, recordData, token, 'Unable to create medical record');
 };

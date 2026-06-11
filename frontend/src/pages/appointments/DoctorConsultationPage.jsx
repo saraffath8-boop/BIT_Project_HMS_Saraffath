@@ -37,7 +37,9 @@ export default function DoctorConsultationPage() {
 
     const updateRecord = (event) => setMedicalRecord({ ...medicalRecord, [event.target.name]: event.target.value });
     const updateVital = (event) => setMedicalRecord({ ...medicalRecord, vitalSigns: { ...medicalRecord.vitalSigns, [event.target.name]: event.target.value } });
-    const updatePrescriptionItem = (event) => setPrescription({ ...prescription, items: [{ ...prescription.items[0], [event.target.name]: event.target.value }] });
+    const updatePrescriptionItem = (index, event) => setPrescription({ ...prescription, items: prescription.items.map((item, itemIndex) => itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item) });
+    const addPrescriptionItem = () => setPrescription({ ...prescription, items: [...prescription.items, { ...emptyPrescriptionItem }] });
+    const removePrescriptionItem = (index) => setPrescription({ ...prescription, items: prescription.items.filter((_, itemIndex) => itemIndex !== index) });
 
     const submit = async (event) => {
         event.preventDefault(); setError(''); setSuccess(''); setSubmitting(true);
@@ -48,7 +50,7 @@ export default function DoctorConsultationPage() {
 
         try {
             const response = await createConsultation(id, payload, token);
-            setSuccess(`${response.message}. ${Object.keys(response.consultation?.requests || {}).length ? 'Receptionist notified about requests pending patient decision.' : 'No additional patient decision is required.'}`);
+            setSuccess(`${response.message}. The diagnosis report was saved and created requests were routed to their relevant sections.`);
             setAppointment(response.consultation?.appointment || appointment);
         } catch (err) { setError(err.message); }
         finally { setSubmitting(false); }
@@ -57,7 +59,7 @@ export default function DoctorConsultationPage() {
     if (loading) return <main><Card className="p-6 text-sm text-slate-500">Loading appointment...</Card></main>;
 
     return <main className="space-y-6">
-        <section className="flex flex-wrap items-start justify-between gap-4"><div><p className="page-kicker">Doctor Consultation</p><h1 className="page-title">{appointment?.patient?.fullName || 'Patient Consultation'}</h1><p className="page-description">{appointment ? `${new Date(appointment.appointmentDate).toLocaleString()} · ${appointment.department} · Status: ${appointment.status.replaceAll('_', ' ')}` : 'Open an assigned appointment and record the consultation.'}</p></div><Button asChild variant="outline"><Link to="/appointments">Appointments</Link></Button></section>
+        <section className="flex flex-wrap items-start justify-between gap-4"><div><p className="page-kicker">Doctor Queue</p><h1 className="page-title">{appointment?.patient?.fullName || 'Patient Diagnosis Report'}</h1><p className="page-description">{appointment ? `${new Date(appointment.appointmentDate).toLocaleString()} · ${appointment.department} · Status: ${appointment.status.replaceAll('_', ' ')}` : 'Open a checked queue entry and record the diagnosis report.'}</p></div><Button asChild variant="outline"><Link to="/queue">Queue</Link></Button></section>
         {error && <Alert variant="destructive">{error}</Alert>}{success && <Alert>{success}</Alert>}
 
         <form onSubmit={submit} className="space-y-6">
@@ -68,8 +70,9 @@ export default function DoctorConsultationPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{Object.keys(emptyVitals).map((field) => <Field key={field} label={field.replace(/([A-Z])/g, ' $1')}><Input name={field} value={medicalRecord.vitalSigns[field]} onChange={updateVital} /></Field>)}</div>
             </CardContent></Card>
 
-            <OptionalCard checked={includePrescription} onChange={setIncludePrescription} icon={Pill} title="Prescription" description="Medicines requiring the patient's decision before processing.">
-                <div className="grid gap-4 sm:grid-cols-2">{Object.keys(emptyPrescriptionItem).map((field) => <Field key={field} label={field.replace(/([A-Z])/g, ' $1')}><Input name={field} value={prescription.items[0][field]} onChange={updatePrescriptionItem} required={includePrescription && field !== 'instructions'} /></Field>)}</div>
+            <OptionalCard checked={includePrescription} onChange={setIncludePrescription} icon={Pill} title="Prescription" description="The cashier receives this prescription first; payment sends it to the pharmacist.">
+                {prescription.items.map((item, index) => <div key={index} className="space-y-4 rounded-xl border border-slate-200 p-4"><div className="grid gap-4 sm:grid-cols-2">{Object.keys(emptyPrescriptionItem).map((field) => <Field key={field} label={field.replace(/([A-Z])/g, ' $1')}><Input name={field} value={item[field]} onChange={(event) => updatePrescriptionItem(index, event)} required={includePrescription && field !== 'instructions'} /></Field>)}</div>{prescription.items.length > 1 && <Button type="button" variant="outline" onClick={() => removePrescriptionItem(index)}>Remove Medicine</Button>}</div>)}
+                <Button type="button" variant="outline" onClick={addPrescriptionItem}>Add Medicine</Button>
                 <Field label="Prescription Notes"><Textarea value={prescription.notes} onChange={(event) => setPrescription({ ...prescription, notes: event.target.value })} /></Field>
             </OptionalCard>
 
@@ -83,7 +86,7 @@ export default function DoctorConsultationPage() {
                 <Field label="Clinical Reason"><Textarea value={radiologyRequest.clinicalReason} onChange={(event) => setRadiologyRequest({ ...radiologyRequest, clinicalReason: event.target.value })} /></Field>
             </OptionalCard>
 
-            <Button type="submit" size="lg" disabled={submitting || Boolean(success)}>{submitting ? 'Completing consultation...' : 'Complete Consultation and Notify Receptionist'}</Button>
+            <Button type="submit" size="lg" disabled={submitting || Boolean(success)}>{submitting ? 'Saving diagnosis report...' : 'Save Diagnosis Report and Requests'}</Button>
         </form>
     </main>;
 }

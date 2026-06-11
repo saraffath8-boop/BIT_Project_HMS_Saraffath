@@ -111,6 +111,19 @@ export const markAppointmentPaid = async (req, res) => {
     }
 };
 
+export const markAppointmentChecked = async (req, res) => {
+    try {
+        const appointment = await appointmentService.markAppointmentChecked(req.params.id, req.user);
+        return res.status(200).json({
+            success: true,
+            message: 'Patient marked as checked',
+            appointment,
+        });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
 export const getMyAppointments = async (req, res) => {
     try {
         const appointments = await appointmentService.getMyAppointments(req.user.id);

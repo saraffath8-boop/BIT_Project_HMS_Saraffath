@@ -6,6 +6,8 @@ import medicineDao from '../dao/medicineDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import smsService from './smsService.js';
 import clinicalCompletionService from './clinicalCompletionService.js';
+import notificationService from './notificationService.js';
+import billService from './billService.js';
 
 const PRESCRIPTION_STATUSES = ['pending', 'partially_issued', 'issued', 'cancelled'];
 
@@ -18,6 +20,9 @@ const sanitizePrescription = (prescription) => ({
     notes: prescription.notes,
     status: prescription.status,
     patientDecisionStatus: prescription.patientDecisionStatus,
+    paymentStatus: prescription.paymentStatus,
+    paidBy: prescription.paidBy,
+    paidAt: prescription.paidAt,
     issuedBy: prescription.issuedBy,
     issuedAt: prescription.issuedAt,
     createdAt: prescription.createdAt,
@@ -96,12 +101,23 @@ const buildPrescriptionQuery = (queryParams, user) => {
         query.status = queryParams.status;
     }
 
+    if (queryParams.paymentStatus) {
+        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus)) {
+            throw new Error('Invalid prescription payment status');
+        }
+        query.paymentStatus = queryParams.paymentStatus;
+    }
+
     if (user.role === 'doctor') {
         query.doctor = user.id;
     }
 
     if (user.role === 'pharmacist') {
-        query.patientDecisionStatus = 'paid';
+        query.paymentStatus = 'paid';
+    }
+
+    if (user.role === 'receptionist') {
+        query.paymentStatus = 'unpaid';
     }
 
     return query;
@@ -188,9 +204,26 @@ const createPrescription = async (data, user) => {
         notes: toCleanString(data.notes) || '',
         status: 'pending',
         patientDecisionStatus: data.patientDecisionStatus || 'not_required',
+        paymentStatus: 'unpaid',
     });
 
     const populatedPrescription = await prescriptionDao.getPrescriptionById(prescription._id);
+    const [receptionists, linkedPatient] = await Promise.all([
+        userDao.getUsers({ role: 'receptionist', isActive: true }),
+        patientDao.getPatientByMongoId(patient),
+    ]);
+    const recipients = [
+        ...receptionists.map((receptionist) => receptionist._id.toString()),
+        linkedPatient?.userAccount?._id?.toString(),
+    ].filter(Boolean);
+    await Promise.all([...new Set(recipients)].map((recipient) => notificationService.createNotification({
+        recipient,
+        title: 'New prescription created',
+        message: `A prescription for ${populatedPrescription.patient.fullName} is awaiting payment.`,
+        type: 'pharmacy',
+        relatedPatient: populatedPrescription.patient._id.toString(),
+        sendSms: false,
+    }, {})));
     return sanitizePrescription(populatedPrescription);
 };
 
@@ -222,7 +255,7 @@ const getPrescriptionById = async (id, user) => {
     if (user.role === 'doctor' && prescription.doctor._id.toString() !== user.id) {
         throw new Error('Prescription not found');
     }
-    if (user.role === 'pharmacist' && prescription.patientDecisionStatus !== 'paid') {
+    if (user.role === 'pharmacist' && prescription.paymentStatus !== 'paid') {
         throw new Error('Prescription not found');
     }
 
@@ -259,9 +292,15 @@ const updatePrescription = async (id, data, user) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(data, 'status')) {
+        if (!['admin', 'pharmacist'].includes(user.role)) {
+            throw new Error('Only pharmacy staff can update prescription distribution status');
+        }
         const status = toCleanString(data.status);
         if (!PRESCRIPTION_STATUSES.includes(status)) {
             throw new Error('Invalid prescription status');
+        }
+        if (user.role === 'pharmacist' && status !== 'issued') {
+            throw new Error('Pharmacists can only mark prescriptions as distributed');
         }
         updateData.status = status;
 
@@ -290,6 +329,32 @@ const updatePrescription = async (id, data, user) => {
     return sanitizePrescription(prescription);
 };
 
+const markPrescriptionPaid = async (id, data, user) => {
+    requireObjectId(id, 'prescription id');
+    const prescription = await prescriptionDao.getPrescriptionById(id);
+    if (!prescription) throw new Error('Prescription not found');
+    if (prescription.paymentStatus === 'paid') throw new Error('Prescription is already paid');
+    if (prescription.status === 'cancelled') throw new Error('Cancelled prescription cannot be paid');
+
+    const bill = await billService.createPaidPrescriptionBill(prescription, data.amount, user);
+    const updatedPrescription = await prescriptionDao.updatePrescription(id, {
+        paymentStatus: 'paid',
+        patientDecisionStatus: 'paid',
+        paidBy: user.id,
+        paidAt: new Date(),
+    });
+    const pharmacists = await userDao.getUsers({ role: 'pharmacist', isActive: true });
+    await Promise.all(pharmacists.map((pharmacist) => notificationService.createNotification({
+        recipient: pharmacist._id.toString(),
+        title: 'Paid prescription ready',
+        message: `${updatedPrescription.patient.fullName}'s prescription is paid and ready for distribution.`,
+        type: 'pharmacy',
+        relatedPatient: updatedPrescription.patient._id.toString(),
+        sendSms: false,
+    }, {})));
+    return { prescription: sanitizePrescription(updatedPrescription), bill };
+};
+
 const deletePrescription = async (id) => {
     const prescription = await getPrescriptionById(id, { role: 'admin' });
     await prescriptionDao.deletePrescription(id);
@@ -302,6 +367,7 @@ const prescriptionService = {
     getMyPrescriptions,
     getPrescriptionById,
     updatePrescription,
+    markPrescriptionPaid,
     deletePrescription,
 };
 

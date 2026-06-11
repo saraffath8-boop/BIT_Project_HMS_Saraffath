@@ -10,9 +10,12 @@ const buildPdf = (bill) => {
     const doctor = bill.doctor || {};
     const appointment = bill.appointment || {};
     const payment = bill.payments?.[0] || {};
+    const isPharmacyBill = bill.billType === 'pharmacy';
+    const receiptTitle = isPharmacyBill ? 'Official Pharmacy Payment Receipt' : 'Official Consultation Payment Receipt';
+    const itemDescription = bill.items?.map((item) => item.description).join('; ') || (isPharmacyBill ? 'Prescription medicines' : 'Doctor consultation fee');
     const lines = [
         textCommand('MEDICORE HOSPITAL', 210, 750, 18, true),
-        textCommand('Official Consultation Payment Receipt', 210, 730, 11),
+        textCommand(receiptTitle, 210, 730, 11),
         '50 715 m 562 715 l S',
         textCommand(`Serial Number: ${bill.billNumber}`, 55, 690, 10, true),
         textCommand(`Issued: ${dateTime(bill.createdAt)}`, 330, 690, 10),
@@ -20,14 +23,14 @@ const buildPdf = (bill) => {
         textCommand(`Patient ID: ${patient.patientId || 'Not recorded'}`, 330, 665, 10),
         textCommand(`Phone: ${patient.phone || 'Not recorded'}`, 55, 645, 10),
         textCommand(`Doctor: ${doctor.name || 'Not recorded'}`, 55, 610, 11, true),
-        textCommand(`Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`, 330, 610, 11, true),
+        textCommand(isPharmacyBill ? 'Service: Pharmacy' : `Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`, 330, 610, 11, true),
         textCommand(`Appointment: ${dateTime(appointment.appointmentDate)}`, 55, 585, 10),
         textCommand(`Time Slot: ${appointment.timeSlot || 'Not recorded'}`, 330, 585, 10),
         '50 555 m 562 555 l S',
         textCommand('Description', 55, 535, 10, true),
         textCommand('Amount', 450, 535, 10, true),
         '50 525 m 562 525 l S',
-        textCommand(bill.items?.[0]?.description || 'Doctor consultation fee', 55, 500, 10),
+        textCommand(itemDescription.slice(0, 68), 55, 500, 10),
         textCommand(money(bill.totalAmount), 450, 500, 10),
         '50 475 m 562 475 l S',
         textCommand(`Paid Amount: ${money(bill.paidAmount)}`, 330, 445, 13, true),

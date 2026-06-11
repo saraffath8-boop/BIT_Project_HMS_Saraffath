@@ -157,6 +157,13 @@ const getMedicalRecords = async (queryParams, user) => {
     return records.map(sanitizeMedicalRecord);
 };
 
+const getMyMedicalRecords = async (userId) => {
+    const patient = await patientDao.getPatientByUserAccount(userId);
+    if (!patient) throw new Error('No patient profile is linked to this account');
+    const records = await medicalRecordDao.getMedicalRecords({ patient: patient._id });
+    return records.map(sanitizeMedicalRecord);
+};
+
 const getMedicalRecordById = async (id, user) => {
     requireObjectId(id, 'medical record id');
     const record = await medicalRecordDao.getMedicalRecordById(id);
@@ -232,6 +239,7 @@ const deleteMedicalRecord = async (id) => {
 const medicalRecordService = {
     createMedicalRecord,
     getMedicalRecords,
+    getMyMedicalRecords,
     getMedicalRecordById,
     updateMedicalRecord,
     deleteMedicalRecord,

@@ -91,8 +91,8 @@ function App() {
 
                 <Route path="/appointments" element={roleRoute(['admin', 'doctor', 'nurse', 'receptionist'], <AppointmentsPage />)} />
                 <Route path="/appointments/new" element={roleRoute(['admin', 'receptionist'], <AppointmentCreatePage />)} />
-                <Route path="/appointments/:id/edit" element={roleRoute(['admin', 'doctor', 'receptionist'], <AppointmentEditPage />)} />
-                <Route path="/appointments/:id/consultation" element={roleRoute(['doctor'], <DoctorConsultationPage />)} />
+                <Route path="/appointments/:id/edit" element={roleRoute(['admin', 'receptionist'], <AppointmentEditPage />)} />
+                <Route path="/queue/:id/diagnosis-report" element={roleRoute(['doctor'], <DoctorConsultationPage />)} />
                 <Route path="/my/appointments" element={roleRoute(['patient'], <MyAppointmentsPage />)} />
                 <Route path="/my/bills" element={roleRoute(['patient'], <MyBillsPage />)} />
                 <Route path="/my/prescriptions" element={roleRoute(['patient'], <MyPrescriptionsPage />)} />
@@ -103,7 +103,7 @@ function App() {
                 <Route path="/medical-records" element={roleRoute(['admin', 'doctor', 'nurse'], <MedicalRecordsPage />)} />
                 <Route path="/medical-records/new" element={roleRoute(['admin', 'doctor'], <MedicalRecordCreatePage />)} />
                 <Route path="/prescriptions" element={roleRoute(['admin', 'doctor', 'pharmacist'], <PrescriptionsPage />)} />
-                <Route path="/prescriptions/new" element={roleRoute(['admin', 'doctor'], <PrescriptionCreatePage />)} />
+                <Route path="/prescriptions/new" element={roleRoute(['admin'], <PrescriptionCreatePage />)} />
                 <Route path="/pharmacy" element={roleRoute(['admin', 'doctor', 'pharmacist'], <PharmacyPage />)} />
                 <Route path="/pharmacy/new" element={roleRoute(['admin', 'pharmacist'], <MedicineCreatePage />)} />
                 <Route path="/laboratory" element={roleRoute(['admin', 'doctor', 'nurse', 'lab_technician'], <LaboratoryPage />)} />

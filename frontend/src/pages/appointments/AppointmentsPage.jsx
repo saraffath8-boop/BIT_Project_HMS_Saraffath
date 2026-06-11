@@ -10,8 +10,6 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 
-const consultationStatuses = ['scheduled', 'confirmed', 'paid', 'checked_in', 'in_consultation'];
-
 const AppointmentsPage = () => {
     const { user } = useAuth();
     if (user?.role === 'receptionist') return <ReceptionistPendingAppointments />;
@@ -31,7 +29,6 @@ const AppointmentsPage = () => {
             { label: 'Department', key: 'department' },
             { label: 'Status', key: 'status' },
             { label: 'Payment', key: 'paymentStatus' },
-            { label: 'Consult', allowedRoles: ['doctor'], render: (item) => consultationStatuses.includes(item.status) ? <Link className="font-semibold text-cyan-700" to={`/appointments/${item.id}/consultation`}>Open Consultation</Link> : <span className="text-slate-400">Not ready</span> },
             { label: 'Actions', allowedRoles: ['admin'], render: (item) => <Link className="font-semibold text-cyan-700" to={`/appointments/${item.id}/edit`}>Edit</Link> },
         ]}
     />;
@@ -51,14 +48,18 @@ const ReceptionistPendingAppointments = () => {
     const loadAppointments = useCallback(async () => {
         setLoading(true); setError('');
         try {
-            const [pendingResponse, confirmedResponse, paidResponse] = await Promise.all([
+            const [pendingResponse, confirmedResponse, legacyPaidResponse] = await Promise.all([
                 getReceptionistPendingAppointments({ token }),
                 getAppointments({ token, filters: { status: 'confirmed' } }),
                 getAppointments({ token, filters: { status: 'paid' } }),
             ]);
             setPendingAppointments(pendingResponse.appointments || []);
-            setConfirmedAppointments(confirmedResponse.appointments || []);
-            setPaidAppointments(paidResponse.appointments || []);
+            const confirmed = confirmedResponse.appointments || [];
+            setConfirmedAppointments(confirmed.filter((appointment) => appointment.paymentStatus !== 'paid'));
+            setPaidAppointments([
+                ...confirmed.filter((appointment) => appointment.paymentStatus === 'paid'),
+                ...(legacyPaidResponse.appointments || []),
+            ].sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate)));
         } catch (err) { setError(err.message || 'Unable to load receptionist appointments'); }
         finally { setLoading(false); }
     }, [token]);

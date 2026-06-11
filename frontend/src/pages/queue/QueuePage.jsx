@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getQueueEntries } from '../../services/queueService';
-import { getReceptionistConfirmedQueue } from '../../services/appointmentService';
+import { getReceptionistConfirmedQueue, markAppointmentChecked } from '../../services/appointmentService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Alert } from '../../components/ui/alert';
@@ -39,6 +39,7 @@ const ConfirmedAppointmentQueue = () => {
     const { token, user } = useAuth();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [updatingId, setUpdatingId] = useState('');
     const [error, setError] = useState('');
 
     const loadQueue = useCallback(async () => {
@@ -53,32 +54,36 @@ const ConfirmedAppointmentQueue = () => {
     useEffect(() => { const id = setTimeout(loadQueue, 0); return () => clearTimeout(id); }, [loadQueue]);
 
     const isDoctor = user?.role === 'doctor';
+    const confirmedAppointments = appointments.filter((appointment) => ['confirmed', 'paid'].includes(appointment.status));
+    const checkedAppointments = appointments.filter((appointment) => appointment.status === 'in_consultation');
+    const markChecked = async (appointment) => {
+        setUpdatingId(appointment.id); setError('');
+        try {
+            const response = await markAppointmentChecked(appointment.id, token);
+            setAppointments((items) => items.map((item) => item.id === appointment.id ? { ...response.appointment, queueNumber: item.queueNumber } : item));
+        } catch (err) { setError(err.message || 'Unable to mark patient as checked'); }
+        finally { setUpdatingId(''); }
+    };
 
     return <main className="space-y-6">
         <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div><p className="page-kicker">{isDoctor ? 'Doctor Queue' : 'Receptionist Queue'}</p><h1 className="page-title">Confirmed Appointment Queue</h1><p className="page-description">{isDoctor ? 'Your confirmed and paid appointments are queued by scheduled appointment time.' : 'Confirmed and paid appointments are queued by scheduled appointment time.'} Earlier appointments receive earlier serial numbers.</p></div>
+            <div><p className="page-kicker">{isDoctor ? 'Doctor Queue' : 'Receptionist Queue'}</p><h1 className="page-title">Confirmed Appointment Queue</h1><p className="page-description">{isDoctor ? 'Only confirmed appointments can enter the checked and diagnosis-report flow.' : 'Confirmed appointments are queued by scheduled appointment time.'} Earlier appointments receive earlier serial numbers.</p></div>
             <Button variant="outline" onClick={loadQueue} disabled={loading}>Refresh</Button>
         </section>
         {error && <Alert variant="destructive">{error}</Alert>}
         {loading && <Card className="p-6 text-sm text-slate-500">Loading confirmed appointment queue...</Card>}
-        {!loading && appointments.length === 0 && <Card className="p-10 text-center text-sm text-slate-500">No confirmed or paid appointments are in the queue.</Card>}
-        {!loading && appointments.length > 0 && <Card className="overflow-hidden">
-            <div className="border-b border-slate-100 px-5 py-4"><p className="text-sm font-semibold text-slate-800">{appointments.length} queued appointment{appointments.length === 1 ? '' : 's'}</p><p className="text-xs text-slate-500">Confirmed and paid appointments ordered by scheduled appointment time</p></div>
-            <Table><TableHeader><TableRow><TableHead>Serial No.</TableHead><TableHead>Patient</TableHead><TableHead>Phone</TableHead><TableHead>Doctor</TableHead><TableHead>Department</TableHead><TableHead>Appointment Time</TableHead><TableHead>Reason</TableHead><TableHead>Status</TableHead><TableHead>Payment</TableHead></TableRow></TableHeader>
-                <TableBody>{appointments.map((appointment) => <TableRow key={appointment.id}>
-                    <TableCell className="font-semibold text-cyan-800">{appointment.queueNumber}</TableCell>
-                    <TableCell>{getPersonName(appointment.patient)}</TableCell>
-                    <TableCell>{appointment.patient?.phone || 'Not recorded'}</TableCell>
-                    <TableCell>{getPersonName(appointment.doctor)}</TableCell>
-                    <TableCell>{appointment.department}</TableCell>
-                    <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
-                    <TableCell className="max-w-64 whitespace-normal">{appointment.reason || 'Not provided'}</TableCell>
-                    <TableCell><Badge variant="success">{appointment.status}</Badge></TableCell>
-                    <TableCell><Badge variant={appointment.paymentStatus === 'paid' ? 'success' : 'destructive'}>{appointment.paymentStatus}</Badge></TableCell>
-                </TableRow>)}</TableBody>
-            </Table>
-        </Card>}
+        {!loading && isDoctor && <QueueSection title="Confirmed Patients" appointments={confirmedAppointments} emptyMessage="No confirmed appointments are ready." action={(appointment) => <Button size="sm" disabled={updatingId === appointment.id} onClick={() => markChecked(appointment)}>{updatingId === appointment.id ? 'Updating...' : 'Mark Checked'}</Button>} />}
+        {!loading && isDoctor && <QueueSection title="Checked Patients" appointments={checkedAppointments} emptyMessage="No checked patients are awaiting diagnosis reports." action={(appointment) => <Button asChild size="sm"><Link to={`/queue/${appointment.id}/diagnosis-report`}>Diagnosis Report and Prescriptions</Link></Button>} />}
+        {!loading && !isDoctor && <QueueSection title="Confirmed Patients" appointments={confirmedAppointments} emptyMessage="No confirmed appointments are in the queue." />}
     </main>;
 };
+
+const QueueSection = ({ title, appointments, emptyMessage, action }) => <section className="space-y-3">
+    <h2 className="text-lg font-semibold text-slate-900">{title} <span className="text-sm font-normal text-slate-500">({appointments.length})</span></h2>
+    {appointments.length === 0 ? <Card className="p-8 text-center text-sm text-slate-500">{emptyMessage}</Card> : <Card className="overflow-hidden"><Table>
+        <TableHeader><TableRow><TableHead>Serial No.</TableHead><TableHead>Patient</TableHead><TableHead>Phone</TableHead><TableHead>Doctor</TableHead><TableHead>Department</TableHead><TableHead>Appointment Time</TableHead><TableHead>Reason</TableHead><TableHead>Status</TableHead>{action && <TableHead>Action</TableHead>}</TableRow></TableHeader>
+        <TableBody>{appointments.map((appointment) => <TableRow key={appointment.id}><TableCell className="font-semibold text-cyan-800">{appointment.queueNumber}</TableCell><TableCell>{getPersonName(appointment.patient)}</TableCell><TableCell>{appointment.patient?.phone || 'Not recorded'}</TableCell><TableCell>{getPersonName(appointment.doctor)}</TableCell><TableCell>{appointment.department}</TableCell><TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell><TableCell className="max-w-64 whitespace-normal">{appointment.reason || 'Not provided'}</TableCell><TableCell><Badge variant="success">{appointment.status === 'paid' ? 'confirmed' : appointment.status.replaceAll('_', ' ')}</Badge></TableCell>{action && <TableCell>{action(appointment)}</TableCell>}</TableRow>)}</TableBody>
+    </Table></Card>}
+</section>;
 
 export default QueuePage;

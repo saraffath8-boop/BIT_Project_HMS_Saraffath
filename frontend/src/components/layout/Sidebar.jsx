@@ -14,7 +14,6 @@ const navItems = [
     { label: 'Laboratory', to: '/laboratory', icon: FlaskConical, roles: ['admin', 'doctor', 'nurse', 'lab_technician'] },
     { label: 'Radiology', to: '/radiology', icon: ScanLine, roles: ['admin', 'doctor', 'nurse', 'radiologist'] },
     { label: 'Billing', to: '/billing', icon: CreditCard, roles: ['admin', 'receptionist'] },
-    { label: 'Patient Decisions', to: '/billing/patient-decisions', icon: CreditCard, roles: ['admin', 'receptionist'] },
     { label: 'Inventory', to: '/inventory', icon: Package, roles: ['admin'] },
     { label: 'Feedback', to: '/feedback', icon: MessageSquare, roles: ['admin', 'patient'] },
     { label: 'Notifications', to: '/notifications', icon: Bell, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'patient', 'pharmacist', 'lab_technician', 'radiologist'] },

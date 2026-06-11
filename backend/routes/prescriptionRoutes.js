@@ -5,6 +5,7 @@ import {
     getMyPrescriptions,
     getPrescriptionById,
     getPrescriptions,
+    markPrescriptionPaid,
     updatePrescription,
 } from '../controllers/prescriptionController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -16,15 +17,17 @@ router.use(protect);
 
 router
     .route('/')
-    .get(authorizeRoles('admin', 'doctor', 'pharmacist'), getPrescriptions)
-    .post(authorizeRoles('admin', 'doctor'), createPrescription);
+    .get(authorizeRoles('admin', 'doctor', 'pharmacist', 'receptionist'), getPrescriptions)
+    .post(authorizeRoles('admin'), createPrescription);
 
 router
     .get('/my', authorizeRoles('patient'), getMyPrescriptions);
 
+router.patch('/:id/mark-paid', authorizeRoles('admin', 'receptionist'), markPrescriptionPaid);
+
 router
     .route('/:id')
-    .get(authorizeRoles('admin', 'doctor', 'pharmacist'), getPrescriptionById)
+    .get(authorizeRoles('admin', 'doctor', 'pharmacist', 'receptionist'), getPrescriptionById)
     .patch(authorizeRoles('admin', 'doctor', 'pharmacist'), updatePrescription)
     .delete(authorizeRoles('admin'), deletePrescription);
 
