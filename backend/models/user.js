@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
         department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', default: null },
         specialization: { type: String, trim: true, maxlength: 160, default: '' },
         consultationFee: { type: Number, min: 0, default: 0 },
+        roomNumber: { type: String, unique: true, sparse: true, trim: true, match: [/^[1-9][0-9]$/, 'Room number must be a two-digit number'] },
         availableDays: { type: [Number], default: [1, 2, 3, 4, 5] },
         availableTimeSlots: { type: [String], default: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
         avatar: {
@@ -37,6 +38,10 @@ const userSchema = new mongoose.Schema(
         },
         lastLogin: { type: Date, default: null },
         passwordChangedAt: { type: Date, default: null },
+        passwordResetOtpHash: { type: String, select: false, default: null },
+        passwordResetOtpExpiresAt: { type: Date, select: false, default: null },
+        passwordResetOtpLastSentAt: { type: Date, select: false, default: null },
+        passwordResetOtpAttempts: { type: Number, select: false, default: 0 },
     },
     { timestamps: true }
 );

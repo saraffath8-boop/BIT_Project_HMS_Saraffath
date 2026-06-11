@@ -25,6 +25,24 @@ export const loginUser = async (formData) => {
     }
 };
 
+export const requestPatientPasswordReset = async (phone) => {
+    try {
+        const response = await axios.post(`${AUTH_URL}/forgot-password`, { phone });
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error, 'Unable to request password reset'), { cause: error });
+    }
+};
+
+export const resetPatientPassword = async (formData) => {
+    try {
+        const response = await axios.post(`${AUTH_URL}/reset-password`, formData);
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error, 'Unable to reset password'), { cause: error });
+    }
+};
+
 export const getCurrentUser = async (token) => {
     try {
         const response = await axios.get(`${AUTH_URL}/me`, {

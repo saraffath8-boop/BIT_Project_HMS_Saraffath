@@ -17,7 +17,7 @@ export const getDoctorAvailability = async (doctorId, date) => apiGet(
 );
 
 export const requestAppointment = async (appointmentData, token) => apiPost(
-    `${API_BASE_URL}/appointments/request`,
+    `${API_BASE_URL}/appointments/request${token ? '' : '/public'}`,
     appointmentData,
     token,
     'Unable to submit appointment request'

@@ -44,9 +44,11 @@ export default function Login() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <Field icon={Mail} label="Email address"><Input id="email" className="pl-9" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@hospital.com" autoComplete="email" required /></Field>
                         <Field icon={LockKeyhole} label="Password"><Input id="password" className="pl-9" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required /></Field>
+                        <p className="text-right text-sm"><Link className="font-semibold text-cyan-700 hover:underline" to="/forgot-password">Forgot password? </Link></p>
                         <Button className="w-full" size="lg" type="submit" disabled={submitting}>{submitting ? 'Signing in...' : 'Sign in'}</Button>
                     </form>
                     <p className="mt-6 text-center text-sm text-slate-500">New patient? <Link className="font-semibold text-cyan-700 hover:underline" to="/signup">Create an account</Link></p>
+                    <p className="mt-3 text-center text-sm"><Link className="font-semibold text-cyan-700 hover:underline" to="/">Go to appointment bookings</Link></p>
                 </CardContent>
             </Card></section>
         </main>

@@ -27,6 +27,19 @@ export const requestAppointment = async (req, res) => {
     }
 };
 
+export const requestPublicAppointment = async (req, res) => {
+    try {
+        const appointment = await appointmentService.requestPublicAppointment(req.body);
+        return res.status(201).json({
+            success: true,
+            message: 'Appointment request submitted successfully. The receptionist will confirm your request and payment.',
+            appointment,
+        });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
 export const createConsultation = async (req, res) => {
     try {
         const consultation = await appointmentService.createConsultation(req.params.id, req.body, req.user);
@@ -49,6 +62,50 @@ export const getAppointments = async (req, res) => {
     try {
         const appointments = await appointmentService.getAppointments(req.query, req.user);
         return res.status(200).json({ success: true, appointments });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const getReceptionistPendingAppointments = async (req, res) => {
+    try {
+        const appointments = await appointmentService.getReceptionistPendingAppointments();
+        return res.status(200).json({ success: true, appointments });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const getReceptionistConfirmedQueue = async (req, res) => {
+    try {
+        const appointments = await appointmentService.getReceptionistConfirmedQueue(req.user);
+        return res.status(200).json({ success: true, appointments });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const confirmAppointment = async (req, res) => {
+    try {
+        const appointment = await appointmentService.confirmAppointment(req.params.id, req.user);
+        return res.status(200).json({
+            success: true,
+            message: 'Appointment confirmed successfully. Payment remains unpaid until collected.',
+            appointment,
+        });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};
+
+export const markAppointmentPaid = async (req, res) => {
+    try {
+        const result = await appointmentService.markAppointmentPaid(req.params.id, req.user);
+        return res.status(200).json({
+            success: true,
+            message: 'Appointment marked as paid successfully.',
+            ...result,
+        });
     } catch (error) {
         return sendError(res, getStatusCode(error), error.message);
     }

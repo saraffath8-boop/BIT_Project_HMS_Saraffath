@@ -44,6 +44,10 @@ const appointmentSchema = new mongoose.Schema(
             enum: ['unpaid', 'pending', 'paid', 'refunded'],
             default: 'unpaid',
         },
+        confirmedAt: {
+            type: Date,
+            default: null,
+        },
         requestedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -52,7 +56,7 @@ const appointmentSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            default: null,
         },
     },
     { timestamps: true }

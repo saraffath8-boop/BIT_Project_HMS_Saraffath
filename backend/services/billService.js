@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import billDao from '../dao/billDao.js';
 import patientDao from '../dao/patientDao.js';
@@ -17,6 +18,9 @@ const sanitizeBill = (bill) => ({
     billNumber: bill.billNumber,
     patient: bill.patient,
     appointment: bill.appointment,
+    billType: bill.billType,
+    doctor: bill.doctor,
+    roomNumber: bill.roomNumber,
     items: bill.items,
     subtotal: bill.subtotal,
     discount: bill.discount,
@@ -40,6 +44,12 @@ const sanitizeBillingStatus = (bill) => ({
     totalAmount: bill.totalAmount,
     paidAmount: bill.paidAmount,
     status: bill.status,
+    appointment: bill.appointment,
+    billType: bill.billType,
+    doctor: bill.doctor,
+    roomNumber: bill.roomNumber,
+    payments: bill.payments,
+    createdAt: bill.createdAt,
 });
 
 const requireObjectId = (id, fieldName) => {
@@ -318,6 +328,95 @@ const buildPayment = (paymentData, user) => {
     };
 };
 
+const assignDoctorRoomNumber = async (doctor) => {
+    if (doctor.roomNumber) return doctor.roomNumber;
+
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+        const roomNumber = String(crypto.randomInt(10, 100));
+        if (await userDao.getUserByRoomNumber(roomNumber)) continue;
+        try {
+            const updatedDoctor = await userDao.updateUser(doctor._id, { roomNumber });
+            return updatedDoctor.roomNumber;
+        } catch (error) {
+            if (error.code !== 11000) throw error;
+        }
+    }
+
+    throw new Error('No available two-digit doctor room number');
+};
+
+const createPaidAppointmentBill = async (appointment, user) => {
+    const appointmentId = appointment._id?.toString() || appointment.id;
+    const existingBill = await billDao.getConsultationBillByAppointment(appointmentId);
+    if (existingBill) return sanitizeBill(existingBill);
+
+    const doctor = appointment.doctor;
+    const patient = appointment.patient;
+    if (!doctor?._id || !patient?._id) throw new Error('Appointment doctor and patient are required for billing');
+
+    const roomNumber = await assignDoctorRoomNumber(doctor);
+    const consultationFee = Number(doctor.consultationFee || 0);
+    const payment = {
+        amount: consultationFee,
+        method: 'cash',
+        reference: '',
+        paidAt: new Date(),
+        receivedBy: user.id,
+    };
+    const bill = await billDao.createBill({
+        billNumber: await billDao.getNextBillNumber(),
+        patient: patient._id,
+        appointment: appointmentId,
+        billType: 'consultation',
+        doctor: doctor._id,
+        roomNumber,
+        items: [{
+            description: `Consultation fee - ${doctor.name}`,
+            category: 'consultation',
+            quantity: 1,
+            unitPrice: consultationFee,
+            total: consultationFee,
+            sourceType: 'manual',
+        }],
+        subtotal: consultationFee,
+        discount: 0,
+        totalAmount: consultationFee,
+        paidAmount: consultationFee,
+        status: 'paid',
+        payments: [payment],
+        createdBy: user.id,
+    });
+
+    return sanitizeBill(await billDao.getBillById(bill._id));
+};
+
+const ensureDoctorRoomNumbers = async () => {
+    const doctors = await userDao.getUsers({ role: 'doctor' });
+    let assignedCount = 0;
+    for (const doctor of doctors) {
+        if (doctor.roomNumber) continue;
+        await assignDoctorRoomNumber(doctor);
+        assignedCount += 1;
+    }
+    return assignedCount;
+};
+
+const ensurePaidAppointmentBills = async () => {
+    const [appointments, receptionists] = await Promise.all([
+        appointmentDao.getAppointments({ status: 'paid', paymentStatus: 'paid' }),
+        userDao.getUsers({ role: 'receptionist', isActive: true }),
+    ]);
+    if (!receptionists.length) return 0;
+
+    let createdCount = 0;
+    for (const appointment of appointments) {
+        if (await billDao.getConsultationBillByAppointment(appointment._id)) continue;
+        await createPaidAppointmentBill(appointment, { id: receptionists[0]._id.toString() });
+        createdCount += 1;
+    }
+    return createdCount;
+};
+
 const getBillOrThrow = async (id) => {
     requireObjectId(id, 'bill id');
     const bill = await billDao.getBillById(id);
@@ -455,6 +554,9 @@ const billService = {
     deleteBill,
     getPendingPatientDecisions,
     processPatientDecisions,
+    createPaidAppointmentBill,
+    ensureDoctorRoomNumbers,
+    ensurePaidAppointmentBills,
 };
 
 export default billService;

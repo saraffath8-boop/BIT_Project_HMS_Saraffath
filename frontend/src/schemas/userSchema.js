@@ -23,11 +23,17 @@ export const commonUserSchema = z.object({
     gender: z.enum(genderOptions, { error: 'Please select a valid gender.' }),
 });
 
-export const signupSchema = commonUserSchema.extend({
+const credentialUserSchema = commonUserSchema.extend({
     password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-export const staffUserSchema = signupSchema.extend({
+export const signupSchema = credentialUserSchema.extend({
+    address: requiredText('Address').max(300, 'Address cannot exceed 300 characters'),
+    emergencyContactName: requiredText('Emergency contact name').min(2, 'Emergency contact name must be at least 2 characters').regex(patientNameRegex, 'Emergency contact name contains invalid characters'),
+    emergencyContactPhone: requiredText('Emergency contact phone').regex(sriLankanPhoneRegex, 'Emergency contact phone must be a valid Sri Lankan 10-digit number starting with 0.'),
+});
+
+export const staffUserSchema = credentialUserSchema.extend({
     role: z.enum(staffRoles, { error: 'Please select a valid staff role.' }),
     isActive: z.boolean(),
     department: z.string().optional(),

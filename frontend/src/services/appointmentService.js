@@ -6,6 +6,22 @@ export const getAppointments = async ({ token, filters = {} }) => {
     return apiGet(APPOINTMENTS_URL, token, filters, 'Unable to load appointments');
 };
 
+export const getReceptionistPendingAppointments = async ({ token }) => {
+    return apiGet(`${APPOINTMENTS_URL}/receptionist/pending`, token, {}, 'Unable to load pending appointment requests');
+};
+
+export const getReceptionistConfirmedQueue = async ({ token }) => {
+    return apiGet(`${APPOINTMENTS_URL}/receptionist/confirmed-queue`, token, {}, 'Unable to load confirmed appointment queue');
+};
+
+export const confirmAppointment = async (id, token) => {
+    return apiPatch(`${APPOINTMENTS_URL}/${id}/confirm`, {}, token, 'Unable to confirm appointment');
+};
+
+export const markAppointmentPaid = async (id, token) => {
+    return apiPatch(`${APPOINTMENTS_URL}/${id}/mark-paid`, {}, token, 'Unable to mark appointment as paid');
+};
+
 export const getAppointmentById = async (id, token) => {
     return apiGet(`${APPOINTMENTS_URL}/${id}`, token, {}, 'Unable to load appointment');
 };

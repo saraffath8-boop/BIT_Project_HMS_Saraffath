@@ -277,6 +277,59 @@ const createPatient = async (patientData, createdByUserId, userRole) => {
 
 };
 
+const createPatientForUser = async (user, patientData) => {
+    const existingPatient = await patientDao.getPatientByUserAccount(user._id);
+    if (existingPatient) return sanitizePatient(existingPatient, 'patient');
+
+    const matchingPatient = await patientDao.getUnlinkedPatientByPhone(user.phone);
+    if (matchingPatient) {
+        const linkedPatient = await patientDao.updatePatient(matchingPatient._id, { userAccount: user._id });
+        return sanitizePatient(linkedPatient, 'patient');
+    }
+
+    const payload = buildPatientPayload({
+        fullName: user.name || `${user.firstName} ${user.lastName}`,
+        dateOfBirth: user.dob,
+        gender: user.gender,
+        phone: user.phone,
+        address: patientData.address,
+        emergencyContactName: patientData.emergencyContactName,
+        emergencyContactPhone: patientData.emergencyContactPhone,
+        bloodGroup: patientData.bloodGroup || 'unknown',
+        allergies: patientData.allergies || '',
+        medicalNotes: patientData.medicalNotes || '',
+        status: 'active',
+    });
+    validateRequiredPatientFields(payload);
+
+    return sanitizePatient(await patientDao.createPatient({
+        ...payload,
+        patientId: await patientDao.getNextPatientId(),
+        createdBy: user._id,
+        userAccount: user._id,
+    }), 'patient');
+};
+
+const ensurePatientProfilesForPatientUsers = async () => {
+    const patientUsers = await userDao.getUsers({ role: 'patient' });
+    let repairedCount = 0;
+
+    for (const user of patientUsers) {
+        const existingPatient = await patientDao.getPatientByUserAccount(user._id);
+        if (existingPatient) continue;
+
+        await createPatientForUser(user, {
+            address: 'Not provided',
+            emergencyContactName: user.name || `${user.firstName} ${user.lastName}`,
+            emergencyContactPhone: user.phone,
+            medicalNotes: 'Patient profile automatically created from an existing patient login account. Contact details require review.',
+        });
+        repairedCount += 1;
+    }
+
+    return repairedCount;
+};
+
 
 
 const getPatients = async ({ search, page, limit }, userRole) => {
@@ -456,6 +509,8 @@ const deletePatient = async (id) => {
 const patientService = {
 
     createPatient,
+    createPatientForUser,
+    ensurePatientProfilesForPatientUsers,
 
     getPatients,
 

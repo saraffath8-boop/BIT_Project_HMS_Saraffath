@@ -21,6 +21,8 @@ import departmentRoutes from './routes/departmentRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import userService from './services/userService.js';
 import departmentService from './services/departmentService.js';
+import patientService from './services/patientService.js';
+import billService from './services/billService.js';
 import dns from 'dns';
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -68,6 +70,12 @@ const startServer = async () => {
 
     await userService.ensureDefaultAdmin();
     await departmentService.ensureDefaultDepartments();
+    const repairedPatientProfiles = await patientService.ensurePatientProfilesForPatientUsers();
+    if (repairedPatientProfiles > 0) console.log(`Repaired ${repairedPatientProfiles} patient profile link(s)`);
+    const assignedDoctorRooms = await billService.ensureDoctorRoomNumbers();
+    if (assignedDoctorRooms > 0) console.log(`Assigned ${assignedDoctorRooms} doctor room number(s)`);
+    const repairedAppointmentBills = await billService.ensurePaidAppointmentBills();
+    if (repairedAppointmentBills > 0) console.log(`Created ${repairedAppointmentBills} missing paid appointment bill(s)`);
 
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);

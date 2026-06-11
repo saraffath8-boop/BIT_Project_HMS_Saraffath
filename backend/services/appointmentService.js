@@ -10,6 +10,8 @@ import prescriptionService from './prescriptionService.js';
 import labRequestService from './labRequestService.js';
 import radiologyRequestService from './radiologyRequestService.js';
 import notificationService from './notificationService.js';
+import billService from './billService.js';
+import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
 const APPOINTMENT_STATUSES = ['requested', 'pending_confirmation', 'scheduled', 'confirmed', 'paid', 'checked_in', 'in_consultation', 'pending_patient_decision', 'completed', 'cancelled', 'no_show'];
 
@@ -24,6 +26,8 @@ const sanitizeAppointment = (appointment) => ({
     reason: appointment.reason,
     status: appointment.status,
     paymentStatus: appointment.paymentStatus,
+    consultationFee: appointment.doctor?.consultationFee || 0,
+    confirmedAt: appointment.confirmedAt,
     createdBy: appointment.createdBy,
     requestedBy: appointment.requestedBy,
     createdAt: appointment.createdAt,
@@ -106,6 +110,10 @@ const buildAppointmentQuery = (queryParams, user) => {
 };
 
 const createAppointment = async (data, user) => {
+    if (user.role === 'receptionist') {
+        return createReceptionistAppointmentRequest(data, user);
+    }
+
     const { patient, department, appointmentDate } = data;
     const doctor = user.role === 'doctor' ? user.id : data.doctor;
 
@@ -135,6 +143,134 @@ const createAppointment = async (data, user) => {
     return sanitizeAppointment(populatedAppointment);
 };
 
+const createRequestedAppointment = async ({ patient, doctor, department, appointmentDate, timeSlot, reason, user = null }) => {
+    if (patient.status === 'inactive') throw serviceError('Inactive patient cannot book an appointment', 403);
+    if (!department || department.status !== 'active') throw serviceError('Department not found', 404);
+    if (!doctor.department || doctor.department._id.toString() !== department._id.toString()) {
+        throw serviceError('Selected doctor does not belong to the selected department');
+    }
+
+    const availableDays = doctor.availableDays?.length ? doctor.availableDays : [1, 2, 3, 4, 5];
+    const availableTimeSlots = doctor.availableTimeSlots?.length ? doctor.availableTimeSlots : ['09:00', '10:00', '11:00', '14:00', '15:00'];
+    const selectedDateTime = buildAppointmentDate(appointmentDate, timeSlot);
+    if (!availableDays.includes(new Date(`${appointmentDate}T00:00:00`).getDay()) || !availableTimeSlots.includes(timeSlot)) {
+        throw serviceError('Doctor is not available for this time slot', 409);
+    }
+
+    const conflict = await appointmentDao.findDoctorSlotConflict(doctor._id, selectedDateTime);
+    if (conflict) throw serviceError('Doctor is not available for this time slot', 409);
+
+    try {
+        const appointment = await appointmentDao.createAppointment({
+            patient: patient._id,
+            doctor: doctor._id,
+            department: department.name,
+            departmentRef: department._id,
+            appointmentDate: selectedDateTime,
+            timeSlot,
+            reason: reason?.trim() || '',
+            status: 'requested',
+            paymentStatus: 'unpaid',
+            createdBy: user?.id || null,
+            requestedBy: user?.id || null,
+        });
+        return sanitizeAppointment(await appointmentDao.getAppointmentById(appointment._id));
+    } catch (error) {
+        if (error.code === 11000) throw serviceError('Doctor is not available for this time slot', 409);
+        throw error;
+    }
+};
+
+const getOrCreatePublicPatient = async (details = {}) => {
+    const fullName = details.fullName?.trim();
+    const phone = details.phone?.trim();
+    const dateOfBirth = details.dateOfBirth;
+    const gender = details.gender?.trim().toLowerCase();
+    const address = details.address?.trim();
+    const emergencyContactName = details.emergencyContactName?.trim();
+    const emergencyContactPhone = details.emergencyContactPhone?.trim();
+
+    if (!fullName || !phone || !dateOfBirth || !gender || !address || !emergencyContactName || !emergencyContactPhone) {
+        throw serviceError('Full name, phone, date of birth, gender, address, and emergency contact details are required');
+    }
+    if (!PATIENT_NAME_REGEX.test(fullName) || !PATIENT_NAME_REGEX.test(emergencyContactName)) {
+        throw serviceError('Patient and emergency contact names contain invalid characters');
+    }
+    if (!SRI_LANKAN_PHONE_REGEX.test(phone) || !SRI_LANKAN_PHONE_REGEX.test(emergencyContactPhone)) {
+        throw serviceError('Phone numbers must be valid Sri Lankan 10-digit numbers starting with 0');
+    }
+    if (!['male', 'female', 'other'].includes(gender)) throw serviceError('Invalid gender');
+
+    const birthDate = validateAppointmentDate(dateOfBirth);
+    if (birthDate > new Date()) throw serviceError('Date of birth cannot be in the future');
+
+    const existingPatient = await patientDao.getPatientByPhone(phone);
+    if (existingPatient) return existingPatient;
+
+    return patientDao.createPatient({
+        patientId: await patientDao.getNextPatientId(),
+        fullName,
+        phone,
+        dateOfBirth: birthDate,
+        gender,
+        address,
+        emergencyContactName,
+        emergencyContactPhone,
+        createdBy: null,
+        userAccount: null,
+        medicalNotes: 'Patient profile created from public appointment booking.',
+    });
+};
+
+const requestPublicAppointment = async (data) => {
+    const { doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
+    if (!doctorId || !departmentId || !appointmentDate || !timeSlot) {
+        throw serviceError('doctor, department, appointmentDate, and timeSlot are required');
+    }
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) throw serviceError('Invalid department id');
+
+    const [patient, doctor, department] = await Promise.all([
+        getOrCreatePublicPatient(data.patient),
+        getDoctorOrThrow(doctorId),
+        departmentDao.getDepartmentById(departmentId),
+    ]);
+
+    return createRequestedAppointment({
+        patient,
+        doctor,
+        department,
+        appointmentDate,
+        timeSlot,
+        reason: data.reason || data.notes,
+    });
+};
+
+const createReceptionistAppointmentRequest = async (data, user) => {
+    const { patient: patientId, doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
+    if (!patientId || !doctorId || !departmentId || !appointmentDate || !timeSlot) {
+        throw serviceError('patient, doctor, department, appointmentDate, and timeSlot are required');
+    }
+    requireObjectId(patientId, 'patient id');
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) throw serviceError('Invalid department id');
+
+    const [patient, doctor, department] = await Promise.all([
+        patientDao.getPatientByMongoId(patientId),
+        getDoctorOrThrow(doctorId),
+        departmentDao.getDepartmentById(departmentId),
+    ]);
+    if (!patient) throw serviceError('Patient not found', 404);
+
+    return createRequestedAppointment({
+        patient,
+        doctor,
+        department,
+        appointmentDate,
+        timeSlot,
+        reason: data.reason || data.notes,
+        user,
+    });
+};
+
 const requestAppointment = async (data, user) => {
     const { doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
     if (!doctorId || !departmentId || !appointmentDate || !timeSlot) {
@@ -149,41 +285,15 @@ const requestAppointment = async (data, user) => {
     ]);
 
     if (!patient) throw serviceError('No patient profile is linked to this account', 404);
-    if (patient.status === 'inactive') throw serviceError('Inactive patient cannot book an appointment', 403);
-    if (!department || department.status !== 'active') throw serviceError('Department not found', 404);
-    if (!doctor.department || doctor.department._id.toString() !== departmentId) {
-        throw serviceError('Selected doctor does not belong to the selected department');
-    }
-
-    const availableDays = doctor.availableDays?.length ? doctor.availableDays : [1, 2, 3, 4, 5];
-    const availableTimeSlots = doctor.availableTimeSlots?.length ? doctor.availableTimeSlots : ['09:00', '10:00', '11:00', '14:00', '15:00'];
-    const selectedDateTime = buildAppointmentDate(appointmentDate, timeSlot);
-    if (!availableDays.includes(new Date(`${appointmentDate}T00:00:00`).getDay()) || !availableTimeSlots.includes(timeSlot)) {
-        throw serviceError('Doctor is not available for this time slot', 409);
-    }
-
-    const conflict = await appointmentDao.findDoctorSlotConflict(doctorId, selectedDateTime);
-    if (conflict) throw serviceError('Doctor is not available for this time slot', 409);
-
-    try {
-        const appointment = await appointmentDao.createAppointment({
-            patient: patient._id,
-            doctor: doctorId,
-            department: department.name,
-            departmentRef: department._id,
-            appointmentDate: selectedDateTime,
-            timeSlot,
-            reason: data.reason?.trim() || data.notes?.trim() || '',
-            status: 'requested',
-            paymentStatus: 'unpaid',
-            createdBy: user.id,
-            requestedBy: user.id,
-        });
-        return sanitizeAppointment(await appointmentDao.getAppointmentById(appointment._id));
-    } catch (error) {
-        if (error.code === 11000) throw serviceError('Doctor is not available for this time slot', 409);
-        throw error;
-    }
+    return createRequestedAppointment({
+        patient,
+        doctor,
+        department,
+        appointmentDate,
+        timeSlot,
+        reason: data.reason || data.notes,
+        user,
+    });
 };
 
 const createConsultation = async (appointmentId, data, user) => {
@@ -259,6 +369,54 @@ const getAppointments = async (queryParams, user) => {
     const query = buildAppointmentQuery(queryParams, user);
     const appointments = await appointmentDao.getAppointments(query);
     return appointments.map(sanitizeAppointment);
+};
+
+const getReceptionistPendingAppointments = async () => {
+    const appointments = await appointmentDao.getAppointments({
+        status: { $in: ['requested', 'pending_confirmation'] },
+    });
+    return appointments.map(sanitizeAppointment);
+};
+
+const getReceptionistConfirmedQueue = async (user = {}) => {
+    const appointments = await appointmentDao.getAppointments({ status: { $in: ['confirmed', 'paid'] } });
+    const queue = appointments
+        .sort((first, second) => new Date(first.appointmentDate) - new Date(second.appointmentDate))
+        .map((appointment, index) => ({
+            ...sanitizeAppointment(appointment),
+            queueNumber: index + 1,
+        }));
+
+    if (user.role === 'doctor') {
+        return queue.filter((appointment) => appointment.doctor?._id?.toString() === user.id);
+    }
+    return queue;
+};
+
+const confirmAppointment = async (id, user) => {
+    const appointment = await getAppointmentById(id, user);
+    if (!['requested', 'pending_confirmation'].includes(appointment.status)) {
+        throw serviceError('Only pending appointment requests can be confirmed', 409);
+    }
+
+    const confirmedAppointment = await appointmentDao.updateAppointment(id, { status: 'confirmed', confirmedAt: new Date() });
+    return sanitizeAppointment(confirmedAppointment);
+};
+
+const markAppointmentPaid = async (id, user) => {
+    const appointment = await appointmentDao.getAppointmentById(id);
+    if (!appointment) throw serviceError('Appointment not found', 404);
+    if (appointment.status !== 'confirmed' || appointment.paymentStatus === 'paid') {
+        throw serviceError('Only confirmed unpaid appointments can be marked as paid', 409);
+    }
+
+    const bill = await billService.createPaidAppointmentBill(appointment, user);
+    const paidAppointment = await appointmentDao.updateAppointment(id, {
+        status: 'paid',
+        paymentStatus: 'paid',
+        confirmedAt: appointment.confirmedAt || appointment.updatedAt || appointment.createdAt,
+    });
+    return { appointment: sanitizeAppointment(paidAppointment), bill };
 };
 
 const getMyAppointments = async (userId) => {
@@ -340,8 +498,13 @@ const deleteAppointment = async (id) => {
 const appointmentService = {
     createAppointment,
     requestAppointment,
+    requestPublicAppointment,
     createConsultation,
     getAppointments,
+    getReceptionistPendingAppointments,
+    getReceptionistConfirmedQueue,
+    confirmAppointment,
+    markAppointmentPaid,
     getMyAppointments,
     getAppointmentById,
     updateAppointment,

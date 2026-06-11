@@ -6,6 +6,7 @@ import { Toaster } from './components/ui/sonner';
 import DashboardRedirect from './pages/DashboardRedirect';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Signup from './pages/Signup';
 import Unauthorized from './pages/Unauthorized';
 import ProfilePage from './pages/ProfilePage';
@@ -69,6 +70,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/Login" element={<Navigate to="/login" replace />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/book-appointment" element={<PatientAppointmentBookingPage />} />

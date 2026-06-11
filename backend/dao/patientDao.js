@@ -82,6 +82,14 @@ class PatientDao {
             .exec();
     }
 
+    async getUnlinkedPatientByPhone(phone) {
+        return Patient.findOne({ phone, userAccount: null }).exec();
+    }
+
+    async getPatientByPhone(phone) {
+        return Patient.findOne({ phone }).exec();
+    }
+
     async deletePatient(id) {
         return Patient.findByIdAndDelete(id).exec();
     }

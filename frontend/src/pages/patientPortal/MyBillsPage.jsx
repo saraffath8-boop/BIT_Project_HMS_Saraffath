@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { downloadHospitalBillPdf } from '../../lib/hospitalBillPdf';
 import { getMyBills } from '../../services/billService';
 
 const formatDate = (dateValue) => {
@@ -79,6 +80,7 @@ const MyBillsPage = () => {
                                 <th style={styles.th}>Status</th>
                                 <th style={styles.th}>Created Date</th>
                                 <th style={styles.th}>Items</th>
+                                <th style={styles.th}>Bill</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -94,6 +96,11 @@ const MyBillsPage = () => {
                                         <td style={styles.td}>{formatStatus(bill.status)}</td>
                                         <td style={styles.td}>{formatDate(bill.createdAt)}</td>
                                         <td style={styles.td}>{summarizeItems(bill.items)}</td>
+                                        <td style={styles.td}>
+                                            <button type="button" style={styles.downloadButton} onClick={() => downloadHospitalBillPdf(bill)}>
+                                                Download PDF
+                                            </button>
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -118,6 +125,7 @@ const styles = {
     table: { width: '100%', borderCollapse: 'collapse' },
     th: { textAlign: 'left', background: '#eff6ff', color: '#1e3a8a', padding: '14px', borderBottom: '1px solid #bfdbfe', fontSize: '14px' },
     td: { padding: '14px', borderBottom: '1px solid #e2e8f0', color: '#0f172a', verticalAlign: 'top' },
+    downloadButton: { border: 0, borderRadius: '10px', background: '#2563eb', color: '#ffffff', cursor: 'pointer', padding: '9px 12px', fontWeight: 800, whiteSpace: 'nowrap' },
 };
 
 export default MyBillsPage;

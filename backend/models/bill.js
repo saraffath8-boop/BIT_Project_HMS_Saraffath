@@ -90,6 +90,21 @@ const billSchema = new mongoose.Schema(
             ref: 'Appointment',
             default: null,
         },
+        billType: {
+            type: String,
+            enum: ['general', 'consultation'],
+            default: 'general',
+        },
+        doctor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null,
+        },
+        roomNumber: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         items: {
             type: [billItemSchema],
             validate: [(items) => items.length > 0, 'At least one bill item is required'],

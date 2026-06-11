@@ -20,7 +20,8 @@ class BillDao {
     async getBills(query = {}) {
         return Bill.find(query)
             .populate('patient', 'patientId fullName phone')
-            .populate('appointment', 'appointmentDate status')
+            .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
+            .populate('doctor', 'name email role consultationFee roomNumber')
             .populate('createdBy', 'name email role')
             .populate('payments.receivedBy', 'name email role')
             .sort({ createdAt: -1 })
@@ -30,7 +31,8 @@ class BillDao {
     async getBillById(id) {
         return Bill.findById(id)
             .populate('patient', 'patientId fullName phone')
-            .populate('appointment', 'appointmentDate status')
+            .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
+            .populate('doctor', 'name email role consultationFee roomNumber')
             .populate('createdBy', 'name email role')
             .populate('payments.receivedBy', 'name email role')
             .exec();
@@ -39,7 +41,8 @@ class BillDao {
     async updateBill(id, updateData) {
         return Bill.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone')
-            .populate('appointment', 'appointmentDate status')
+            .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
+            .populate('doctor', 'name email role consultationFee roomNumber')
             .populate('createdBy', 'name email role')
             .populate('payments.receivedBy', 'name email role')
             .exec();
@@ -51,6 +54,16 @@ class BillDao {
 
     async countBills(query = {}) {
         return Bill.countDocuments(query).exec();
+    }
+
+    async getConsultationBillByAppointment(appointmentId) {
+        return Bill.findOne({ appointment: appointmentId, billType: 'consultation' })
+            .populate('patient', 'patientId fullName phone')
+            .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
+            .populate('doctor', 'name email role consultationFee roomNumber')
+            .populate('createdBy', 'name email role')
+            .populate('payments.receivedBy', 'name email role')
+            .exec();
     }
 
     async sumBillTotals(match = {}) {

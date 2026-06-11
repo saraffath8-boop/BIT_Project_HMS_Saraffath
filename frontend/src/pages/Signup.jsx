@@ -17,7 +17,7 @@ export default function Signup() {
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
         resolver: zodResolver(signupSchema),
-        defaultValues: { firstName: '', lastName: '', email: '', phone: '', nic: '', dob: '', gender: 'Other', password: '' },
+        defaultValues: { firstName: '', lastName: '', email: '', phone: '', nic: '', dob: '', gender: 'Other', password: '', address: '', emergencyContactName: '', emergencyContactPhone: '' },
     });
 
     useEffect(() => {
@@ -44,7 +44,10 @@ export default function Signup() {
                 <Field label="Date of Birth" error={errors.dob?.message}><Input {...register('dob')} type="date" /></Field>
                 <Field label="Gender" error={errors.gender?.message}><select {...register('gender')} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm">{genderOptions.map((gender) => <option key={gender} value={gender}>{gender}</option>)}</select></Field>
                 <Field label="Password" error={errors.password?.message}><Input {...register('password')} type="password" autoComplete="new-password" /></Field>
+                <Field label="Emergency Contact Name" error={errors.emergencyContactName?.message}><Input {...register('emergencyContactName')} autoComplete="name" /></Field>
+                <Field label="Emergency Contact Phone" error={errors.emergencyContactPhone?.message}><Input {...register('emergencyContactPhone')} type="text" inputMode="numeric" maxLength={10} autoComplete="tel" /></Field>
             </div>
+            <Field label="Address" error={errors.address?.message}><textarea {...register('address')} className="min-h-24 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" autoComplete="street-address" /></Field>
             <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-3 text-sm text-cyan-800"><strong>Account type:</strong> Patient</div>
             <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}><UserRoundPlus className="size-4" />{isSubmitting ? 'Creating account...' : 'Create patient account'}</Button>
         </form><p className="mt-6 text-center text-sm text-slate-500">Already registered? <Link className="font-semibold text-cyan-700 hover:underline" to="/login">Sign in</Link></p></CardContent>

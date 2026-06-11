@@ -8,7 +8,7 @@ class UserDao {
 
     async getUsers(query = {}) {
         return User.find(query)
-            .select('name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee availableDays availableTimeSlots')
+            .select('name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee roomNumber availableDays availableTimeSlots')
             .populate('department', 'name description status')
             .sort({ name: 1 })
             .exec();
@@ -42,12 +42,26 @@ class UserDao {
         return User.findOne({ phone }).exec();
     }
 
+    async getUserByPhoneForPasswordReset(phone) {
+        return User.findOne({ phone })
+            .select('+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpLastSentAt +passwordResetOtpAttempts')
+            .exec();
+    }
+
     async getUserByNic(nic) {
         return User.findOne({ nic }).exec();
     }
 
+    async getUserByRoomNumber(roomNumber) {
+        return User.findOne({ roomNumber }).exec();
+    }
+
     async updateUser(userId, updateData) {
         return User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true, context: 'query' }).exec();
+    }
+
+    async deleteUser(userId) {
+        return User.findByIdAndDelete(userId).exec();
     }
 }
 
