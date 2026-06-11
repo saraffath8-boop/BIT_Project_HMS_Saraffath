@@ -8,7 +8,8 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No lab request') || error.message.includes('cannot change')) return 400;
+    if (error.message.includes('already paid') || error.message.includes('cannot be paid')) return 409;
+    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No lab request') || error.message.includes('cannot change') || error.message.includes('greater than')) return 400;
     return 500;
 };
 
@@ -77,6 +78,13 @@ export const updateLabRequest = async (req, res) => {
     } catch (error) {
         return sendError(res, getStatusCode(error), error.message);
     }
+};
+
+export const markLabRequestPaid = async (req, res) => {
+    try {
+        const result = await labRequestService.markLabRequestPaid(req.params.id, req.body, req.user);
+        return res.status(200).json({ success: true, message: 'Laboratory request marked paid, bill created, and sent to laboratory', ...result });
+    } catch (error) { return sendError(res, getStatusCode(error), error.message); }
 };
 
 export const deleteLabRequest = async (req, res) => {

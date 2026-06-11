@@ -8,7 +8,8 @@ const sendError = (res, statusCode, message) => res.status(statusCode).json({
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('valid date') || error.message.includes('No radiology request')) return 400;
+    if (error.message.includes('already paid') || error.message.includes('cannot be paid')) return 409;
+    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('valid date') || error.message.includes('No radiology request') || error.message.includes('greater than')) return 400;
     return 500;
 };
 
@@ -77,6 +78,13 @@ export const updateRadiologyRequest = async (req, res) => {
     } catch (error) {
         return sendError(res, getStatusCode(error), error.message);
     }
+};
+
+export const markRadiologyRequestPaid = async (req, res) => {
+    try {
+        const result = await radiologyRequestService.markRadiologyRequestPaid(req.params.id, req.body, req.user);
+        return res.status(200).json({ success: true, message: 'Radiology request marked paid, bill created, and sent to radiology', ...result });
+    } catch (error) { return sendError(res, getStatusCode(error), error.message); }
 };
 
 export const deleteRadiologyRequest = async (req, res) => {

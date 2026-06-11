@@ -437,6 +437,33 @@ const createPaidPrescriptionBill = async (prescription, amount, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
+const createPaidClinicalServiceBill = async ({ request, amount, user, billType, sourceType, description }) => {
+    const sourceId = request._id?.toString() || request.id;
+    const existingBill = await billDao.getServiceBillBySource(billType, sourceType, sourceId);
+    if (existingBill) return sanitizeBill(existingBill);
+    const totalAmount = toNumber(amount, `${billType} payment amount`, 0.01);
+    const patientId = request.patient?._id?.toString() || request.patient?.id || request.patient?.toString();
+    const doctorId = request.doctor?._id?.toString() || request.doctor?.id || request.doctor?.toString();
+    const appointmentId = request.medicalRecord?.appointment?._id?.toString() || request.medicalRecord?.appointment?.toString() || null;
+    const payment = { amount: totalAmount, method: 'cash', reference: '', paidAt: new Date(), receivedBy: user.id };
+    const bill = await billDao.createBill({
+        billNumber: await billDao.getNextBillNumber(),
+        patient: patientId,
+        appointment: appointmentId,
+        billType,
+        doctor: doctorId,
+        items: [{ description: description.slice(0, 250), category: billType, quantity: 1, unitPrice: totalAmount, total: totalAmount, sourceType, sourceId }],
+        subtotal: totalAmount,
+        discount: 0,
+        totalAmount,
+        paidAmount: totalAmount,
+        status: 'paid',
+        payments: [payment],
+        createdBy: user.id,
+    });
+    return sanitizeBill(await billDao.getBillById(bill._id));
+};
+
 const ensureDoctorRoomNumbers = async () => {
     const doctors = await userDao.getUsers({ role: 'doctor' });
     let assignedCount = 0;
@@ -603,6 +630,7 @@ const billService = {
     processPatientDecisions,
     createPaidAppointmentBill,
     createPaidPrescriptionBill,
+    createPaidClinicalServiceBill,
     ensureDoctorRoomNumbers,
     ensurePaidAppointmentBills,
 };

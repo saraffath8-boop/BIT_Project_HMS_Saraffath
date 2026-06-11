@@ -22,6 +22,10 @@ export const updateLabRequest = async (id, labRequestData, token) => {
     return apiPatch(`${LAB_REQUESTS_URL}/${id}`, labRequestData, token, 'Unable to update lab request');
 };
 
+export const markLabRequestPaid = async (id, amount, token) => {
+    return apiPatch(`${LAB_REQUESTS_URL}/${id}/mark-paid`, { amount }, token, 'Unable to mark lab request as paid');
+};
+
 export const deleteLabRequest = async (id, token) => {
     return apiDelete(`${LAB_REQUESTS_URL}/${id}`, token, 'Unable to delete lab request');
 };

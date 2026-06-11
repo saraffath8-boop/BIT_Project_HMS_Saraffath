@@ -10,9 +10,10 @@ const buildPdf = (bill) => {
     const doctor = bill.doctor || {};
     const appointment = bill.appointment || {};
     const payment = bill.payments?.[0] || {};
-    const isPharmacyBill = bill.billType === 'pharmacy';
-    const receiptTitle = isPharmacyBill ? 'Official Pharmacy Payment Receipt' : 'Official Consultation Payment Receipt';
-    const itemDescription = bill.items?.map((item) => item.description).join('; ') || (isPharmacyBill ? 'Prescription medicines' : 'Doctor consultation fee');
+    const serviceNames = { pharmacy: 'Pharmacy', laboratory: 'Laboratory', radiology: 'Radiology' };
+    const serviceName = serviceNames[bill.billType];
+    const receiptTitle = serviceName ? `Official ${serviceName} Payment Receipt` : 'Official Consultation Payment Receipt';
+    const itemDescription = bill.items?.map((item) => item.description).join('; ') || (serviceName ? `${serviceName} service` : 'Doctor consultation fee');
     const lines = [
         textCommand('MEDICORE HOSPITAL', 210, 750, 18, true),
         textCommand(receiptTitle, 210, 730, 11),
@@ -23,7 +24,7 @@ const buildPdf = (bill) => {
         textCommand(`Patient ID: ${patient.patientId || 'Not recorded'}`, 330, 665, 10),
         textCommand(`Phone: ${patient.phone || 'Not recorded'}`, 55, 645, 10),
         textCommand(`Doctor: ${doctor.name || 'Not recorded'}`, 55, 610, 11, true),
-        textCommand(isPharmacyBill ? 'Service: Pharmacy' : `Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`, 330, 610, 11, true),
+        textCommand(serviceName ? `Service: ${serviceName}` : `Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`, 330, 610, 11, true),
         textCommand(`Appointment: ${dateTime(appointment.appointmentDate)}`, 55, 585, 10),
         textCommand(`Time Slot: ${appointment.timeSlot || 'Not recorded'}`, 330, 585, 10),
         '50 555 m 562 555 l S',

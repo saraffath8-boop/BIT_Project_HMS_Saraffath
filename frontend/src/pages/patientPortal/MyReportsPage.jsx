@@ -106,6 +106,7 @@ const MyReportsPage = () => {
                                             <th style={styles.th}>Doctor</th>
                                             <th style={styles.th}>Tests</th>
                                             <th style={styles.th}>Priority</th>
+                                            <th style={styles.th}>Payment</th>
                                             <th style={styles.th}>Status</th>
                                             <th style={styles.th}>Result Summary</th>
                                         </tr>
@@ -117,6 +118,7 @@ const MyReportsPage = () => {
                                                 <td style={styles.td}>{formatPerson(request.doctor)}</td>
                                                 <td style={styles.td}>{formatTestNames(request.tests)}</td>
                                                 <td style={styles.td}>{formatStatus(request.priority)}</td>
+                                                <td style={styles.td}>{formatStatus(request.paymentStatus || 'unpaid')}</td>
                                                 <td style={styles.td}>{formatStatus(request.status)}</td>
                                                 <td style={styles.td}>{summarizeLabResults(request.tests)}</td>
                                             </tr>
@@ -140,6 +142,7 @@ const MyReportsPage = () => {
                                             <th style={styles.th}>Doctor</th>
                                             <th style={styles.th}>Scan Type</th>
                                             <th style={styles.th}>Body Part</th>
+                                            <th style={styles.th}>Payment</th>
                                             <th style={styles.th}>Status</th>
                                             <th style={styles.th}>Report Summary</th>
                                         </tr>
@@ -151,6 +154,7 @@ const MyReportsPage = () => {
                                                 <td style={styles.td}>{formatPerson(request.doctor)}</td>
                                                 <td style={styles.td}>{request.scanType || 'N/A'}</td>
                                                 <td style={styles.td}>{request.bodyPart || 'N/A'}</td>
+                                                <td style={styles.td}>{formatStatus(request.paymentStatus || 'unpaid')}</td>
                                                 <td style={styles.td}>{formatStatus(request.status)}</td>
                                                 <td style={styles.td}>{request.report || 'N/A'}</td>
                                             </tr>

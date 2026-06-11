@@ -4,6 +4,8 @@ import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import clinicalCompletionService from './clinicalCompletionService.js';
+import notificationService from './notificationService.js';
+import billService from './billService.js';
 
 const RADIOLOGY_STATUSES = ['requested', 'scheduled', 'in_progress', 'completed', 'cancelled'];
 
@@ -20,6 +22,9 @@ const sanitizeRadiologyRequest = (request) => ({
     report: request.report,
     status: request.status,
     patientDecisionStatus: request.patientDecisionStatus,
+    paymentStatus: request.paymentStatus,
+    paidBy: request.paidBy,
+    paidAt: request.paidAt,
     radiologist: request.radiologist,
     completedAt: request.completedAt,
     createdAt: request.createdAt,
@@ -119,14 +124,24 @@ const buildRadiologyQuery = (queryParams, user) => {
     if (queryParams.scanType) {
         query.scanType = toCleanString(queryParams.scanType);
     }
+    if (queryParams.paymentStatus) {
+        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus)) throw new Error('Invalid radiology request payment status');
+        query.paymentStatus = queryParams.paymentStatus;
+    }
 
     if (user.role === 'doctor') {
         query.doctor = user.id;
     }
 
     if (user.role === 'radiologist') {
-        query.patientDecisionStatus = { $in: ['paid', 'not_required'] };
-        query.$or = [{ radiologist: user.id }, { radiologist: null }];
+        query.$and = [
+            { $or: [{ paymentStatus: 'paid' }, { status: 'completed' }] },
+            { $or: [{ radiologist: user.id }, { radiologist: null }] },
+        ];
+    }
+    if (user.role === 'receptionist') {
+        query.paymentStatus = { $ne: 'paid' };
+        query.status = { $nin: ['completed', 'cancelled'] };
     }
 
     return query;
@@ -158,6 +173,7 @@ const createRadiologyRequest = async (data, user) => {
         report: '',
         status: data.scheduledAt ? 'scheduled' : 'requested',
         patientDecisionStatus: data.patientDecisionStatus || 'not_required',
+        paymentStatus: 'unpaid',
         radiologist: null,
     });
 
@@ -197,7 +213,7 @@ const getRadiologyRequestById = async (id, user) => {
     if (
         user.role === 'radiologist'
         && (
-            !['paid', 'not_required'].includes(request.patientDecisionStatus)
+            request.paymentStatus !== 'paid' && request.status !== 'completed'
             || (request.radiologist && request.radiologist._id.toString() !== user.id)
         )
     ) {
@@ -205,6 +221,26 @@ const getRadiologyRequestById = async (id, user) => {
     }
 
     return sanitizeRadiologyRequest(request);
+};
+
+const markRadiologyRequestPaid = async (id, data, user) => {
+    requireObjectId(id, 'radiology request id');
+    const request = await radiologyRequestDao.getRadiologyRequestById(id);
+    if (!request) throw new Error('Radiology request not found');
+    if (request.paymentStatus === 'paid') throw new Error('Radiology request is already paid');
+    if (['completed', 'cancelled'].includes(request.status)) throw new Error(`${request.status === 'completed' ? 'Completed' : 'Cancelled'} radiology request cannot be paid`);
+    const bill = await billService.createPaidClinicalServiceBill({
+        request, amount: data.amount, user, billType: 'radiology', sourceType: 'radiology',
+        description: `Radiology scan: ${request.scanType}${request.bodyPart ? ` - ${request.bodyPart}` : ''}`,
+    });
+    const radiologyRequest = await radiologyRequestDao.updateRadiologyRequest(id, { paymentStatus: 'paid', patientDecisionStatus: 'paid', paidBy: user.id, paidAt: new Date() });
+    const recipients = await userDao.getUsers({ role: 'radiologist', isActive: true });
+    await Promise.all(recipients.map((recipient) => notificationService.createNotification({
+        recipient: recipient._id.toString(), title: 'Paid radiology request ready',
+        message: `${radiologyRequest.patient.fullName}'s radiology request is paid and ready for processing.`,
+        type: 'radiology', relatedPatient: radiologyRequest.patient._id.toString(), sendSms: false,
+    }, {})));
+    return { radiologyRequest: sanitizeRadiologyRequest(radiologyRequest), bill };
 };
 
 const updateRadiologyRequest = async (id, data, user) => {
@@ -291,6 +327,7 @@ const radiologyRequestService = {
     getMyRadiologyRequests,
     getRadiologyRequestById,
     updateRadiologyRequest,
+    markRadiologyRequestPaid,
     deleteRadiologyRequest,
 };
 

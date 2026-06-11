@@ -76,6 +76,16 @@ class BillDao {
             .exec();
     }
 
+    async getServiceBillBySource(billType, sourceType, sourceId) {
+        return Bill.findOne({ billType, 'items.sourceType': sourceType, 'items.sourceId': sourceId })
+            .populate('patient', 'patientId fullName phone')
+            .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
+            .populate('doctor', 'name email role consultationFee roomNumber')
+            .populate('createdBy', 'name email role')
+            .populate('payments.receivedBy', 'name email role')
+            .exec();
+    }
+
     async sumBillTotals(match = {}) {
         const result = await Bill.aggregate([
             { $match: match },

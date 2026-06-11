@@ -4,6 +4,8 @@ import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import clinicalCompletionService from './clinicalCompletionService.js';
+import notificationService from './notificationService.js';
+import billService from './billService.js';
 
 const LAB_PRIORITIES = ['routine', 'urgent'];
 const LAB_STATUSES = ['requested', 'sample_collected', 'in_progress', 'completed', 'cancelled'];
@@ -17,6 +19,9 @@ const sanitizeLabRequest = (labRequest) => ({
     priority: labRequest.priority,
     status: labRequest.status,
     patientDecisionStatus: labRequest.patientDecisionStatus,
+    paymentStatus: labRequest.paymentStatus,
+    paidBy: labRequest.paidBy,
+    paidAt: labRequest.paidAt,
     technician: labRequest.technician,
     completedAt: labRequest.completedAt,
     createdAt: labRequest.createdAt,
@@ -106,14 +111,24 @@ const buildLabRequestQuery = (queryParams, user) => {
         }
         query.priority = queryParams.priority;
     }
+    if (queryParams.paymentStatus) {
+        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus)) throw new Error('Invalid lab request payment status');
+        query.paymentStatus = queryParams.paymentStatus;
+    }
 
     if (user.role === 'doctor') {
         query.doctor = user.id;
     }
 
     if (user.role === 'lab_technician') {
-        query.patientDecisionStatus = { $in: ['paid', 'not_required'] };
-        query.$or = [{ technician: user.id }, { technician: null }];
+        query.$and = [
+            { $or: [{ paymentStatus: 'paid' }, { status: 'completed' }] },
+            { $or: [{ technician: user.id }, { technician: null }] },
+        ];
+    }
+    if (user.role === 'receptionist') {
+        query.paymentStatus = { $ne: 'paid' };
+        query.status = { $nin: ['completed', 'cancelled'] };
     }
 
     return query;
@@ -166,6 +181,7 @@ const createLabRequest = async (data, user) => {
         priority,
         status: 'requested',
         patientDecisionStatus: data.patientDecisionStatus || 'not_required',
+        paymentStatus: 'unpaid',
         technician: null,
     });
 
@@ -205,7 +221,7 @@ const getLabRequestById = async (id, user) => {
     if (
         user.role === 'lab_technician'
         && (
-            !['paid', 'not_required'].includes(labRequest.patientDecisionStatus)
+            labRequest.paymentStatus !== 'paid' && labRequest.status !== 'completed'
             || (labRequest.technician && labRequest.technician._id.toString() !== user.id)
         )
     ) {
@@ -213,6 +229,26 @@ const getLabRequestById = async (id, user) => {
     }
 
     return sanitizeLabRequest(labRequest);
+};
+
+const markLabRequestPaid = async (id, data, user) => {
+    requireObjectId(id, 'lab request id');
+    const request = await labRequestDao.getLabRequestById(id);
+    if (!request) throw new Error('Lab request not found');
+    if (request.paymentStatus === 'paid') throw new Error('Lab request is already paid');
+    if (['completed', 'cancelled'].includes(request.status)) throw new Error(`${request.status === 'completed' ? 'Completed' : 'Cancelled'} lab request cannot be paid`);
+    const bill = await billService.createPaidClinicalServiceBill({
+        request, amount: data.amount, user, billType: 'laboratory', sourceType: 'laboratory',
+        description: `Laboratory tests: ${request.tests.map((test) => test.testName).join(', ')}`,
+    });
+    const labRequest = await labRequestDao.updateLabRequest(id, { paymentStatus: 'paid', patientDecisionStatus: 'paid', paidBy: user.id, paidAt: new Date() });
+    const recipients = await userDao.getUsers({ role: 'lab_technician', isActive: true });
+    await Promise.all(recipients.map((recipient) => notificationService.createNotification({
+        recipient: recipient._id.toString(), title: 'Paid laboratory request ready',
+        message: `${labRequest.patient.fullName}'s laboratory request is paid and ready for processing.`,
+        type: 'laboratory', relatedPatient: labRequest.patient._id.toString(), sendSms: false,
+    }, {})));
+    return { labRequest: sanitizeLabRequest(labRequest), bill };
 };
 
 const updateLabRequest = async (id, data, user) => {
@@ -307,6 +343,7 @@ const labRequestService = {
     getMyLabRequests,
     getLabRequestById,
     updateLabRequest,
+    markLabRequestPaid,
     deleteLabRequest,
 };
 

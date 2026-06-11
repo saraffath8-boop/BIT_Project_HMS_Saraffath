@@ -107,10 +107,10 @@ function App() {
                 <Route path="/pharmacy" element={roleRoute(['admin', 'doctor', 'pharmacist'], <PharmacyPage />)} />
                 <Route path="/pharmacy/new" element={roleRoute(['admin', 'pharmacist'], <MedicineCreatePage />)} />
                 <Route path="/laboratory" element={roleRoute(['admin', 'doctor', 'nurse', 'lab_technician'], <LaboratoryPage />)} />
-                <Route path="/laboratory/new" element={roleRoute(['admin', 'doctor'], <LabRequestCreatePage />)} />
+                <Route path="/laboratory/new" element={roleRoute(['admin'], <LabRequestCreatePage />)} />
                 <Route path="/laboratory/:id/process" element={roleRoute(['admin', 'doctor', 'lab_technician'], <LabRequestProcessingPage />)} />
                 <Route path="/radiology" element={roleRoute(['admin', 'doctor', 'nurse', 'radiologist'], <RadiologyPage />)} />
-                <Route path="/radiology/new" element={roleRoute(['admin', 'doctor'], <RadiologyRequestCreatePage />)} />
+                <Route path="/radiology/new" element={roleRoute(['admin'], <RadiologyRequestCreatePage />)} />
                 <Route path="/radiology/:id/process" element={roleRoute(['admin', 'doctor', 'radiologist'], <RadiologyRequestProcessingPage />)} />
                 <Route path="/billing" element={roleRoute(['admin', 'receptionist'], <BillingPage />)} />
                 <Route path="/billing/new" element={roleRoute(['admin'], <BillCreatePage />)} />

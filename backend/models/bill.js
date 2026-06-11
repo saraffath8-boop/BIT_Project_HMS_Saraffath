@@ -92,7 +92,7 @@ const billSchema = new mongoose.Schema(
         },
         billType: {
             type: String,
-            enum: ['general', 'consultation', 'pharmacy'],
+            enum: ['general', 'consultation', 'pharmacy', 'laboratory', 'radiology'],
             default: 'general',
         },
         doctor: {

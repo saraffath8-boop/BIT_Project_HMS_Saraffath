@@ -11,6 +11,7 @@ class RadiologyRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('radiologist', 'name email role')
+            .populate('paidBy', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
             .sort({ createdAt: -1 })
             .exec();
@@ -21,6 +22,7 @@ class RadiologyRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('radiologist', 'name email role')
+            .populate('paidBy', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
             .exec();
     }
@@ -30,6 +32,7 @@ class RadiologyRequestDao {
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('radiologist', 'name email role')
+            .populate('paidBy', 'name email role')
             .populate('medicalRecord', 'diagnosis createdAt appointment')
             .exec();
     }

@@ -347,21 +347,21 @@ const createConsultation = async (appointmentId, data, user) => {
     }
 
     const updatedAppointment = sanitizeAppointment(await appointmentDao.updateAppointment(appointmentId, { status: 'completed' }));
-    const directRequests = [
-        requests.labRequest && { role: 'lab_technician', type: 'laboratory', label: 'laboratory request' },
-        requests.radiologyRequest && { role: 'radiologist', type: 'radiology', label: 'scan request' },
+    const cashierRequests = [
+        requests.labRequest && 'laboratory request',
+        requests.radiologyRequest && 'scan request',
     ].filter(Boolean);
-    await Promise.all(directRequests.map(async ({ role, type, label }) => {
-        const recipients = await userDao.getUsers({ role, isActive: true });
+    if (cashierRequests.length) {
+        const recipients = await userDao.getUsers({ role: 'receptionist', isActive: true });
         await Promise.all(recipients.map((recipient) => notificationService.createNotification({
             recipient: recipient._id.toString(),
-            title: `New ${label}`,
-            message: `${appointment.patient.fullName} has a new ${label} ready for processing.`,
-            type,
+            title: 'Clinical request awaiting payment',
+            message: `${appointment.patient.fullName} has ${cashierRequests.join(' and ')} awaiting payment.`,
+            type: 'billing',
             relatedPatient: patientId,
             sendSms: false,
         }, {})));
-    }));
+    }
 
     return { appointment: updatedAppointment, medicalRecord, requests };
 };

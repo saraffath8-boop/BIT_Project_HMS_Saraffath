@@ -5,6 +5,7 @@ import {
     getMyRadiologyRequests,
     getRadiologyRequestById,
     getRadiologyRequests,
+    markRadiologyRequestPaid,
     updateRadiologyRequest,
 } from '../controllers/radiologyRequestController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -16,15 +17,17 @@ router.use(protect);
 
 router
     .route('/')
-    .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist'), getRadiologyRequests)
-    .post(authorizeRoles('admin', 'doctor'), createRadiologyRequest);
+    .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist', 'receptionist'), getRadiologyRequests)
+    .post(authorizeRoles('admin'), createRadiologyRequest);
 
 router
     .get('/my', authorizeRoles('patient'), getMyRadiologyRequests);
 
+router.patch('/:id/mark-paid', authorizeRoles('admin', 'receptionist'), markRadiologyRequestPaid);
+
 router
     .route('/:id')
-    .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist'), getRadiologyRequestById)
+    .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist', 'receptionist'), getRadiologyRequestById)
     .patch(authorizeRoles('admin', 'radiologist'), updateRadiologyRequest)
     .delete(authorizeRoles('admin'), deleteRadiologyRequest);
 
