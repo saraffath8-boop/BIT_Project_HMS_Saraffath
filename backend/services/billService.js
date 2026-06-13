@@ -419,12 +419,12 @@ const createPaidAppointmentBill = async (appointment, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
-const createPaidPrescriptionBill = async (prescription, amount, user) => {
+const createPaidPrescriptionBill = async (prescription, pricing, user) => {
     const prescriptionId = prescription._id?.toString() || prescription.id;
     const existingBill = await billDao.getPharmacyBillByPrescription(prescriptionId);
     if (existingBill) return sanitizeBill(existingBill);
 
-    const totalAmount = toNumber(amount, 'prescription payment amount', 0.01);
+    const totalAmount = toNumber(pricing.totalAmount, 'prescription payment amount', 0.01);
     const patientId = prescription.patient?._id?.toString() || prescription.patient?.id || prescription.patient?.toString();
     const doctorId = prescription.doctor?._id?.toString() || prescription.doctor?.id || prescription.doctor?.toString();
     const appointmentId = prescription.medicalRecord?.appointment?._id?.toString()
@@ -437,22 +437,21 @@ const createPaidPrescriptionBill = async (prescription, amount, user) => {
         paidAt: new Date(),
         receivedBy: user.id,
     };
-    const medicineNames = prescription.items.map((item) => item.medicineName).join(', ');
     const bill = await billDao.createBill({
         billNumber: await billDao.getNextBillNumber(),
         patient: patientId,
         appointment: appointmentId,
         billType: 'pharmacy',
         doctor: doctorId,
-        items: [{
-            description: `Prescription medicines: ${medicineNames}`.slice(0, 250),
+        items: pricing.billItems.map((item) => ({
+            description: item.description.slice(0, 250),
             category: 'medicine',
-            quantity: 1,
-            unitPrice: totalAmount,
-            total: totalAmount,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
             sourceType: 'prescription',
-            sourceId: prescriptionId,
-        }],
+            sourceId: item.sourceId,
+        })),
         subtotal: totalAmount,
         discount: 0,
         totalAmount,

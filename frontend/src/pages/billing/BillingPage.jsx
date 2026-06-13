@@ -14,6 +14,18 @@ import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { getLabRequests, markLabRequestPaid } from '../../services/labRequestService';
 import { getRadiologyRequests, markRadiologyRequestPaid } from '../../services/radiologyRequestService';
 
+const getNumericMultiplier = (value) => Number(String(value || '').match(/\d+(?:\.\d+)?/)?.[0] || 0);
+const getPrescriptionItemId = (item, index) => String(item._id || item.id || index);
+const calculateMedicineTotal = (item, pricing = {}) => {
+    const unitPrice = Number(pricing.unitPrice || 0);
+    const duration = Number(pricing.duration || 0);
+    return Math.round((unitPrice * duration * getNumericMultiplier(item.dosage) * getNumericMultiplier(item.frequency) + Number.EPSILON) * 100) / 100;
+};
+const calculatePrescriptionTotal = (prescription, pricing = {}) => (prescription.items || []).reduce(
+    (total, item, index) => total + calculateMedicineTotal(item, pricing[getPrescriptionItemId(item, index)]),
+    0,
+);
+
 const BillingPage = () => {
     const { user } = useAuth();
     if (user?.role === 'receptionist') return <ReceptionistBillingPage />;
@@ -90,7 +102,7 @@ const ClinicalOperatorBillingPage = ({ type }) => {
     const markPaid = async (request) => {
         setPayingId(`${type}:${request.id}`); setError(''); setSuccess('');
         try {
-            const amount = Number(amounts[request.id]);
+            const amount = Number(amounts[`${type}:${request.id}`]);
             if (!(amount > 0)) throw new Error('Enter a valid amount before marking the request paid');
             const response = isLaboratory
                 ? await markLabRequestPaid(request.id, amount, token)
@@ -119,7 +131,7 @@ const PharmacistBillingPage = () => {
     const { token } = useAuth();
     const [prescriptions, setPrescriptions] = useState([]);
     const [pharmacyBills, setPharmacyBills] = useState([]);
-    const [amounts, setAmounts] = useState({});
+    const [pricing, setPricing] = useState({});
     const [payingId, setPayingId] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -143,9 +155,15 @@ const PharmacistBillingPage = () => {
     const markPaid = async (prescription) => {
         setPayingId(prescription.id); setError(''); setSuccess('');
         try {
-            const amount = Number(amounts[prescription.id]);
-            if (!(amount > 0)) throw new Error('Enter a valid prescription amount before marking it paid');
-            const response = await markPrescriptionPaid(prescription.id, amount, token);
+            const prescriptionPricing = pricing[prescription.id] || {};
+            const pricingItems = (prescription.items || []).map((item, index) => {
+                const itemId = getPrescriptionItemId(item, index);
+                return { itemId, unitPrice: prescriptionPricing[itemId]?.unitPrice, duration: prescriptionPricing[itemId]?.duration };
+            });
+            if (pricingItems.some((item) => !(Number(item.unitPrice) > 0) || !(Number(item.duration) > 0))) {
+                throw new Error('Enter a valid unit price and duration for every medicine');
+            }
+            const response = await markPrescriptionPaid(prescription.id, pricingItems, token);
             setPrescriptions((items) => items.filter((item) => item.id !== prescription.id));
             setPharmacyBills((items) => [response.bill, ...items]);
             setSuccess(response.message);
@@ -158,7 +176,7 @@ const PharmacistBillingPage = () => {
         {error && <Alert variant="destructive">{error}</Alert>}
         {success && <Alert>{success}</Alert>}
         {loading && <Card className="p-6 text-sm text-slate-500">Loading pharmacy billing...</Card>}
-        {!loading && <PrescriptionCashierQueue prescriptions={prescriptions} amounts={amounts} setAmounts={setAmounts} payingId={payingId} onPay={markPaid} />}
+        {!loading && <PrescriptionCashierQueue prescriptions={prescriptions} pricing={pricing} setPricing={setPricing} payingId={payingId} onPay={markPaid} />}
         {!loading && <CollapsibleSection title="Paid Pharmacy Bills" count={pharmacyBills.length}>
             {pharmacyBills.length === 0 ? <Card className="p-10 text-center text-sm text-slate-500">No paid pharmacy bills are available.</Card> : <Card className="overflow-hidden"><Table><TableHeader><TableRow><TableHead>Patient</TableHead><TableHead>Medicines</TableHead><TableHead>Paid Amount</TableHead><TableHead>Bill</TableHead></TableRow></TableHeader><TableBody>{pharmacyBills.map((bill) => <TableRow key={bill.id}><TableCell><PersonSummary person={bill.patient} /></TableCell><TableCell className="max-w-72 whitespace-normal">{bill.items?.map((item) => item.description).join(', ') || 'Prescription medicines'}</TableCell><TableCell>LKR {Number(bill.paidAmount || 0).toLocaleString()}</TableCell><TableCell><Button size="sm" onClick={() => downloadHospitalBillPdf(bill)}>Download PDF</Button></TableCell></TableRow>)}</TableBody></Table></Card>}
         </CollapsibleSection>}
@@ -172,9 +190,21 @@ const ClinicalPaymentQueue = ({ title, requests, type, amounts, setAmounts, payi
     })}</TableBody></Table></Card>}
 </CollapsibleSection>;
 
-const PrescriptionCashierQueue = ({ prescriptions, amounts, setAmounts, payingId, onPay }) => <CollapsibleSection title="Prescription Cashier Queue" count={prescriptions.length} >
+const PrescriptionCashierQueue = ({ prescriptions, pricing, setPricing, payingId, onPay }) => <CollapsibleSection title="Prescription Cashier Queue" count={prescriptions.length} >
     {prescriptions.length === 0 ? <Card className="p-8 text-center text-sm text-slate-500">No unpaid prescriptions are waiting.</Card> : <div className="grid gap-4">{prescriptions.map((prescription) => {
-        const amount = amounts[prescription.id] || '';
+        const prescriptionPricing = pricing[prescription.id] || {};
+        const totalAmount = calculatePrescriptionTotal(prescription, prescriptionPricing);
+        const pricingComplete = (prescription.items || []).every((item, index) => {
+            const itemPricing = prescriptionPricing[getPrescriptionItemId(item, index)];
+            return Number(itemPricing?.unitPrice) > 0 && Number(itemPricing?.duration) > 0;
+        });
+        const updatePricing = (itemId, field, value) => setPricing((current) => ({
+            ...current,
+            [prescription.id]: {
+                ...(current[prescription.id] || {}),
+                [itemId]: { ...(current[prescription.id]?.[itemId] || {}), [field]: value },
+            },
+        }));
         return <Card key={prescription.id} className="overflow-hidden">
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4">
                 <PersonSummary person={prescription.patient} />
@@ -183,19 +213,29 @@ const PrescriptionCashierQueue = ({ prescriptions, amounts, setAmounts, payingId
             <div className="space-y-4 p-5">
                 <div className="overflow-hidden rounded-xl border border-slate-200">
                     <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2 bg-cyan-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-cyan-900"><span>#</span><span>Prescribed medicines</span></div>
-                    {(prescription.items || []).map((item, index) => <div key={item._id || `${prescription.id}-${index}`} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2 border-t border-slate-100 px-4 py-3">
+                    {(prescription.items || []).map((item, index) => {
+                        const itemId = getPrescriptionItemId(item, index);
+                        const itemPricing = prescriptionPricing[itemId] || {};
+                        const lineTotal = calculateMedicineTotal(item, itemPricing);
+                        return <div key={itemId} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2 border-t border-slate-100 px-4 py-3">
                         <span className="grid size-6 place-items-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-800">{index + 1}</span>
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold text-slate-950">{item.medicineName}</p>{item.medicine?.unitPrice != null && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Reference unit price: LKR {Number(item.medicine.unitPrice).toLocaleString()}</span>}</div>
-                            <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-3"><p><span className="font-semibold text-slate-800">Dosage:</span> {item.dosage}</p><p><span className="font-semibold text-slate-800">Frequency:</span> {item.frequency}</p><p><span className="font-semibold text-slate-800">Duration:</span> {item.duration}</p></div>
+                            <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-2"><p><span className="font-semibold text-slate-800">Dosage:</span> {item.dosage}</p><p><span className="font-semibold text-slate-800">Frequency:</span> {item.frequency}</p></div>
+                            <div className="grid gap-3 rounded-lg border border-cyan-100 bg-cyan-50 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                                <label className="text-xs font-semibold text-slate-800">Unit Price (LKR)<Input className="mt-1 bg-white" type="number" min="0.01" step="0.01" value={itemPricing.unitPrice || ''} onChange={(event) => updatePricing(itemId, 'unitPrice', event.target.value)} placeholder="Enter unit price" /></label>
+                                <label className="text-xs font-semibold text-slate-800">Duration<Input className="mt-1 bg-white" type="number" min="1" step="1" value={itemPricing.duration || ''} onChange={(event) => updatePricing(itemId, 'duration', event.target.value)} placeholder="Enter duration" /></label>
+                                <div className="min-w-36 rounded-lg bg-white px-3 py-2 text-right"><p className="text-xs font-semibold text-slate-500">Medicine Total</p><p className="font-bold text-slate-950">LKR {lineTotal.toLocaleString()}</p></div>
+                            </div>
                             {item.instructions && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900"><span className="font-semibold">Instructions:</span> {item.instructions}</p>}
                         </div>
-                    </div>)}
+                    </div>;
+                    })}
                 </div>
                 {prescription.notes && <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"><span className="font-semibold">Doctor&apos;s prescription notes:</span> {prescription.notes}</p>}
                 <div className="flex flex-col gap-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4 sm:flex-row sm:items-end sm:justify-end">
-                    <div className="w-full sm:max-w-56"><label className="text-sm font-semibold text-slate-900" htmlFor={`prescription-amount-${prescription.id}`}>Final amount to collect (LKR)</label><Input id={`prescription-amount-${prescription.id}`} className="mt-2 bg-white" type="number" min="0.01" step="0.01" value={amount} onChange={(event) => setAmounts((current) => ({ ...current, [prescription.id]: event.target.value }))} placeholder="Enter total amount" /></div>
-                    <Button type="button" size="lg" disabled={payingId === prescription.id || !(Number(amount) > 0)} onClick={() => onPay(prescription)}>{payingId === prescription.id ? 'Updating...' : 'Mark Prescription Paid'}</Button>
+                    <div className="w-full sm:max-w-56"><p className="text-sm font-semibold text-slate-900">Calculated final amount (LKR)</p><p className="mt-2 rounded-lg border border-cyan-300 bg-white px-3 py-2 text-xl font-bold text-slate-950">LKR {totalAmount.toLocaleString()}</p></div>
+                    <Button type="button" size="lg" disabled={payingId === prescription.id || !pricingComplete || !(totalAmount > 0)} onClick={() => onPay(prescription)}>{payingId === prescription.id ? 'Updating...' : 'Mark Prescription Paid'}</Button>
                 </div>
             </div>
         </Card>;

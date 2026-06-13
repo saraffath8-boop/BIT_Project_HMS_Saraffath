@@ -36,6 +36,48 @@ const requireObjectId = (id, fieldName) => {
 };
 
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
+const getPositiveNumber = (value, fieldName) => {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number <= 0) throw new Error(`${fieldName} must be greater than zero`);
+    return number;
+};
+const getPrescribedMultiplier = (value, fieldName) => {
+    const match = String(value || '').match(/\d+(?:\.\d+)?/);
+    if (!match) throw new Error(`${fieldName} must contain a numeric value`);
+    return getPositiveNumber(match[0], fieldName);
+};
+const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const calculatePrescriptionPricing = (prescription, pricingItems) => {
+    if (!Array.isArray(pricingItems) || pricingItems.length !== prescription.items.length) {
+        throw new Error('Pricing is required for every prescribed medicine');
+    }
+
+    const pricingByItem = new Map(pricingItems.map((item) => [String(item.itemId), item]));
+    const billItems = prescription.items.map((item) => {
+        const pricing = pricingByItem.get(item._id.toString());
+        if (!pricing) throw new Error(`Pricing is required for ${item.medicineName}`);
+
+        const unitPrice = getPositiveNumber(pricing.unitPrice, `${item.medicineName} unit price`);
+        const duration = getPositiveNumber(pricing.duration, `${item.medicineName} duration`);
+        const dosage = getPrescribedMultiplier(item.dosage, `${item.medicineName} dosage`);
+        const frequency = getPrescribedMultiplier(item.frequency, `${item.medicineName} frequency`);
+        const quantity = dosage * frequency * duration;
+
+        return {
+            description: `${item.medicineName}: ${dosage} dosage x ${frequency} frequency x ${duration} duration`,
+            quantity,
+            unitPrice,
+            total: roundCurrency(unitPrice * quantity),
+            sourceId: prescription._id,
+        };
+    });
+
+    return {
+        billItems,
+        totalAmount: roundCurrency(billItems.reduce((total, item) => total + item.total, 0)),
+    };
+};
 
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
@@ -327,7 +369,8 @@ const markPrescriptionPaid = async (id, data, user) => {
     if (prescription.paymentStatus === 'paid') throw new Error('Prescription is already paid');
     if (prescription.status === 'cancelled') throw new Error('Cancelled prescription cannot be paid');
 
-    const bill = await billService.createPaidPrescriptionBill(prescription, data.amount, user);
+    const pricing = calculatePrescriptionPricing(prescription, data.pricingItems);
+    const bill = await billService.createPaidPrescriptionBill(prescription, pricing, user);
     const updatedPrescription = await prescriptionDao.updatePrescription(id, {
         paymentStatus: 'paid',
         patientDecisionStatus: 'paid',

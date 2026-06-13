@@ -9,7 +9,7 @@ const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('already paid') || error.message.includes('cannot be paid')) return 409;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No prescription') || error.message.includes('greater than')) return 400;
+    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No prescription') || error.message.includes('greater than') || error.message.includes('must contain')) return 400;
     return 500;
 };
 
