@@ -1,5 +1,8 @@
+// This file contains the queue entry database model.
+
 import mongoose from 'mongoose';
 
+// Define the queue counter schema database fields and rules.
 const queueCounterSchema = new mongoose.Schema(
     {
         _id: { type: String, required: true },
@@ -8,9 +11,11 @@ const queueCounterSchema = new mongoose.Schema(
     { versionKey: false },
 );
 
+// Handle queue counter.
 export const QueueCounter =
     mongoose.models.QueueCounter || mongoose.model('QueueCounter', queueCounterSchema);
 
+// Define the queue entry schema database fields and rules.
 const queueEntrySchema = new mongoose.Schema(
     {
         queueNumber: {
@@ -60,6 +65,7 @@ queueEntrySchema.index({ status: 1, createdAt: 1 });
 queueEntrySchema.index({ patient: 1 });
 queueEntrySchema.index({ appointment: 1 });
 
+// Handle queue entry.
 const QueueEntry = mongoose.models.QueueEntry || mongoose.model('QueueEntry', queueEntrySchema);
 
 export default QueueEntry;

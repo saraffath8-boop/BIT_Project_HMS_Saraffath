@@ -1,3 +1,5 @@
+// This file contains the appointment service business workflow.
+
 import mongoose from 'mongoose';
 import appointmentDao from '../dao/appointmentDao.js';
 import departmentDao from '../dao/departmentDao.js';
@@ -13,6 +15,7 @@ import notificationService from './notificationService.js';
 import billService from './billService.js';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
+// Store the appointment statuses setting used by this file.
 const APPOINTMENT_STATUSES = [
     'requested',
     'pending_confirmation',
@@ -27,6 +30,7 @@ const APPOINTMENT_STATUSES = [
     'no_show',
 ];
 
+// Prepare appointment.
 const sanitizeAppointment = (appointment) => ({
     id: appointment._id.toString(),
     patient: appointment.patient,
@@ -46,12 +50,14 @@ const sanitizeAppointment = (appointment) => ({
     updatedAt: appointment.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Validate appointment date.
 const validateAppointmentDate = (appointmentDate) => {
     const date = new Date(appointmentDate);
     if (Number.isNaN(date.getTime())) {
@@ -60,6 +66,7 @@ const validateAppointmentDate = (appointmentDate) => {
     return date;
 };
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -68,6 +75,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate doctor exists.
 const validateDoctorExists = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -76,9 +84,11 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
+// Create the service error.
 const serviceError = (message, statusCode = 400) =>
     Object.assign(new Error(message), { statusCode });
 
+// Prepare appointment query.
 const buildAppointmentQuery = (queryParams, user) => {
     const query = {};
 
@@ -122,6 +132,7 @@ const buildAppointmentQuery = (queryParams, user) => {
     return query;
 };
 
+// Create appointment.
 const createAppointment = async (data, user) => {
     if (user.role === 'receptionist') {
         return createReceptionistAppointmentRequest(data, user);
@@ -156,6 +167,7 @@ const createAppointment = async (data, user) => {
     return sanitizeAppointment(populatedAppointment);
 };
 
+// Create requested appointment.
 const createRequestedAppointment = async ({
     patient,
     doctor,
@@ -210,6 +222,7 @@ const createRequestedAppointment = async ({
     }
 };
 
+// Load or create no account patient.
 const getOrCreateNoAccountPatient = async (details = {}, user = null) => {
     const fullName = details.fullName?.trim();
     const phone = details.phone?.trim();
@@ -269,6 +282,7 @@ const getOrCreateNoAccountPatient = async (details = {}, user = null) => {
     });
 };
 
+// Handle request public appointment.
 const requestPublicAppointment = async (data) => {
     const { doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
     if (!doctorId || !departmentId || !appointmentDate || !timeSlot) {
@@ -292,6 +306,7 @@ const requestPublicAppointment = async (data) => {
     });
 };
 
+// Create receptionist appointment request.
 const createReceptionistAppointmentRequest = async (data, user) => {
     const {
         patient: patientInput,
@@ -328,6 +343,7 @@ const createReceptionistAppointmentRequest = async (data, user) => {
     });
 };
 
+// Handle request appointment.
 const requestAppointment = async (data, user) => {
     const { doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
     if (!doctorId || !departmentId || !appointmentDate || !timeSlot) {
@@ -353,6 +369,7 @@ const requestAppointment = async (data, user) => {
     });
 };
 
+// Create consultation.
 const createConsultation = async (appointmentId, data, user) => {
     const appointment = await getAppointmentById(appointmentId, user);
     if (appointment.status !== 'in_consultation') {
@@ -458,12 +475,14 @@ const createConsultation = async (appointmentId, data, user) => {
     return { appointment: updatedAppointment, medicalRecord, requests };
 };
 
+// Load appointments.
 const getAppointments = async (queryParams, user) => {
     const query = buildAppointmentQuery(queryParams, user);
     const appointments = await appointmentDao.getAppointments(query);
     return appointments.map(sanitizeAppointment);
 };
 
+// Load receptionist pending appointments.
 const getReceptionistPendingAppointments = async () => {
     const appointments = await appointmentDao.getAppointments({
         status: { $in: ['requested', 'pending_confirmation'] },
@@ -471,6 +490,7 @@ const getReceptionistPendingAppointments = async () => {
     return appointments.map(sanitizeAppointment);
 };
 
+// Load receptionist confirmed queue.
 const getReceptionistConfirmedQueue = async (user = {}) => {
     // Older paid appointments used "paid" as the clinical status. Keep them
     // visible until they move into consultation, while new payments remain confirmed.
@@ -480,6 +500,7 @@ const getReceptionistConfirmedQueue = async (user = {}) => {
         appointmentDao.getAppointments({ status: { $in: statuses } }),
         medicalRecordDao.getAppointmentIdsWithRecords(),
     ]);
+    // Handle reported ids.
     const reportedIds = new Set(reportedAppointmentIds.map((id) => id.toString()));
     const eligibleAppointments = appointments.filter(
         (appointment) => !reportedIds.has(appointment._id.toString()),
@@ -498,6 +519,7 @@ const getReceptionistConfirmedQueue = async (user = {}) => {
         }));
 };
 
+// Update appointment checked.
 const markAppointmentChecked = async (id, user) => {
     const appointment = await getAppointmentById(id, user);
     if (!['confirmed', 'paid'].includes(appointment.status)) {
@@ -508,6 +530,7 @@ const markAppointmentChecked = async (id, user) => {
     );
 };
 
+// Update appointment.
 const confirmAppointment = async (id, user) => {
     const appointment = await getAppointmentById(id, user);
     if (!['requested', 'pending_confirmation'].includes(appointment.status)) {
@@ -521,6 +544,7 @@ const confirmAppointment = async (id, user) => {
     return sanitizeAppointment(confirmedAppointment);
 };
 
+// Update appointment paid.
 const markAppointmentPaid = async (id, user) => {
     const appointment = await appointmentDao.getAppointmentById(id);
     if (!appointment) throw serviceError('Appointment not found', 404);
@@ -537,6 +561,7 @@ const markAppointmentPaid = async (id, user) => {
     return { appointment: sanitizeAppointment(paidAppointment), bill };
 };
 
+// Load my appointments.
 const getMyAppointments = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
 
@@ -548,6 +573,7 @@ const getMyAppointments = async (userId) => {
     return appointments.map(sanitizeAppointment);
 };
 
+// Load appointment by id.
 const getAppointmentById = async (id, user) => {
     requireObjectId(id, 'appointment id');
     const appointment = await appointmentDao.getAppointmentById(id);
@@ -563,6 +589,7 @@ const getAppointmentById = async (id, user) => {
     return sanitizeAppointment(appointment);
 };
 
+// Update appointment.
 const updateAppointment = async (id, data, user) => {
     await getAppointmentById(id, user);
 
@@ -601,6 +628,7 @@ const updateAppointment = async (id, data, user) => {
     return sanitizeAppointment(appointment);
 };
 
+// Remove appointment.
 const deleteAppointment = async (id) => {
     requireObjectId(id, 'appointment id');
     const appointment = await appointmentDao.getAppointmentById(id);
@@ -613,6 +641,7 @@ const deleteAppointment = async (id) => {
     return sanitizeAppointment(appointment);
 };
 
+// Handle appointment service.
 const appointmentService = {
     createAppointment,
     requestAppointment,

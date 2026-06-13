@@ -1,3 +1,5 @@
+// This file contains the sidebar shared interface.
+
 import {
     Activity,
     Bell,
@@ -21,6 +23,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { getDashboardPath } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 
+// Handle nav items.
 const navItems = [
     {
         label: 'Dashboard',

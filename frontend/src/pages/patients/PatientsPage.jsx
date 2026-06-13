@@ -1,3 +1,5 @@
+// This file contains the patients page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 
 import { Link } from 'react-router-dom';
@@ -6,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 
 import { getPatients } from '../../services/patientService';
 
+// Show the patients page interface.
 const PatientsPage = () => {
     const { token, user } = useAuth();
 
@@ -36,7 +39,9 @@ const PatientsPage = () => {
         [search, token],
     );
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Handle timeout id.
         const timeoutId = setTimeout(() => {
             loadPatients('');
         }, 0);
@@ -44,6 +49,7 @@ const PatientsPage = () => {
         return () => clearTimeout(timeoutId);
     }, [loadPatients]);
 
+    // Handle handle search submit.
     const handleSearchSubmit = (event) => {
         event.preventDefault();
 
@@ -171,6 +177,7 @@ const PatientsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { color: '#0f172a' },
 

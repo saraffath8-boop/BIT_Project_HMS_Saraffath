@@ -1,3 +1,5 @@
+// This file contains the billing page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
@@ -24,9 +26,12 @@ import {
     markRadiologyRequestPaid,
 } from '../../services/radiologyRequestService';
 
+// Load numeric multiplier.
 const getNumericMultiplier = (value) =>
     Number(String(value || '').match(/\d+(?:\.\d+)?/)?.[0] || 0);
+// Load prescription item id.
 const getPrescriptionItemId = (item, index) => String(item._id || item.id || index);
+// Prepare medicine total.
 const calculateMedicineTotal = (item, pricing = {}) => {
     const unitPrice = Number(pricing.unitPrice || 0);
     const duration = Number(pricing.duration || 0);
@@ -41,6 +46,7 @@ const calculateMedicineTotal = (item, pricing = {}) => {
         ) / 100
     );
 };
+// Prepare prescription total.
 const calculatePrescriptionTotal = (prescription, pricing = {}) =>
     (prescription.items || []).reduce(
         (total, item, index) =>
@@ -48,6 +54,7 @@ const calculatePrescriptionTotal = (prescription, pricing = {}) =>
         0,
     );
 
+// Show the billing page interface.
 const BillingPage = () => {
     const { user } = useAuth();
     if (user?.role === 'receptionist') return <ReceptionistBillingPage />;
@@ -86,11 +93,13 @@ const BillingPage = () => {
     );
 };
 
+// Show the receptionist billing page interface.
 const ReceptionistBillingPage = () => {
     const { token } = useAuth();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    // Load bills.
     const loadBills = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -103,6 +112,7 @@ const ReceptionistBillingPage = () => {
             setLoading(false);
         }
     }, [token]);
+    // Run this work when the listed values change.
     useEffect(() => {
         const id = setTimeout(loadBills, 0);
         return () => clearTimeout(id);
@@ -178,6 +188,7 @@ const ReceptionistBillingPage = () => {
     );
 };
 
+// Show the clinical operator billing page interface.
 const ClinicalOperatorBillingPage = ({ type }) => {
     const { token } = useAuth();
     const isLaboratory = type === 'laboratory';
@@ -189,6 +200,7 @@ const ClinicalOperatorBillingPage = ({ type }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    // Load billing.
     const loadBilling = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -216,10 +228,12 @@ const ClinicalOperatorBillingPage = ({ type }) => {
             setLoading(false);
         }
     }, [isLaboratory, token, type]);
+    // Run this work when the listed values change.
     useEffect(() => {
         const id = setTimeout(loadBilling, 0);
         return () => clearTimeout(id);
     }, [loadBilling]);
+    // Update paid.
     const markPaid = async (request) => {
         setPayingId(`${type}:${request.id}`);
         setError('');
@@ -240,6 +254,7 @@ const ClinicalOperatorBillingPage = ({ type }) => {
             setPayingId('');
         }
     };
+    // Handle request description.
     const requestDescription = (request) =>
         isLaboratory
             ? request.tests?.map((test) => test.testName).join(', ') || 'Laboratory tests'
@@ -285,6 +300,7 @@ const ClinicalOperatorBillingPage = ({ type }) => {
     );
 };
 
+// Show the pharmacist billing page interface.
 const PharmacistBillingPage = () => {
     const { token } = useAuth();
     const [prescriptions, setPrescriptions] = useState([]);
@@ -295,6 +311,7 @@ const PharmacistBillingPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Load billing.
     const loadBilling = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -314,17 +331,20 @@ const PharmacistBillingPage = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         const id = setTimeout(loadBilling, 0);
         return () => clearTimeout(id);
     }, [loadBilling]);
 
+    // Update paid.
     const markPaid = async (prescription) => {
         setPayingId(prescription.id);
         setError('');
         setSuccess('');
         try {
             const prescriptionPricing = pricing[prescription.id] || {};
+            // Handle pricing items.
             const pricingItems = (prescription.items || []).map((item, index) => {
                 const itemId = getPrescriptionItemId(item, index);
                 return {
@@ -431,6 +451,7 @@ const PharmacistBillingPage = () => {
     );
 };
 
+// Handle clinical payment queue.
 const ClinicalPaymentQueue = ({
     title,
     requests,
@@ -508,6 +529,7 @@ const ClinicalPaymentQueue = ({
     </CollapsibleSection>
 );
 
+// Show the prescription cashier queue interface.
 const PrescriptionCashierQueue = ({ prescriptions, pricing, setPricing, payingId, onPay }) => (
     <CollapsibleSection title="Prescription Cashier Queue" count={prescriptions.length}>
         {prescriptions.length === 0 ? (
@@ -522,12 +544,14 @@ const PrescriptionCashierQueue = ({ prescriptions, pricing, setPricing, payingId
                         prescription,
                         prescriptionPricing,
                     );
+                    // Handle pricing complete.
                     const pricingComplete = (prescription.items || []).every((item, index) => {
                         const itemPricing = prescriptionPricing[getPrescriptionItemId(item, index)];
                         return (
                             Number(itemPricing?.unitPrice) > 0 && Number(itemPricing?.duration) > 0
                         );
                     });
+                    // Update pricing.
                     const updatePricing = (itemId, field, value) =>
                         setPricing((current) => ({
                             ...current,
@@ -698,6 +722,7 @@ const PrescriptionCashierQueue = ({ prescriptions, pricing, setPricing, payingId
     </CollapsibleSection>
 );
 
+// Show the paid service bills interface.
 const PaidServiceBills = ({ title, bills, emptyMessage }) => (
     <CollapsibleSection title={title} count={bills.length}>
         {bills.length === 0 ? (
@@ -740,9 +765,11 @@ const PaidServiceBills = ({ title, bills, emptyMessage }) => (
     </CollapsibleSection>
 );
 
+// Show the person summary interface.
 const PersonSummary = ({ person }) => (
     <DetailSummary title={getPersonName(person)} subtitle={person?.phone || 'Phone not recorded'} />
 );
+// Show the detail summary interface.
 const DetailSummary = ({ title, subtitle }) => (
     <div className="min-w-40">
         <p className="font-medium text-slate-900">{title}</p>

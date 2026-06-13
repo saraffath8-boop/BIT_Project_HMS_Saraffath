@@ -1,7 +1,10 @@
+// This file contains the pharmacy page interface.
+
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime } from '../shared/modulePageUtils';
 import { getMedicines } from '../../services/medicineService';
 
+// Show the pharmacy page interface.
 const PharmacyPage = () => (
     <ModuleListPage
         title="Medicine Inventory"

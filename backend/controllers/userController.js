@@ -1,12 +1,16 @@
+// This file contains the user controller HTTP request handlers.
+
 import userService, { ADMIN_CREATABLE_ROLES } from '../services/userService.js';
 import { validateUserCreateInput } from '../utils/userValidation.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load error status code.
 const getErrorStatusCode = (error) => {
     if (error.code === 11000 || error.message.includes('already exists')) return 409;
     if (
@@ -17,6 +21,7 @@ const getErrorStatusCode = (error) => {
     return 500;
 };
 
+// Create user by admin.
 export const createUserByAdmin = async (req, res) => {
     try {
         const {
@@ -94,6 +99,7 @@ export const createUserByAdmin = async (req, res) => {
     }
 };
 
+// Load users.
 export const getUsers = async (req, res) => {
     try {
         const users = await userService.getUsers(req.query, req.user);
@@ -108,6 +114,7 @@ export const getUsers = async (req, res) => {
     }
 };
 
+// Update doctor booking profile.
 export const updateDoctorBookingProfile = async (req, res) => {
     try {
         const user = await userService.updateDoctorBookingProfile(req.params.id, req.body);

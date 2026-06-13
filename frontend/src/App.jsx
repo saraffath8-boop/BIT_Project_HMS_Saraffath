@@ -1,3 +1,5 @@
+// This file contains the app shared application logic.
+
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRoute from './components/RoleRoute';
@@ -55,12 +57,14 @@ import RadiologyRequestProcessingPage from './pages/radiology/RadiologyRequestPr
 import ReportsPage from './pages/reports/ReportsPage';
 import UsersPage from './pages/users/UsersPage';
 
+// Handle protected route.
 const protectedRoute = (children) => (
     <ProtectedRoute>
         <AppShell>{children}</AppShell>
     </ProtectedRoute>
 );
 
+// Handle role route.
 const roleRoute = (allowedRoles, children) => (
     <ProtectedRoute>
         <RoleRoute allowedRoles={allowedRoles}>
@@ -69,6 +73,7 @@ const roleRoute = (allowedRoles, children) => (
     </ProtectedRoute>
 );
 
+// Handle app.
 function App() {
     return (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

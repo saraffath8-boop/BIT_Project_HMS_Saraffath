@@ -1,6 +1,9 @@
+// This file contains the nurse dashboard interface.
+
 import DashboardLayout from './DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 
+// Handle cards.
 const cards = [
     {
         title: 'Patients',
@@ -44,10 +47,12 @@ const cards = [
     },
 ];
 
+// Handle receptionist cards.
 const receptionistCards = cards.filter((card) =>
     ['Patients', 'Queue', 'Appointments', 'Notifications', 'Billing'].includes(card.title),
 );
 
+// Show the nurse dashboard interface.
 const NurseDashboard = () => {
     const { user } = useAuth();
     const isReceptionist = user?.role === 'receptionist';

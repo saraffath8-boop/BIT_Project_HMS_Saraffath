@@ -1,5 +1,8 @@
+// This file contains the lab request database model.
+
 import mongoose from 'mongoose';
 
+// Define the lab test schema database fields and rules.
 const labTestSchema = new mongoose.Schema(
     {
         testName: {
@@ -30,6 +33,7 @@ const labTestSchema = new mongoose.Schema(
     { _id: true },
 );
 
+// Define the lab request schema database fields and rules.
 const labRequestSchema = new mongoose.Schema(
     {
         patient: {
@@ -90,6 +94,7 @@ labRequestSchema.index({ patient: 1, createdAt: -1 });
 labRequestSchema.index({ doctor: 1, createdAt: -1 });
 labRequestSchema.index({ status: 1 });
 
+// Handle lab request.
 const LabRequest = mongoose.models.LabRequest || mongoose.model('LabRequest', labRequestSchema);
 
 export default LabRequest;

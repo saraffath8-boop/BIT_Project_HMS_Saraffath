@@ -1,9 +1,12 @@
+// This file contains the notification service business workflow.
+
 import mongoose from 'mongoose';
 import notificationDao from '../dao/notificationDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import smsService from './smsService.js';
 
+// Store the notification types setting used by this file.
 const NOTIFICATION_TYPES = [
     'appointment',
     'billing',
@@ -13,6 +16,7 @@ const NOTIFICATION_TYPES = [
     'system',
 ];
 
+// Prepare notification.
 const sanitizeNotification = (notification) => ({
     id: notification._id.toString(),
     recipient: notification.recipient,
@@ -26,14 +30,17 @@ const sanitizeNotification = (notification) => ({
     updatedAt: notification.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate user exists.
 const validateUserExists = async (userId) => {
     requireObjectId(userId, 'recipient user id');
     const user = await userDao.getUserById(userId);
@@ -45,6 +52,7 @@ const validateUserExists = async (userId) => {
     return user;
 };
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     if (!patientId) {
         return null;
@@ -60,6 +68,7 @@ const validatePatientExists = async (patientId) => {
     return patient;
 };
 
+// Prepare notification query.
 const buildNotificationQuery = (queryParams, user) => {
     const query = {};
 
@@ -88,6 +97,7 @@ const buildNotificationQuery = (queryParams, user) => {
     return query;
 };
 
+// Create notification.
 const createNotification = async (data, user = {}) => {
     const recipient = toCleanString(data.recipient);
     const title = toCleanString(data.title);
@@ -137,12 +147,14 @@ const createNotification = async (data, user = {}) => {
     return sanitizeNotification(populatedNotification);
 };
 
+// Load notifications.
 const getNotifications = async (queryParams, user) => {
     const query = buildNotificationQuery(queryParams, user);
     const notifications = await notificationDao.getNotifications(query);
     return notifications.map(sanitizeNotification);
 };
 
+// Load notification by id.
 const getNotificationById = async (id, user) => {
     requireObjectId(id, 'notification id');
     const notification = await notificationDao.getNotificationById(id);
@@ -158,6 +170,7 @@ const getNotificationById = async (id, user) => {
     return sanitizeNotification(notification);
 };
 
+// Update notification.
 const updateNotification = async (id, data, user) => {
     const existingNotification = await getNotificationById(id, user);
     const updateData = {};
@@ -210,12 +223,14 @@ const updateNotification = async (id, data, user) => {
     return sanitizeNotification(notification);
 };
 
+// Remove notification.
 const deleteNotification = async (id) => {
     const notification = await getNotificationById(id, { role: 'admin' });
     await notificationDao.deleteNotification(id);
     return notification;
 };
 
+// Handle notification service.
 const notificationService = {
     createNotification,
     getNotifications,

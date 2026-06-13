@@ -1,3 +1,5 @@
+// This file contains the forgot password interface.
+
 import { useState } from 'react';
 import { HeartPulse, KeyRound, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,6 +10,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { requestPatientPasswordReset, resetPatientPassword } from '../services/authService';
 
+// Handle phone pattern.
 const phonePattern = /^07[0-9]{8}$/;
 
 export default function ForgotPassword() {
@@ -21,6 +24,7 @@ export default function ForgotPassword() {
     const [developmentOtp, setDevelopmentOtp] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // Handle request otp.
     const requestOtp = async (event) => {
         event.preventDefault();
         setError('');
@@ -43,6 +47,7 @@ export default function ForgotPassword() {
         }
     };
 
+    // Handle reset password.
     const resetPassword = async (event) => {
         event.preventDefault();
         setError('');
@@ -72,6 +77,7 @@ export default function ForgotPassword() {
         }
     };
 
+    // Handle resend otp.
     const resendOtp = async () => {
         setError('');
         setMessage('');
@@ -237,6 +243,7 @@ export default function ForgotPassword() {
     );
 }
 
+// Show the field interface.
 const Field = ({ icon: Icon, label, children }) => (
     <div className="space-y-2">
         <Label htmlFor={children.props.id}>{label}</Label>

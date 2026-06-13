@@ -1,19 +1,26 @@
+// This file contains the notification service business workflow.
+
 import { API_BASE_URL, apiDelete, apiGet, apiPatch, apiPost } from './apiClient.js';
 
+// Store the notifications url setting used by this file.
 const NOTIFICATIONS_URL = `${API_BASE_URL}/notifications`;
 
+// Load notifications.
 export const getNotifications = async ({ token, filters = {} }) => {
     return apiGet(NOTIFICATIONS_URL, token, filters, 'Unable to load notifications');
 };
 
+// Load notification by id.
 export const getNotificationById = async (id, token) => {
     return apiGet(`${NOTIFICATIONS_URL}/${id}`, token, {}, 'Unable to load notification');
 };
 
+// Create notification.
 export const createNotification = async (notificationData, token) => {
     return apiPost(NOTIFICATIONS_URL, notificationData, token, 'Unable to create notification');
 };
 
+// Update notification.
 export const updateNotification = async (id, notificationData, token) => {
     return apiPatch(
         `${NOTIFICATIONS_URL}/${id}`,
@@ -23,6 +30,7 @@ export const updateNotification = async (id, notificationData, token) => {
     );
 };
 
+// Update notification as read.
 export const markNotificationAsRead = async (id, token) => {
     return apiPatch(
         `${NOTIFICATIONS_URL}/${id}`,
@@ -32,6 +40,7 @@ export const markNotificationAsRead = async (id, token) => {
     );
 };
 
+// Remove notification.
 export const deleteNotification = async (id, token) => {
     return apiDelete(`${NOTIFICATIONS_URL}/${id}`, token, 'Unable to delete notification');
 };

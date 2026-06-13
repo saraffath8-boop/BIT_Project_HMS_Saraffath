@@ -1,19 +1,27 @@
+// This file contains the doctor service business workflow.
+
 import mongoose from 'mongoose';
 import appointmentDao from '../dao/appointmentDao.js';
 import departmentDao from '../dao/departmentDao.js';
 import userDao from '../dao/userDao.js';
 
+// Store the default days setting used by this file.
 const DEFAULT_DAYS = [1, 2, 3, 4, 5];
+// Store the default slots setting used by this file.
 const DEFAULT_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00'];
+// Store the date pattern setting used by this file.
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+// Create the service error.
 const serviceError = (message, statusCode = 400) =>
     Object.assign(new Error(message), { statusCode });
 
+// Validate object id.
 const requireObjectId = (id, label) => {
     if (!mongoose.Types.ObjectId.isValid(id)) throw serviceError(`Invalid ${label}`);
 };
 
+// Load future date.
 export const getFutureDate = (dateValue) => {
     if (!DATE_PATTERN.test(dateValue || '')) throw serviceError('date must use YYYY-MM-DD format');
     const selectedDate = new Date(`${dateValue}T00:00:00`);
@@ -32,6 +40,7 @@ export const getFutureDate = (dateValue) => {
     return selectedDate;
 };
 
+// Prepare appointment date.
 export const buildAppointmentDate = (dateValue, timeSlot) => {
     getFutureDate(dateValue);
     if (!/^\d{2}:\d{2}$/.test(timeSlot || '')) throw serviceError('A valid time slot is required');
@@ -41,6 +50,7 @@ export const buildAppointmentDate = (dateValue, timeSlot) => {
     return appointmentDate;
 };
 
+// Load doctor or throw.
 export const getDoctorOrThrow = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -49,6 +59,7 @@ export const getDoctorOrThrow = async (doctorId) => {
     return doctor;
 };
 
+// Prepare doctor.
 const sanitizeDoctor = (doctor) => ({
     id: doctor._id.toString(),
     fullName: doctor.name,
@@ -63,6 +74,7 @@ const sanitizeDoctor = (doctor) => ({
         : DEFAULT_SLOTS,
 });
 
+// Load doctors.
 const getDoctors = async (departmentId) => {
     requireObjectId(departmentId, 'department id');
     const department = await departmentDao.getDepartmentById(departmentId);
@@ -72,6 +84,7 @@ const getDoctors = async (departmentId) => {
     return doctors.map(sanitizeDoctor);
 };
 
+// Load doctor availability.
 const getDoctorAvailability = async (doctorId, dateValue) => {
     const selectedDate = getFutureDate(dateValue);
     const doctor = await getDoctorOrThrow(doctorId);

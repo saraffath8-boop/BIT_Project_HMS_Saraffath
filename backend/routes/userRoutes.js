@@ -1,3 +1,5 @@
+// This file contains the user routes API routes.
+
 import express from 'express';
 import {
     createUserByAdmin,
@@ -8,8 +10,10 @@ import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import { USER_ROLES } from '../types/userRoles.js';
 
+// Create the router used by this API module.
 const router = express.Router();
 
+// Connect this API URL to its request handler.
 router.get(
     '/',
     protect,
@@ -24,7 +28,9 @@ router.get(
     ),
     getUsers,
 );
+// Connect this API URL to its request handler.
 router.post('/admin/create-user', protect, authorizeRoles(USER_ROLES.ADMIN), createUserByAdmin);
+// Connect this API URL to its request handler.
 router.patch(
     '/admin/doctors/:id/booking-profile',
     protect,

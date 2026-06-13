@@ -1,12 +1,21 @@
+// This file contains the user validation shared application logic.
+
 export const SRI_LANKAN_PHONE_REGEX = /^0[1-9][0-9]{8}$/;
+// Store the sri lankan nic regex setting used by this file.
 export const SRI_LANKAN_NIC_REGEX = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
+// Store the person name regex setting used by this file.
 export const PERSON_NAME_REGEX = /^[\p{L}][\p{L}\s.'-]*$/u;
+// Store the patient name regex setting used by this file.
 export const PATIENT_NAME_REGEX = /^[\p{L}\p{N}][\p{L}\p{N}\s.'-]*$/u;
+// Store the valid genders setting used by this file.
 export const VALID_GENDERS = ['Male', 'Female', 'Other'];
+// Store the patient role setting used by this file.
 export const PATIENT_ROLE = 'patient';
 
+// Prepare nic.
 export const normalizeNic = (nic) => (typeof nic === 'string' ? nic.trim().toUpperCase() : nic);
 
+// Prepare age.
 export const calculateAge = (dob, today = new Date()) => {
     const birthDate = new Date(dob);
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -16,6 +25,7 @@ export const calculateAge = (dob, today = new Date()) => {
     return age;
 };
 
+// Validate user create input.
 export const validateUserCreateInput = ({
     firstName,
     lastName,

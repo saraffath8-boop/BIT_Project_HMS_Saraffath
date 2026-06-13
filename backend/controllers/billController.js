@@ -1,11 +1,15 @@
+// This file contains the bill controller HTTP request handlers.
+
 import billService from '../services/billService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('no longer pending')) return 409;
     if (error.message === 'No patient profile is linked to this account') return 404;
@@ -24,6 +28,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Load pending patient decisions.
 export const getPendingPatientDecisions = async (req, res) => {
     try {
         const requests = await billService.getPendingPatientDecisions(req.user);
@@ -33,6 +38,7 @@ export const getPendingPatientDecisions = async (req, res) => {
     }
 };
 
+// Update patient decisions.
 export const processPatientDecisions = async (req, res) => {
     try {
         const result = await billService.processPatientDecisions(req.body, req.user);
@@ -48,6 +54,7 @@ export const processPatientDecisions = async (req, res) => {
     }
 };
 
+// Create bill.
 export const createBill = async (req, res) => {
     try {
         const bill = await billService.createBill(req.body, req.user);
@@ -62,6 +69,7 @@ export const createBill = async (req, res) => {
     }
 };
 
+// Load bills.
 export const getBills = async (req, res) => {
     try {
         const bills = await billService.getBills(req.query, req.user);
@@ -75,6 +83,7 @@ export const getBills = async (req, res) => {
     }
 };
 
+// Load my bills.
 export const getMyBills = async (req, res) => {
     try {
         const bills = await billService.getMyBills(req.user.id);
@@ -88,6 +97,7 @@ export const getMyBills = async (req, res) => {
     }
 };
 
+// Load bill by id.
 export const getBillById = async (req, res) => {
     try {
         const bill = await billService.getBillById(req.params.id);
@@ -101,6 +111,7 @@ export const getBillById = async (req, res) => {
     }
 };
 
+// Update bill.
 export const updateBill = async (req, res) => {
     try {
         const bill = await billService.updateBill(req.params.id, req.body, req.user);
@@ -115,6 +126,7 @@ export const updateBill = async (req, res) => {
     }
 };
 
+// Remove bill.
 export const deleteBill = async (req, res) => {
     try {
         const bill = await billService.deleteBill(req.params.id);

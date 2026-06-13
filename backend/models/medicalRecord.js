@@ -1,5 +1,8 @@
+// This file contains the medical record database model.
+
 import mongoose from 'mongoose';
 
+// Define the vital signs schema database fields and rules.
 const vitalSignsSchema = new mongoose.Schema(
     {
         temperature: String,
@@ -12,6 +15,7 @@ const vitalSignsSchema = new mongoose.Schema(
     { _id: false },
 );
 
+// Define the medical record schema database fields and rules.
 const medicalRecordSchema = new mongoose.Schema(
     {
         patient: {
@@ -76,6 +80,7 @@ medicalRecordSchema.index({ patient: 1, createdAt: -1 });
 medicalRecordSchema.index({ doctor: 1, createdAt: -1 });
 medicalRecordSchema.index({ appointment: 1 });
 
+// Handle medical record.
 const MedicalRecord =
     mongoose.models.MedicalRecord || mongoose.model('MedicalRecord', medicalRecordSchema);
 

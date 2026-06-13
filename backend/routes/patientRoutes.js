@@ -1,3 +1,5 @@
+// This file contains the patient routes API routes.
+
 import express from 'express';
 
 import {
@@ -14,10 +16,13 @@ import { protect } from '../middleware/authMiddleware.js';
 
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
+// Create the router used by this API module.
 const router = express.Router();
 
+// Connect this API URL to its request handler.
 router.use(protect);
 
+// Connect this API URL to its request handler.
 router
 
     .route('/')
@@ -26,10 +31,13 @@ router
 
     .post(authorizeRoles('admin', 'receptionist'), createPatient);
 
+// Connect this API URL to its request handler.
 router.get('/me', authorizeRoles('patient'), getMyPatientProfile);
 
+// Connect this API URL to its request handler.
 router.patch('/:id/link-user', authorizeRoles('admin'), linkPatientUser);
 
+// Connect this API URL to its request handler.
 router
 
     .route('/:id')

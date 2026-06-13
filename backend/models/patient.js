@@ -1,6 +1,9 @@
+// This file contains the patient database model.
+
 import mongoose from 'mongoose';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
+// Define the counter schema database fields and rules.
 const counterSchema = new mongoose.Schema(
     {
         _id: { type: String, required: true },
@@ -11,8 +14,10 @@ const counterSchema = new mongoose.Schema(
     { versionKey: false },
 );
 
+// Handle counter.
 export const Counter = mongoose.models.Counter || mongoose.model('Counter', counterSchema);
 
+// Define the patient schema database fields and rules.
 const patientSchema = new mongoose.Schema(
     {
         patientId: {
@@ -165,6 +170,7 @@ patientSchema.index({ fullName: 'text', phone: 'text' });
 
 patientSchema.index({ createdBy: 1 });
 
+// Handle patient.
 const Patient = mongoose.models.Patient || mongoose.model('Patient', patientSchema);
 
 export default Patient;

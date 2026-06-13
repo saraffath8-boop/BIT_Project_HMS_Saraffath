@@ -1,6 +1,9 @@
+// This file contains the protected route shared interface.
+
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Load loading styles.
 const loadingStyles = {
     display: 'flex',
     minHeight: '100vh',
@@ -11,6 +14,7 @@ const loadingStyles = {
     fontFamily: 'Arial, sans-serif',
 };
 
+// Show the protected route interface.
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();

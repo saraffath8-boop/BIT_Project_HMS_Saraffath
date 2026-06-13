@@ -1,11 +1,15 @@
+// This file contains the queue controller HTTP request handlers.
+
 import queueService from '../services/queueService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
     if (
@@ -18,6 +22,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create queue entry.
 export const createQueueEntry = async (req, res) => {
     try {
         const queueEntry = await queueService.createQueueEntry(req.body, req.user);
@@ -32,6 +37,7 @@ export const createQueueEntry = async (req, res) => {
     }
 };
 
+// Load queue entries.
 export const getQueueEntries = async (req, res) => {
     try {
         const queueEntries = await queueService.getQueueEntries(req.query);
@@ -45,6 +51,7 @@ export const getQueueEntries = async (req, res) => {
     }
 };
 
+// Load queue entry by id.
 export const getQueueEntryById = async (req, res) => {
     try {
         const queueEntry = await queueService.getQueueEntryById(req.params.id);
@@ -58,6 +65,7 @@ export const getQueueEntryById = async (req, res) => {
     }
 };
 
+// Update queue entry.
 export const updateQueueEntry = async (req, res) => {
     try {
         const queueEntry = await queueService.updateQueueEntry(req.params.id, req.body);
@@ -72,6 +80,7 @@ export const updateQueueEntry = async (req, res) => {
     }
 };
 
+// Remove queue entry.
 export const deleteQueueEntry = async (req, res) => {
     try {
         const queueEntry = await queueService.deleteQueueEntry(req.params.id);

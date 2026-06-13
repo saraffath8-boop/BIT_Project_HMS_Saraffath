@@ -1,3 +1,5 @@
+// This file contains the patient decision billing page interface.
+
 import { CreditCard, FlaskConical, Pill, ScanLine } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from '../../components/ui/alert';
@@ -15,6 +17,7 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../context/AuthContext';
 import { getPendingPatientDecisions, processPatientDecisions } from '../../services/billService';
 
+// Handle type details.
 const typeDetails = {
     prescription: { label: 'Prescription', icon: Pill },
     laboratory: { label: 'Laboratory', icon: FlaskConical },
@@ -31,6 +34,7 @@ export default function PatientDecisionBillingPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Load load.
     const load = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -52,6 +56,7 @@ export default function PatientDecisionBillingPage() {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         load();
     }, [load]);
@@ -75,11 +80,14 @@ export default function PatientDecisionBillingPage() {
         [requests],
     );
 
+    // Handle toggle.
     const toggle = (id, selected) =>
         setDecisions((current) => ({ ...current, [id]: { ...current[id], selected } }));
+    // Update price.
     const setPrice = (id, unitPrice) =>
         setDecisions((current) => ({ ...current, [id]: { ...current[id], unitPrice } }));
 
+    // Handle total for.
     const totalFor = (group) =>
         group.requests.reduce(
             (total, request) =>
@@ -89,6 +97,7 @@ export default function PatientDecisionBillingPage() {
             0,
         );
 
+    // Handle submit.
     const submit = async (group) => {
         setProcessing(group.appointmentId);
         setError('');

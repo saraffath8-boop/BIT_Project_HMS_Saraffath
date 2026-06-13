@@ -1,5 +1,8 @@
+// This file contains the notification database model.
+
 import mongoose from 'mongoose';
 
+// Define the notification schema database fields and rules.
 const notificationSchema = new mongoose.Schema(
     {
         recipient: {
@@ -41,6 +44,7 @@ const notificationSchema = new mongoose.Schema(
 notificationSchema.index({ recipient: 1, createdAt: -1 });
 notificationSchema.index({ isRead: 1 });
 
+// Handle notification.
 const Notification =
     mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
 

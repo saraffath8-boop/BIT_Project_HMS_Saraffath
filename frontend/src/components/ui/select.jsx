@@ -1,9 +1,14 @@
+// This file contains the select shared interface.
+
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+// Handle select.
 export const Select = SelectPrimitive.Root;
+// Handle select value.
 export const SelectValue = SelectPrimitive.Value;
+// Handle select trigger.
 export function SelectTrigger({ className, children, ...props }) {
     return (
         <SelectPrimitive.Trigger
@@ -20,6 +25,7 @@ export function SelectTrigger({ className, children, ...props }) {
         </SelectPrimitive.Trigger>
     );
 }
+// Handle select content.
 export function SelectContent({ className, children, ...props }) {
     return (
         <SelectPrimitive.Portal>
@@ -35,6 +41,7 @@ export function SelectContent({ className, children, ...props }) {
         </SelectPrimitive.Portal>
     );
 }
+// Handle select item.
 export function SelectItem({ className, children, ...props }) {
     return (
         <SelectPrimitive.Item

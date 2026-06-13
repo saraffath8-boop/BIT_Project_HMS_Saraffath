@@ -1,3 +1,5 @@
+// This file contains the appointment create page interface.
+
 import { CalendarDays, Clock, Stethoscope } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -25,12 +27,14 @@ import { getUsers } from '../../services/userService';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 
+// Handle tomorrow.
 const tomorrow = () => {
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
+// Prepare fee.
 const formatFee = (fee) => `LKR ${Number(fee || 0).toLocaleString()}`;
 
 export default function AppointmentCreatePage() {
@@ -42,6 +46,7 @@ export default function AppointmentCreatePage() {
     );
 }
 
+// Show the receptionist appointment request page interface.
 const ReceptionistAppointmentRequestPage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -71,6 +76,7 @@ const ReceptionistAppointmentRequestPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
         Promise.all([getPatients({ token, limit: 100 }), getDepartments()])
             .then(([patientResponse, departmentResponse]) => {
@@ -81,6 +87,7 @@ const ReceptionistAppointmentRequestPage = () => {
             .finally(() => setLoading(false));
     }, [token]);
 
+    // Handle select department.
     const selectDepartment = async (event) => {
         const id = event.target.value;
         setDepartment(id);
@@ -102,6 +109,7 @@ const ReceptionistAppointmentRequestPage = () => {
         }
     };
 
+    // Handle select date.
     const selectDate = async (event) => {
         const selectedDate = event.target.value;
         setDate(selectedDate);
@@ -120,6 +128,7 @@ const ReceptionistAppointmentRequestPage = () => {
         }
     };
 
+    // Handle submit.
     const submit = async (event) => {
         event.preventDefault();
         setError('');
@@ -416,6 +425,7 @@ const ReceptionistAppointmentRequestPage = () => {
     );
 };
 
+// Validate required new patient fields.
 const requiredNewPatientFields = [
     'fullName',
     'phone',
@@ -425,11 +435,14 @@ const requiredNewPatientFields = [
     'emergencyContactName',
     'emergencyContactPhone',
 ];
+// Check whether is patient ready.
 const isPatientReady = (mode, patient, details) =>
     mode === 'existing'
         ? Boolean(patient)
         : requiredNewPatientFields.every((field) => details[field]?.trim());
+// Show the new patient fields interface.
 const NewPatientFields = ({ details, setDetails }) => {
+    // Update update.
     const update = (field) => (event) => setDetails({ ...details, [field]: event.target.value });
     return (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -523,6 +536,7 @@ const NewPatientFields = ({ details, setDetails }) => {
     );
 };
 
+// Show the legacy appointment create page interface.
 const LegacyAppointmentCreatePage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -538,6 +552,7 @@ const LegacyAppointmentCreatePage = () => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    // Load options.
     const loadOptions = useCallback(async () => {
         try {
             const [patientResponse, doctorResponse] = await Promise.all([
@@ -550,10 +565,13 @@ const LegacyAppointmentCreatePage = () => {
             setError(err.message);
         }
     }, [token]);
+    // Run this work when the listed values change.
     useEffect(() => {
         loadOptions();
     }, [loadOptions]);
+    // Update change.
     const change = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle submit.
     const submit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

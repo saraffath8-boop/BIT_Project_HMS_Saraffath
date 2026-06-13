@@ -1,3 +1,5 @@
+// This file contains the user database model.
+
 import mongoose from 'mongoose';
 import { ALL_USER_ROLES, USER_ROLES as USER_ROLE_VALUES } from '../types/userRoles.js';
 import {
@@ -8,8 +10,10 @@ import {
     SRI_LANKAN_PHONE_REGEX,
 } from '../utils/userValidation.js';
 
+// Store the user roles setting used by this file.
 export const USER_ROLES = ALL_USER_ROLES;
 
+// Define the user schema database fields and rules.
 const userSchema = new mongoose.Schema(
     {
         name: { type: String, trim: true, maxlength: [80, 'Name cannot exceed 80 characters'] },
@@ -125,5 +129,6 @@ userSchema.pre('validate', function setLegacyName() {
     }
 });
 
+// Handle user.
 const User = mongoose.model('User', userSchema);
 export default User;

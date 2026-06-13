@@ -1,5 +1,8 @@
+// This file contains the generate token shared application logic.
+
 import jwt from 'jsonwebtoken';
 
+// Create token.
 const generateToken = (user) => {
     return jwt.sign(
         {

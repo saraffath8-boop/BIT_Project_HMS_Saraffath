@@ -1,3 +1,5 @@
+// This file contains the login interface.
+
 import { useEffect, useState } from 'react';
 import { HeartPulse, LockKeyhole, Mail } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -17,6 +19,7 @@ export default function Login() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Run this work when the listed values change.
     useEffect(() => {
         if (!loading && isAuthenticated && user)
             navigate(location.state?.from?.pathname || getDashboardPath(user.role), {
@@ -24,6 +27,7 @@ export default function Login() {
             });
     }, [isAuthenticated, loading, location.state, navigate, user]);
 
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
@@ -147,6 +151,7 @@ export default function Login() {
     );
 }
 
+// Show the brand interface.
 const Brand = ({ dark = false }) => (
     <div className="flex items-center gap-3">
         <span className="grid size-11 place-items-center rounded-xl bg-cyan-700 text-white">
@@ -160,6 +165,7 @@ const Brand = ({ dark = false }) => (
         </div>
     </div>
 );
+// Show the field interface.
 const Field = ({ icon: Icon, label, children }) => (
     <div className="space-y-2">
         <Label htmlFor={children.props.id}>{label}</Label>

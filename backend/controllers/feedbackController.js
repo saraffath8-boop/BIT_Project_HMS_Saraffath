@@ -1,11 +1,15 @@
+// This file contains the feedback controller HTTP request handlers.
+
 import feedbackService from '../services/feedbackService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
     if (
@@ -17,6 +21,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create feedback.
 export const createFeedback = async (req, res) => {
     try {
         const feedback = await feedbackService.createFeedback(req.body, req.user);
@@ -31,6 +36,7 @@ export const createFeedback = async (req, res) => {
     }
 };
 
+// Load feedback entries.
 export const getFeedbackEntries = async (req, res) => {
     try {
         const feedbackEntries = await feedbackService.getFeedbackEntries(req.query, req.user);
@@ -44,6 +50,7 @@ export const getFeedbackEntries = async (req, res) => {
     }
 };
 
+// Load feedback by id.
 export const getFeedbackById = async (req, res) => {
     try {
         const feedback = await feedbackService.getFeedbackById(req.params.id, req.user);
@@ -57,6 +64,7 @@ export const getFeedbackById = async (req, res) => {
     }
 };
 
+// Update feedback.
 export const updateFeedback = async (req, res) => {
     try {
         const feedback = await feedbackService.updateFeedback(req.params.id, req.body, req.user);
@@ -71,6 +79,7 @@ export const updateFeedback = async (req, res) => {
     }
 };
 
+// Remove feedback.
 export const deleteFeedback = async (req, res) => {
     try {
         const feedback = await feedbackService.deleteFeedback(req.params.id);

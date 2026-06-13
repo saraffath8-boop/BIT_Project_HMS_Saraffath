@@ -1,5 +1,8 @@
+// This file contains the appointment database model.
+
 import mongoose from 'mongoose';
 
+// Define the appointment schema database fields and rules.
 const appointmentSchema = new mongoose.Schema(
     {
         patient: {
@@ -79,6 +82,7 @@ appointmentSchema.index({ doctor: 1, appointmentDate: -1 });
 appointmentSchema.index({ doctor: 1, appointmentDate: 1, status: 1 });
 appointmentSchema.index({ status: 1 });
 
+// Handle appointment.
 const Appointment = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);
 
 export default Appointment;

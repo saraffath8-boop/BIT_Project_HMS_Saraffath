@@ -1,6 +1,9 @@
+// This file contains the inventory service business workflow.
+
 import mongoose from 'mongoose';
 import inventoryDao from '../dao/inventoryDao.js';
 
+// Store the inventory categories setting used by this file.
 const INVENTORY_CATEGORIES = [
     'medical_supply',
     'equipment',
@@ -9,8 +12,10 @@ const INVENTORY_CATEGORIES = [
     'office',
     'other',
 ];
+// Store the inventory statuses setting used by this file.
 const INVENTORY_STATUSES = ['active', 'inactive'];
 
+// Prepare inventory item.
 const sanitizeInventoryItem = (item) => ({
     id: item._id.toString(),
     name: item.name,
@@ -27,14 +32,17 @@ const sanitizeInventoryItem = (item) => ({
     updatedAt: item.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Handle to number.
 const toNumber = (value, fieldName) => {
     const numberValue = Number(value);
 
@@ -45,6 +53,7 @@ const toNumber = (value, fieldName) => {
     return numberValue;
 };
 
+// Prepare inventory query.
 const buildInventoryQuery = (queryParams) => {
     const query = {};
 
@@ -79,6 +88,7 @@ const buildInventoryQuery = (queryParams) => {
     return query;
 };
 
+// Load inventory item or throw.
 const getInventoryItemOrThrow = async (id) => {
     requireObjectId(id, 'inventory item id');
     const item = await inventoryDao.getInventoryItemById(id);
@@ -90,6 +100,7 @@ const getInventoryItemOrThrow = async (id) => {
     return item;
 };
 
+// Create inventory item.
 const createInventoryItem = async (data, user) => {
     const name = toCleanString(data.name);
     const itemCode = toCleanString(data.itemCode)?.toUpperCase();
@@ -128,17 +139,20 @@ const createInventoryItem = async (data, user) => {
     return sanitizeInventoryItem(populatedItem);
 };
 
+// Load inventory items.
 const getInventoryItems = async (queryParams) => {
     const query = buildInventoryQuery(queryParams);
     const items = await inventoryDao.getInventoryItems(query);
     return items.map(sanitizeInventoryItem);
 };
 
+// Load inventory item by id.
 const getInventoryItemById = async (id) => {
     const item = await getInventoryItemOrThrow(id);
     return sanitizeInventoryItem(item);
 };
 
+// Update inventory item.
 const updateInventoryItem = async (id, data) => {
     await getInventoryItemOrThrow(id);
 
@@ -195,12 +209,14 @@ const updateInventoryItem = async (id, data) => {
     return sanitizeInventoryItem(item);
 };
 
+// Remove inventory item.
 const deleteInventoryItem = async (id) => {
     const item = await getInventoryItemOrThrow(id);
     await inventoryDao.deleteInventoryItem(id);
     return sanitizeInventoryItem(item);
 };
 
+// Handle inventory service.
 const inventoryService = {
     createInventoryItem,
     getInventoryItems,

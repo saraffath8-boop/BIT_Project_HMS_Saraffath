@@ -1,3 +1,5 @@
+// This file contains the dashboard layout interface.
+
 import {
     ArrowUpRight,
     Bell,
@@ -21,6 +23,7 @@ import {
     CardTitle,
 } from '../../components/ui/card';
 
+// Handle icons.
 const icons = {
     Appointments: CalendarDays,
     Patients: Users,
@@ -36,6 +39,7 @@ const icons = {
     Queue: ClipboardList,
 };
 
+// Show the dashboard layout interface.
 const DashboardLayout = ({ kicker, title, description, cards }) => {
     const { user } = useAuth();
     return (

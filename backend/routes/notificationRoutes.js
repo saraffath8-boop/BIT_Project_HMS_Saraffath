@@ -1,3 +1,5 @@
+// This file contains the notification routes API routes.
+
 import express from 'express';
 import {
     createNotification,
@@ -9,15 +11,19 @@ import {
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
+// Create the router used by this API module.
 const router = express.Router();
 
+// Connect this API URL to its request handler.
 router.use(protect);
 
+// Connect this API URL to its request handler.
 router
     .route('/')
     .get(getNotifications)
     .post(authorizeRoles('admin', 'receptionist'), createNotification);
 
+// Connect this API URL to its request handler.
 router
     .route('/:id')
     .get(getNotificationById)

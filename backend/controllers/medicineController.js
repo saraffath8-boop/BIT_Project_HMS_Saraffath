@@ -1,11 +1,15 @@
+// This file contains the medicine controller HTTP request handlers.
+
 import medicineService from '../services/medicineService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
     if (
@@ -21,6 +25,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create medicine.
 export const createMedicine = async (req, res) => {
     try {
         const medicine = await medicineService.createMedicine(req.body, req.user);
@@ -35,6 +40,7 @@ export const createMedicine = async (req, res) => {
     }
 };
 
+// Load medicines.
 export const getMedicines = async (req, res) => {
     try {
         const medicines = await medicineService.getMedicines(req.query);
@@ -48,6 +54,7 @@ export const getMedicines = async (req, res) => {
     }
 };
 
+// Load medicine by id.
 export const getMedicineById = async (req, res) => {
     try {
         const medicine = await medicineService.getMedicineById(req.params.id);
@@ -61,6 +68,7 @@ export const getMedicineById = async (req, res) => {
     }
 };
 
+// Update medicine.
 export const updateMedicine = async (req, res) => {
     try {
         const medicine = await medicineService.updateMedicine(req.params.id, req.body);
@@ -75,6 +83,7 @@ export const updateMedicine = async (req, res) => {
     }
 };
 
+// Remove medicine.
 export const deleteMedicine = async (req, res) => {
     try {
         const medicine = await medicineService.deleteMedicine(req.params.id);

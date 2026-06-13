@@ -1,3 +1,5 @@
+// This file contains the prescription create page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +9,7 @@ import { getUsers } from '../../services/userService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
+// Handle empty item.
 const emptyItem = {
     medicine: '',
     medicineName: '',
@@ -15,8 +18,10 @@ const emptyItem = {
     duration: '',
     instructions: '',
 };
+// Load user label.
 const getUserLabel = (user) => `${user.name || 'Unnamed User'} (${user.email})`;
 
+// Show the prescription create page interface.
 const PrescriptionCreatePage = () => {
     const { token, user } = useAuth();
     const navigate = useNavigate();
@@ -34,6 +39,7 @@ const PrescriptionCreatePage = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    // Load patients.
     const loadPatients = useCallback(async () => {
         setLoadingPatients(true);
         try {
@@ -50,21 +56,27 @@ const PrescriptionCreatePage = () => {
         }
     }, [token, user?.role]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         loadPatients();
     }, [loadPatients]);
 
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle item change.
     const handleItemChange = (index, event) =>
         setItems(
             items.map((item, itemIndex) =>
                 itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item,
             ),
         );
+    // Create item.
     const addItem = () => setItems([...items, { ...emptyItem }]);
+    // Remove item.
     const removeItem = (index) => setItems(items.filter((item, itemIndex) => itemIndex !== index));
 
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

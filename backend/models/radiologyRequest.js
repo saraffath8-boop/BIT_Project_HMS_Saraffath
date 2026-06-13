@@ -1,5 +1,8 @@
+// This file contains the radiology request database model.
+
 import mongoose from 'mongoose';
 
+// Define the radiology request schema database fields and rules.
 const radiologyRequestSchema = new mongoose.Schema(
     {
         patient: {
@@ -81,6 +84,7 @@ radiologyRequestSchema.index({ patient: 1, createdAt: -1 });
 radiologyRequestSchema.index({ doctor: 1, createdAt: -1 });
 radiologyRequestSchema.index({ status: 1 });
 
+// Handle radiology request.
 const RadiologyRequest =
     mongoose.models.RadiologyRequest || mongoose.model('RadiologyRequest', radiologyRequestSchema);
 

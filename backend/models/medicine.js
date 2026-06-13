@@ -1,5 +1,8 @@
+// This file contains the medicine database model.
+
 import mongoose from 'mongoose';
 
+// Define the medicine schema database fields and rules.
 const medicineSchema = new mongoose.Schema(
     {
         name: {
@@ -62,6 +65,7 @@ const medicineSchema = new mongoose.Schema(
 medicineSchema.index({ name: 'text', sku: 'text', category: 'text' });
 medicineSchema.index({ stockQuantity: 1, reorderLevel: 1 });
 
+// Handle medicine.
 const Medicine = mongoose.models.Medicine || mongoose.model('Medicine', medicineSchema);
 
 export default Medicine;

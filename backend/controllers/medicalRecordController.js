@@ -1,11 +1,15 @@
+// This file contains the medical record controller HTTP request handlers.
+
 import medicalRecordService from '../services/medicalRecordService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
@@ -19,6 +23,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create medical record.
 export const createMedicalRecord = async (req, res) => {
     try {
         const medicalRecord = await medicalRecordService.createMedicalRecord(req.body, req.user);
@@ -33,6 +38,7 @@ export const createMedicalRecord = async (req, res) => {
     }
 };
 
+// Load medical records.
 export const getMedicalRecords = async (req, res) => {
     try {
         const medicalRecords = await medicalRecordService.getMedicalRecords(req.query, req.user);
@@ -46,6 +52,7 @@ export const getMedicalRecords = async (req, res) => {
     }
 };
 
+// Load my medical records.
 export const getMyMedicalRecords = async (req, res) => {
     try {
         const medicalRecords = await medicalRecordService.getMyMedicalRecords(req.user.id);
@@ -55,6 +62,7 @@ export const getMyMedicalRecords = async (req, res) => {
     }
 };
 
+// Load medical record by id.
 export const getMedicalRecordById = async (req, res) => {
     try {
         const medicalRecord = await medicalRecordService.getMedicalRecordById(
@@ -71,6 +79,7 @@ export const getMedicalRecordById = async (req, res) => {
     }
 };
 
+// Update medical record.
 export const updateMedicalRecord = async (req, res) => {
     try {
         const medicalRecord = await medicalRecordService.updateMedicalRecord(
@@ -89,6 +98,7 @@ export const updateMedicalRecord = async (req, res) => {
     }
 };
 
+// Remove medical record.
 export const deleteMedicalRecord = async (req, res) => {
     try {
         const medicalRecord = await medicalRecordService.deleteMedicalRecord(req.params.id);

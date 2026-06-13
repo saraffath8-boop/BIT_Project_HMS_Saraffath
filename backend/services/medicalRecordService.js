@@ -1,11 +1,15 @@
+// This file contains the medical record service business workflow.
+
 import mongoose from 'mongoose';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import appointmentDao from '../dao/appointmentDao.js';
 
+// Store the record statuses setting used by this file.
 const RECORD_STATUSES = ['open', 'completed', 'archived'];
 
+// Prepare medical record.
 const sanitizeMedicalRecord = (record) => ({
     id: record._id.toString(),
     patient: record.patient,
@@ -23,14 +27,17 @@ const sanitizeMedicalRecord = (record) => ({
     updatedAt: record.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -40,6 +47,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate doctor exists.
 const validateDoctorExists = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -49,6 +57,7 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
+// Validate appointment exists.
 const validateAppointmentExists = async (appointmentId) => {
     if (!appointmentId) {
         return;
@@ -62,6 +71,7 @@ const validateAppointmentExists = async (appointmentId) => {
     }
 };
 
+// Validate date.
 const validateDate = (value, fieldName) => {
     if (!value) {
         return undefined;
@@ -75,6 +85,7 @@ const validateDate = (value, fieldName) => {
     return date;
 };
 
+// Prepare medical record query.
 const buildMedicalRecordQuery = (queryParams, user) => {
     const query = {};
 
@@ -107,6 +118,7 @@ const buildMedicalRecordQuery = (queryParams, user) => {
     return query;
 };
 
+// Handle pick vital signs.
 const pickVitalSigns = (vitalSigns = {}) => {
     const allowedFields = [
         'temperature',
@@ -127,6 +139,7 @@ const pickVitalSigns = (vitalSigns = {}) => {
     return cleanVitalSigns;
 };
 
+// Create medical record.
 const createMedicalRecord = async (data, user) => {
     const patient = toCleanString(data.patient);
     const doctor = user.role === 'doctor' ? user.id : toCleanString(data.doctor);
@@ -158,12 +171,14 @@ const createMedicalRecord = async (data, user) => {
     return sanitizeMedicalRecord(populatedRecord);
 };
 
+// Load medical records.
 const getMedicalRecords = async (queryParams, user) => {
     const query = buildMedicalRecordQuery(queryParams, user);
     const records = await medicalRecordDao.getMedicalRecords(query);
     return records.map(sanitizeMedicalRecord);
 };
 
+// Load my medical records.
 const getMyMedicalRecords = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
     if (!patient) throw new Error('No patient profile is linked to this account');
@@ -171,6 +186,7 @@ const getMyMedicalRecords = async (userId) => {
     return records.map(sanitizeMedicalRecord);
 };
 
+// Load medical record by id.
 const getMedicalRecordById = async (id, user) => {
     requireObjectId(id, 'medical record id');
     const record = await medicalRecordDao.getMedicalRecordById(id);
@@ -186,6 +202,7 @@ const getMedicalRecordById = async (id, user) => {
     return sanitizeMedicalRecord(record);
 };
 
+// Update medical record.
 const updateMedicalRecord = async (id, data, user) => {
     await getMedicalRecordById(id, user);
 
@@ -237,12 +254,14 @@ const updateMedicalRecord = async (id, data, user) => {
     return sanitizeMedicalRecord(record);
 };
 
+// Remove medical record.
 const deleteMedicalRecord = async (id) => {
     const record = await getMedicalRecordById(id, { role: 'admin' });
     await medicalRecordDao.deleteMedicalRecord(id);
     return record;
 };
 
+// Handle medical record service.
 const medicalRecordService = {
     createMedicalRecord,
     getMedicalRecords,

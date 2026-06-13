@@ -1,6 +1,9 @@
+// This file contains the dashboard interface.
+
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Handle stat cards.
 const statCards = [
     { label: 'Total Patients', value: '1,284', icon: '🏥', color: '#38bdf8' },
     { label: 'Doctors On Duty', value: '24', icon: '👨‍⚕️', color: '#34d399' },
@@ -12,6 +15,7 @@ export default function Dashboard() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
+    // Handle handle logout.
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -123,6 +127,7 @@ export default function Dashboard() {
     );
 }
 
+// Handle styles.
 const styles = {
     wrapper: {
         display: 'flex',

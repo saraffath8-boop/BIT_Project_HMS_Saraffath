@@ -1,3 +1,5 @@
+// This file contains the patient edit page interface.
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -12,7 +14,9 @@ import {
 } from '../../schemas/patientSchema';
 import { getPatientById, updatePatient } from '../../services/patientService';
 
+// Handle to date input value.
 const toDateInputValue = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
+// Handle defaults.
 const defaults = {
     fullName: '',
     dateOfBirth: '',
@@ -42,7 +46,9 @@ export default function PatientEditPage() {
         formState: { errors, isSubmitting },
     } = useForm({ resolver: zodResolver(patientSchema), defaultValues: defaults });
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load patient.
         const loadPatient = async () => {
             try {
                 const { patient } = await getPatientById(id, token);
@@ -60,6 +66,7 @@ export default function PatientEditPage() {
         loadPatient();
     }, [id, reset, token]);
 
+    // Handle submit.
     const submit = async (formData) => {
         setError('');
         try {
@@ -220,9 +227,11 @@ export default function PatientEditPage() {
     );
 }
 
+// Handle select.
 const Select = forwardRef(function Select(props, ref) {
     return <select ref={ref} style={styles.input} {...props} />;
 });
+// Show the field interface.
 const Field = ({ label, error, children }) => (
     <label style={styles.label}>
         {label}
@@ -230,6 +239,7 @@ const Field = ({ label, error, children }) => (
         {error && <span style={styles.fieldError}>{error}</span>}
     </label>
 );
+// Handle styles.
 const styles = {
     page: { color: '#0f172a' },
     header: {

@@ -1,5 +1,8 @@
+// This file contains the feedback database model.
+
 import mongoose from 'mongoose';
 
+// Define the feedback schema database fields and rules.
 const feedbackSchema = new mongoose.Schema(
     {
         submittedBy: {
@@ -54,6 +57,7 @@ feedbackSchema.index({ submittedBy: 1, createdAt: -1 });
 feedbackSchema.index({ patient: 1 });
 feedbackSchema.index({ status: 1 });
 
+// Handle feedback.
 const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', feedbackSchema);
 
 export default Feedback;

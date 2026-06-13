@@ -1,3 +1,5 @@
+// This file contains the doctor consultation page interface.
+
 import { FlaskConical, Pill, ScanLine, Stethoscope } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -15,6 +17,7 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../context/AuthContext';
 import { createConsultation, getAppointmentById } from '../../services/appointmentService';
 
+// Handle empty prescription item.
 const emptyPrescriptionItem = {
     medicineName: '',
     dosage: '',
@@ -22,6 +25,7 @@ const emptyPrescriptionItem = {
     duration: '',
     instructions: '',
 };
+// Handle empty vitals.
 const emptyVitals = {
     temperature: '',
     bloodPressure: '',
@@ -60,6 +64,7 @@ export default function DoctorConsultationPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
         getAppointmentById(id, token)
             .then((response) => setAppointment(response.appointment))
@@ -67,13 +72,16 @@ export default function DoctorConsultationPage() {
             .finally(() => setLoading(false));
     }, [id, token]);
 
+    // Update record.
     const updateRecord = (event) =>
         setMedicalRecord({ ...medicalRecord, [event.target.name]: event.target.value });
+    // Update vital.
     const updateVital = (event) =>
         setMedicalRecord({
             ...medicalRecord,
             vitalSigns: { ...medicalRecord.vitalSigns, [event.target.name]: event.target.value },
         });
+    // Update prescription item.
     const updatePrescriptionItem = (index, event) =>
         setPrescription({
             ...prescription,
@@ -81,17 +89,20 @@ export default function DoctorConsultationPage() {
                 itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item,
             ),
         });
+    // Create prescription item.
     const addPrescriptionItem = () =>
         setPrescription({
             ...prescription,
             items: [...prescription.items, { ...emptyPrescriptionItem }],
         });
+    // Remove prescription item.
     const removePrescriptionItem = (index) =>
         setPrescription({
             ...prescription,
             items: prescription.items.filter((_, itemIndex) => itemIndex !== index),
         });
 
+    // Handle submit.
     const submit = async (event) => {
         event.preventDefault();
         setError('');
@@ -346,12 +357,14 @@ export default function DoctorConsultationPage() {
     );
 }
 
+// Show the field interface.
 const Field = ({ label, children }) => (
     <label className="block space-y-2">
         <Label className="capitalize">{label}</Label>
         {children}
     </label>
 );
+// Show the textarea interface.
 const Textarea = (props) => (
     <textarea
         rows={4}
@@ -359,6 +372,7 @@ const Textarea = (props) => (
         {...props}
     />
 );
+// Show the optional card interface.
 const OptionalCard = ({ checked, onChange, icon: Icon, title, description, children }) => (
     <Card>
         <CardHeader>

@@ -1,3 +1,5 @@
+// This file contains the radiology request service business workflow.
+
 import mongoose from 'mongoose';
 import radiologyRequestDao from '../dao/radiologyRequestDao.js';
 import patientDao from '../dao/patientDao.js';
@@ -7,8 +9,10 @@ import clinicalCompletionService from './clinicalCompletionService.js';
 import notificationService from './notificationService.js';
 import billService from './billService.js';
 
+// Store the radiology statuses setting used by this file.
 const RADIOLOGY_STATUSES = ['requested', 'scheduled', 'in_progress', 'completed', 'cancelled'];
 
+// Prepare radiology request.
 const sanitizeRadiologyRequest = (request) => ({
     id: request._id.toString(),
     patient: request.patient,
@@ -31,14 +35,17 @@ const sanitizeRadiologyRequest = (request) => ({
     updatedAt: request.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate date.
 const validateDate = (value, fieldName) => {
     if (!value) {
         return undefined;
@@ -52,6 +59,7 @@ const validateDate = (value, fieldName) => {
     return date;
 };
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -61,6 +69,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate doctor exists.
 const validateDoctorExists = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -70,6 +79,7 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
+// Validate radiologist exists.
 const validateRadiologistExists = async (radiologistId) => {
     if (!radiologistId) {
         return;
@@ -83,6 +93,7 @@ const validateRadiologistExists = async (radiologistId) => {
     }
 };
 
+// Validate medical record exists.
 const validateMedicalRecordExists = async (medicalRecordId) => {
     if (!medicalRecordId) {
         return;
@@ -96,6 +107,7 @@ const validateMedicalRecordExists = async (medicalRecordId) => {
     }
 };
 
+// Prepare radiology query.
 const buildRadiologyQuery = (queryParams, user) => {
     const query = {};
 
@@ -141,6 +153,7 @@ const buildRadiologyQuery = (queryParams, user) => {
     return query;
 };
 
+// Create radiology request.
 const createRadiologyRequest = async (data, user) => {
     const patient = toCleanString(data.patient);
     const doctor = user.role === 'doctor' ? user.id : toCleanString(data.doctor);
@@ -191,12 +204,14 @@ const createRadiologyRequest = async (data, user) => {
     return sanitizeRadiologyRequest(populatedRequest);
 };
 
+// Load radiology requests.
 const getRadiologyRequests = async (queryParams, user) => {
     const query = buildRadiologyQuery(queryParams, user);
     const requests = await radiologyRequestDao.getRadiologyRequests(query);
     return requests.map(sanitizeRadiologyRequest);
 };
 
+// Load my radiology requests.
 const getMyRadiologyRequests = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
 
@@ -208,6 +223,7 @@ const getMyRadiologyRequests = async (userId) => {
     return requests.map(sanitizeRadiologyRequest);
 };
 
+// Load radiology request by id.
 const getRadiologyRequestById = async (id, user) => {
     requireObjectId(id, 'radiology request id');
     const request = await radiologyRequestDao.getRadiologyRequestById(id);
@@ -231,6 +247,7 @@ const getRadiologyRequestById = async (id, user) => {
     return sanitizeRadiologyRequest(request);
 };
 
+// Update radiology request paid.
 const markRadiologyRequestPaid = async (id, data, user) => {
     requireObjectId(id, 'radiology request id');
     const request = await radiologyRequestDao.getRadiologyRequestById(id);
@@ -275,6 +292,7 @@ const markRadiologyRequestPaid = async (id, data, user) => {
     return { radiologyRequest: sanitizeRadiologyRequest(radiologyRequest), bill };
 };
 
+// Update radiology request.
 const updateRadiologyRequest = async (id, data, user) => {
     const existingRequest = await getRadiologyRequestById(id, user);
 
@@ -354,12 +372,14 @@ const updateRadiologyRequest = async (id, data, user) => {
     return sanitizeRadiologyRequest(request);
 };
 
+// Remove radiology request.
 const deleteRadiologyRequest = async (id) => {
     const request = await getRadiologyRequestById(id, { role: 'admin' });
     await radiologyRequestDao.deleteRadiologyRequest(id);
     return request;
 };
 
+// Handle radiology request service.
 const radiologyRequestService = {
     createRadiologyRequest,
     getRadiologyRequests,

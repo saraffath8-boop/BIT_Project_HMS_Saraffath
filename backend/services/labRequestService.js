@@ -1,3 +1,5 @@
+// This file contains the lab request service business workflow.
+
 import mongoose from 'mongoose';
 import labRequestDao from '../dao/labRequestDao.js';
 import patientDao from '../dao/patientDao.js';
@@ -7,9 +9,12 @@ import clinicalCompletionService from './clinicalCompletionService.js';
 import notificationService from './notificationService.js';
 import billService from './billService.js';
 
+// Store the lab priorities setting used by this file.
 const LAB_PRIORITIES = ['routine', 'urgent'];
+// Store the lab statuses setting used by this file.
 const LAB_STATUSES = ['requested', 'sample_collected', 'in_progress', 'completed', 'cancelled'];
 
+// Prepare lab request.
 const sanitizeLabRequest = (labRequest) => ({
     id: labRequest._id.toString(),
     patient: labRequest.patient,
@@ -28,14 +33,17 @@ const sanitizeLabRequest = (labRequest) => ({
     updatedAt: labRequest.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -45,6 +53,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate doctor exists.
 const validateDoctorExists = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -54,6 +63,7 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
+// Validate technician exists.
 const validateTechnicianExists = async (technicianId) => {
     if (!technicianId) {
         return;
@@ -67,6 +77,7 @@ const validateTechnicianExists = async (technicianId) => {
     }
 };
 
+// Validate medical record exists.
 const validateMedicalRecordExists = async (medicalRecordId) => {
     if (!medicalRecordId) {
         return;
@@ -80,6 +91,7 @@ const validateMedicalRecordExists = async (medicalRecordId) => {
     }
 };
 
+// Prepare lab request query.
 const buildLabRequestQuery = (queryParams, user) => {
     const query = {};
 
@@ -128,6 +140,7 @@ const buildLabRequestQuery = (queryParams, user) => {
     return query;
 };
 
+// Prepare tests.
 const buildTests = (tests) => {
     if (!Array.isArray(tests) || tests.length === 0) {
         throw new Error('At least one lab test is required');
@@ -149,6 +162,7 @@ const buildTests = (tests) => {
     });
 };
 
+// Create lab request.
 const createLabRequest = async (data, user) => {
     const patient = toCleanString(data.patient);
     const doctor = user.role === 'doctor' ? user.id : toCleanString(data.doctor);
@@ -199,12 +213,14 @@ const createLabRequest = async (data, user) => {
     return sanitizeLabRequest(populatedLabRequest);
 };
 
+// Load lab requests.
 const getLabRequests = async (queryParams, user) => {
     const query = buildLabRequestQuery(queryParams, user);
     const labRequests = await labRequestDao.getLabRequests(query);
     return labRequests.map(sanitizeLabRequest);
 };
 
+// Load my lab requests.
 const getMyLabRequests = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
 
@@ -216,6 +232,7 @@ const getMyLabRequests = async (userId) => {
     return labRequests.map(sanitizeLabRequest);
 };
 
+// Load lab request by id.
 const getLabRequestById = async (id, user) => {
     requireObjectId(id, 'lab request id');
     const labRequest = await labRequestDao.getLabRequestById(id);
@@ -239,6 +256,7 @@ const getLabRequestById = async (id, user) => {
     return sanitizeLabRequest(labRequest);
 };
 
+// Update lab request paid.
 const markLabRequestPaid = async (id, data, user) => {
     requireObjectId(id, 'lab request id');
     const request = await labRequestDao.getLabRequestById(id);
@@ -283,6 +301,7 @@ const markLabRequestPaid = async (id, data, user) => {
     return { labRequest: sanitizeLabRequest(labRequest), bill };
 };
 
+// Update lab request.
 const updateLabRequest = async (id, data, user) => {
     const existingRequest = await getLabRequestById(id, user);
 
@@ -381,12 +400,14 @@ const updateLabRequest = async (id, data, user) => {
     return sanitizeLabRequest(labRequest);
 };
 
+// Remove lab request.
 const deleteLabRequest = async (id) => {
     const labRequest = await getLabRequestById(id, { role: 'admin' });
     await labRequestDao.deleteLabRequest(id);
     return labRequest;
 };
 
+// Handle lab request service.
 const labRequestService = {
     createLabRequest,
     getLabRequests,

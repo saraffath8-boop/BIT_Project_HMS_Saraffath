@@ -1,3 +1,5 @@
+// This file contains the auth service business workflow.
+
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -8,33 +10,45 @@ import patientService from './patientService.js';
 import smsService from './smsService.js';
 import { normalizeNic, validateUserCreateInput } from '../utils/userValidation.js';
 
+// Store the salt rounds setting used by this file.
 const SALT_ROUNDS = 12;
+// Store the public signup role setting used by this file.
 const PUBLIC_SIGNUP_ROLE = 'patient';
+// Store the otp expiry minutes setting used by this file.
 const OTP_EXPIRY_MINUTES = 10;
+// Store the otp resend cooldown seconds setting used by this file.
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
+// Store the max otp attempts setting used by this file.
 const MAX_OTP_ATTEMPTS = 5;
+// Store the password reset request message setting used by this file.
 const PASSWORD_RESET_REQUEST_MESSAGE =
     'If an active patient account uses this mobile number, a password reset OTP has been sent.';
 
+// Create the service error.
 const serviceError = (message, statusCode) => Object.assign(new Error(message), { statusCode });
+// Check whether should show development otp.
 const shouldShowDevelopmentOtp = () =>
     process.env.NODE_ENV !== 'production' &&
     (process.env.SMS_PROVIDER || 'log').toLowerCase() === 'log' &&
     process.env.SHOW_DEVELOPMENT_OTP === 'true';
 
+// Create the secure hash otp.
 const hashOtp = (otp) => {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
     return crypto.createHmac('sha256', process.env.JWT_SECRET).update(otp).digest('hex');
 };
 
+// Compare the otp values safely.
 const otpMatches = (otp, expectedHash) => {
     const actual = Buffer.from(hashOtp(otp), 'hex');
     const expected = Buffer.from(expectedHash || '', 'hex');
     return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 };
 
+// Prepare email.
 export const normalizeEmail = (email) => email.toLowerCase().trim();
 
+// Prepare user.
 export const sanitizeUser = (user) => ({
     id: user._id.toString(),
     name: user.name,
@@ -53,8 +67,10 @@ export const sanitizeUser = (user) => ({
     updatedAt: user.updatedAt,
 });
 
+// Create the secure hash password.
 export const hashPassword = async (password) => bcrypt.hash(password, SALT_ROUNDS);
 
+// Create token.
 const generateToken = (user) => {
     if (!process.env.JWT_SECRET) {
         throw new Error('JWT_SECRET is not configured');
@@ -70,6 +86,7 @@ const generateToken = (user) => {
     );
 };
 
+// Create user.
 const signupUser = async ({
     firstName,
     lastName,
@@ -143,6 +160,7 @@ const signupUser = async ({
     };
 };
 
+// Handle login user.
 const loginUser = async ({ email, password }) => {
     const normalizedEmail = normalizeEmail(email);
     const user = await userDao.getUserByEmail(normalizedEmail, true);
@@ -169,6 +187,7 @@ const loginUser = async ({ email, password }) => {
     };
 };
 
+// Handle request patient password reset.
 const requestPatientPasswordReset = async ({ phone }) => {
     const normalizedPhone = String(phone || '').trim();
     const user = await userDao.getUserByPhoneForPasswordReset(normalizedPhone);
@@ -214,9 +233,11 @@ const requestPatientPasswordReset = async ({ phone }) => {
     };
 };
 
+// Handle reset patient password.
 const resetPatientPassword = async ({ phone, otp, newPassword }) => {
     const normalizedPhone = String(phone || '').trim();
     const user = await userDao.getUserByPhoneForPasswordReset(normalizedPhone);
+    // Create the invalid otp error.
     const invalidOtpError = () => serviceError('The OTP is invalid or has expired.', 400);
 
     if (
@@ -268,6 +289,7 @@ const resetPatientPassword = async ({ phone, otp, newPassword }) => {
     return { message: 'Password reset successful. You can now sign in with your new password.' };
 };
 
+// Load current user.
 const getCurrentUser = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new Error('Invalid user id');
@@ -281,6 +303,7 @@ const getCurrentUser = async (userId) => {
     return sanitizeUser(user);
 };
 
+// Handle verify token and get user.
 const verifyTokenAndGetUser = async (token) => {
     if (!process.env.JWT_SECRET) {
         throw new Error('JWT_SECRET is not configured');
@@ -307,6 +330,7 @@ const verifyTokenAndGetUser = async (token) => {
     return user;
 };
 
+// Handle auth service.
 const authService = {
     signupUser,
     loginUser,

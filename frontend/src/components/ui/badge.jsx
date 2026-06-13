@@ -1,6 +1,9 @@
+// This file contains the badge shared interface.
+
 import { cva } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
+// Handle variants.
 const variants = cva(
     'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize',
     {
@@ -17,6 +20,7 @@ const variants = cva(
     },
 );
 
+// Show the badge interface.
 export const Badge = ({ className, variant, ...props }) => (
     <span className={cn(variants({ variant }), className)} {...props} />
 );

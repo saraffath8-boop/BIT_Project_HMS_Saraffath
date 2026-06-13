@@ -1,3 +1,5 @@
+// This file contains the module list page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowRight, Plus, RefreshCw, SearchX } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,9 +19,12 @@ import {
 } from '../../components/ui/table';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Load nested value.
 const getNestedValue = (item, path) =>
     path?.split('.').reduce((value, key) => value?.[key], item) ?? '';
+// Store the empty filters setting used by this file.
 const EMPTY_FILTERS = {};
+// Handle status words.
 const statusWords = [
     'active',
     'scheduled',
@@ -36,6 +41,7 @@ const statusWords = [
     'unpaid',
 ];
 
+// Show the cell value interface.
 const CellValue = ({ value }) => {
     const clean = value || 'Not recorded';
     const text = typeof clean === 'string' ? clean.replaceAll('_', ' ') : clean;
@@ -59,6 +65,7 @@ const CellValue = ({ value }) => {
     );
 };
 
+// Handle module list page.
 const ModuleListPage = ({
     title,
     kicker,
@@ -75,6 +82,7 @@ const ModuleListPage = ({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Load items.
     const loadItems = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -88,6 +96,7 @@ const ModuleListPage = ({
         }
     }, [filters, itemsKey, loadData, token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         const id = setTimeout(loadItems, 0);
         return () => clearTimeout(id);

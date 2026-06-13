@@ -1,21 +1,26 @@
+// This file contains the profile page interface.
+
 import { ArrowLeft, Mail, Phone, ShieldCheck, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { getDashboardPath, useAuth } from '../context/AuthContext';
 
+// Prepare role.
 const formatRole = (role = '') =>
     role
         .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
+// Prepare date.
 const formatDate = (value) => {
     if (!value) return 'Not recorded';
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
 };
 
+// Show the detail interface.
 const Detail = ({ label, value }) => (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>

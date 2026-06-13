@@ -1,3 +1,5 @@
+// This file contains the medicine create page interface.
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -5,6 +7,7 @@ import { createMedicine } from '../../services/medicineService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getNumberValue, getOptionalValue } from '../shared/formHelpers';
 
+// Show the medicine create page interface.
 const MedicineCreatePage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -23,9 +26,11 @@ const MedicineCreatePage = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
 
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

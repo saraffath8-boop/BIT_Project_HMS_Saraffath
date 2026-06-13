@@ -1,10 +1,16 @@
+// This file contains the medical record pdf shared application logic.
+
 const ascii = (value) => String(value ?? '').replace(/[^\x20-\x7E]/g, '');
+// Handle escape pdf text.
 const escapePdfText = (value) =>
     ascii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+// Handle text.
 const text = (value, x, y, size = 10, bold = false) =>
     `BT /F${bold ? 2 : 1} ${size} Tf ${x} ${y} Td (${escapePdfText(value)}) Tj ET`;
+// Handle person name.
 const personName = (person) => person?.fullName || person?.name || 'Not recorded';
 
+// Handle wrap.
 const wrap = (value, length = 78) => {
     const words = ascii(value || 'Not recorded').split(/\s+/);
     return words.reduce((lines, word) => {
@@ -15,6 +21,7 @@ const wrap = (value, length = 78) => {
     }, []);
 };
 
+// Prepare pdf.
 const buildPdf = (record) => {
     const commands = [
         text('MEDICORE HOSPITAL', 210, 750, 18, true),
@@ -79,6 +86,7 @@ const buildPdf = (record) => {
     return `${pdf}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
 };
 
+// Handle download medical record pdf.
 export const downloadMedicalRecordPdf = (record) => {
     const url = URL.createObjectURL(new Blob([buildPdf(record)], { type: 'application/pdf' }));
     const link = document.createElement('a');

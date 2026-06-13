@@ -1,7 +1,10 @@
+// This file contains the landing page interface.
+
 import { ArrowRight, CalendarCheck, HeartPulse, ShieldCheck, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 
+// Handle features.
 const features = [
     {
         icon: Stethoscope,

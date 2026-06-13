@@ -1,5 +1,8 @@
+// This file contains the lab dashboard interface.
+
 import DashboardLayout from './DashboardLayout';
 
+// Handle cards.
 const cards = [
     {
         title: 'Laboratory Requests',
@@ -23,6 +26,7 @@ const cards = [
     },
 ];
 
+// Show the lab dashboard interface.
 const LabDashboard = () => (
     <DashboardLayout
         kicker="Laboratory Dashboard"

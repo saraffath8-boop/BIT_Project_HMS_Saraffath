@@ -1,5 +1,8 @@
+// This file contains the alert shared interface.
+
 import { cn } from '../../lib/utils';
 
+// Handle alert.
 export function Alert({ className, variant = 'default', ...props }) {
     return (
         <div

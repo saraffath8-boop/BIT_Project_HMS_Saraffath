@@ -1,9 +1,12 @@
+// This file contains the queue edit page interface.
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getQueueEntryById, updateQueueEntry } from '../../services/queueService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 
+// Show the queue edit page interface.
 const QueueEditPage = () => {
     const { id } = useParams();
     const { token } = useAuth();
@@ -17,7 +20,9 @@ const QueueEditPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load queue entry.
         const loadQueueEntry = async () => {
             try {
                 const { queueEntry } = await getQueueEntryById(id, token);
@@ -35,8 +40,10 @@ const QueueEditPage = () => {
         loadQueueEntry();
     }, [id, token]);
 
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

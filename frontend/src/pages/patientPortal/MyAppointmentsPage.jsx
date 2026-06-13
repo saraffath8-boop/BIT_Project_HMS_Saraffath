@@ -1,19 +1,24 @@
+// This file contains the my appointments page interface.
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getMyAppointments } from '../../services/appointmentService';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Prepare date time.
 const formatDateTime = (dateValue) => {
     if (!dateValue) return 'N/A';
     return new Date(dateValue).toLocaleString();
 };
 
+// Prepare doctor.
 const formatDoctor = (doctor) => {
     if (!doctor) return 'N/A';
     return doctor.name || doctor.email || 'N/A';
 };
 
+// Prepare status.
 const formatStatus = (status) =>
     status
         ? status
@@ -22,13 +27,16 @@ const formatStatus = (status) =>
               .join(' ')
         : 'N/A';
 
+// Show the my appointments page interface.
 const MyAppointmentsPage = () => {
     const { token } = useAuth();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load appointments.
         const loadAppointments = async () => {
             setLoading(true);
             setError('');
@@ -111,6 +119,7 @@ const MyAppointmentsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

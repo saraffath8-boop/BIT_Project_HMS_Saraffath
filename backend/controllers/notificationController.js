@@ -1,11 +1,15 @@
+// This file contains the notification controller HTTP request handlers.
+
 import notificationService from '../services/notificationService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
     if (
@@ -18,6 +22,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create notification.
 export const createNotification = async (req, res) => {
     try {
         const notification = await notificationService.createNotification(req.body, req.user);
@@ -32,6 +37,7 @@ export const createNotification = async (req, res) => {
     }
 };
 
+// Load notifications.
 export const getNotifications = async (req, res) => {
     try {
         const notifications = await notificationService.getNotifications(req.query, req.user);
@@ -45,6 +51,7 @@ export const getNotifications = async (req, res) => {
     }
 };
 
+// Load notification by id.
 export const getNotificationById = async (req, res) => {
     try {
         const notification = await notificationService.getNotificationById(req.params.id, req.user);
@@ -58,6 +65,7 @@ export const getNotificationById = async (req, res) => {
     }
 };
 
+// Update notification.
 export const updateNotification = async (req, res) => {
     try {
         const notification = await notificationService.updateNotification(
@@ -76,6 +84,7 @@ export const updateNotification = async (req, res) => {
     }
 };
 
+// Remove notification.
 export const deleteNotification = async (req, res) => {
     try {
         const notification = await notificationService.deleteNotification(req.params.id);

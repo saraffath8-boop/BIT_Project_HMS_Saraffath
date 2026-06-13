@@ -1,11 +1,15 @@
+// This file contains the inventory controller HTTP request handlers.
+
 import inventoryService from '../services/inventoryService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
     if (
@@ -20,6 +24,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create inventory item.
 export const createInventoryItem = async (req, res) => {
     try {
         const inventoryItem = await inventoryService.createInventoryItem(req.body, req.user);
@@ -34,6 +39,7 @@ export const createInventoryItem = async (req, res) => {
     }
 };
 
+// Load inventory items.
 export const getInventoryItems = async (req, res) => {
     try {
         const inventoryItems = await inventoryService.getInventoryItems(req.query);
@@ -47,6 +53,7 @@ export const getInventoryItems = async (req, res) => {
     }
 };
 
+// Load inventory item by id.
 export const getInventoryItemById = async (req, res) => {
     try {
         const inventoryItem = await inventoryService.getInventoryItemById(req.params.id);
@@ -60,6 +67,7 @@ export const getInventoryItemById = async (req, res) => {
     }
 };
 
+// Update inventory item.
 export const updateInventoryItem = async (req, res) => {
     try {
         const inventoryItem = await inventoryService.updateInventoryItem(req.params.id, req.body);
@@ -74,6 +82,7 @@ export const updateInventoryItem = async (req, res) => {
     }
 };
 
+// Remove inventory item.
 export const deleteInventoryItem = async (req, res) => {
     try {
         const inventoryItem = await inventoryService.deleteInventoryItem(req.params.id);

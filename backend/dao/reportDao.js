@@ -1,3 +1,5 @@
+// This file contains the report dao database queries.
+
 import Appointment from '../models/appointment.js';
 import Bill from '../models/bill.js';
 import Feedback from '../models/feedback.js';
@@ -10,7 +12,9 @@ import QueueEntry from '../models/queueEntry.js';
 import RadiologyRequest from '../models/radiologyRequest.js';
 import User from '../models/user.js';
 
+// Group the report dao database queries.
 class ReportDao {
+    // Load dashboard counts.
     async getDashboardCounts() {
         const [
             totalPatients,
@@ -61,6 +65,7 @@ class ReportDao {
         };
     }
 
+    // Load revenue summary.
     async getRevenueSummary(match = {}) {
         const result = await Bill.aggregate([
             { $match: match },

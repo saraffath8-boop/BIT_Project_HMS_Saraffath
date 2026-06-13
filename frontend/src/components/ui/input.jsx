@@ -1,6 +1,9 @@
+// This file contains the input shared interface.
+
 import { forwardRef } from 'react';
 import { cn } from '../../lib/utils';
 
+// Handle input.
 export const Input = forwardRef(function Input({ className, type = 'text', ...props }, ref) {
     return (
         <input

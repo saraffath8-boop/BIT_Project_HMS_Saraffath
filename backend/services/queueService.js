@@ -1,11 +1,16 @@
+// This file contains the queue service business workflow.
+
 import mongoose from 'mongoose';
 import queueDao from '../dao/queueDao.js';
 import patientDao from '../dao/patientDao.js';
 import appointmentDao from '../dao/appointmentDao.js';
 
+// Store the queue statuses setting used by this file.
 const QUEUE_STATUSES = ['waiting', 'called', 'in_service', 'completed', 'cancelled'];
+// Store the queue priorities setting used by this file.
 const QUEUE_PRIORITIES = ['normal', 'urgent', 'emergency'];
 
+// Prepare queue entry.
 const sanitizeQueueEntry = (queueEntry) => ({
     id: queueEntry._id.toString(),
     queueNumber: queueEntry.queueNumber,
@@ -21,14 +26,17 @@ const sanitizeQueueEntry = (queueEntry) => ({
     updatedAt: queueEntry.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -38,6 +46,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate appointment exists.
 const validateAppointmentExists = async (appointmentId) => {
     if (!appointmentId) {
         return;
@@ -51,6 +60,7 @@ const validateAppointmentExists = async (appointmentId) => {
     }
 };
 
+// Prepare queue query.
 const buildQueueQuery = (queryParams) => {
     const query = {};
 
@@ -85,6 +95,7 @@ const buildQueueQuery = (queryParams) => {
     return query;
 };
 
+// Prepare status time fields.
 const buildStatusTimeFields = (status) => {
     const updateData = {};
 
@@ -99,6 +110,7 @@ const buildStatusTimeFields = (status) => {
     return updateData;
 };
 
+// Create queue entry.
 const createQueueEntry = async (data, user) => {
     const patient = toCleanString(data.patient);
     const appointment = toCleanString(data.appointment) || null;
@@ -131,12 +143,14 @@ const createQueueEntry = async (data, user) => {
     return sanitizeQueueEntry(populatedQueueEntry);
 };
 
+// Load queue entries.
 const getQueueEntries = async (queryParams) => {
     const query = buildQueueQuery(queryParams);
     const queueEntries = await queueDao.getQueueEntries(query);
     return queueEntries.map(sanitizeQueueEntry);
 };
 
+// Load queue entry by id.
 const getQueueEntryById = async (id) => {
     requireObjectId(id, 'queue entry id');
     const queueEntry = await queueDao.getQueueEntryById(id);
@@ -148,6 +162,7 @@ const getQueueEntryById = async (id) => {
     return sanitizeQueueEntry(queueEntry);
 };
 
+// Update queue entry.
 const updateQueueEntry = async (id, data) => {
     await getQueueEntryById(id);
 
@@ -186,12 +201,14 @@ const updateQueueEntry = async (id, data) => {
     return sanitizeQueueEntry(queueEntry);
 };
 
+// Remove queue entry.
 const deleteQueueEntry = async (id) => {
     const queueEntry = await getQueueEntryById(id);
     await queueDao.deleteQueueEntry(id);
     return queueEntry;
 };
 
+// Handle queue service.
 const queueService = {
     createQueueEntry,
     getQueueEntries,

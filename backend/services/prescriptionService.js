@@ -1,3 +1,5 @@
+// This file contains the prescription service business workflow.
+
 import mongoose from 'mongoose';
 import prescriptionDao from '../dao/prescriptionDao.js';
 import patientDao from '../dao/patientDao.js';
@@ -9,8 +11,10 @@ import clinicalCompletionService from './clinicalCompletionService.js';
 import notificationService from './notificationService.js';
 import billService from './billService.js';
 
+// Store the prescription statuses setting used by this file.
 const PRESCRIPTION_STATUSES = ['pending', 'partially_issued', 'issued', 'cancelled'];
 
+// Prepare prescription.
 const sanitizePrescription = (prescription) => ({
     id: prescription._id.toString(),
     patient: prescription.patient,
@@ -29,32 +33,40 @@ const sanitizePrescription = (prescription) => ({
     updatedAt: prescription.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
+// Load positive number.
 const getPositiveNumber = (value, fieldName) => {
     const number = Number(value);
     if (!Number.isFinite(number) || number <= 0)
         throw new Error(`${fieldName} must be greater than zero`);
     return number;
 };
+// Load prescribed multiplier.
 const getPrescribedMultiplier = (value, fieldName) => {
     const match = String(value || '').match(/\d+(?:\.\d+)?/);
     if (!match) throw new Error(`${fieldName} must contain a numeric value`);
     return getPositiveNumber(match[0], fieldName);
 };
+// Handle round currency.
 const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+// Prepare prescription pricing.
 const calculatePrescriptionPricing = (prescription, pricingItems) => {
     if (!Array.isArray(pricingItems) || pricingItems.length !== prescription.items.length) {
         throw new Error('Pricing is required for every prescribed medicine');
     }
 
+    // Handle pricing by item.
     const pricingByItem = new Map(pricingItems.map((item) => [String(item.itemId), item]));
+    // Handle bill items.
     const billItems = prescription.items.map((item) => {
         const pricing = pricingByItem.get(item._id.toString());
         if (!pricing) throw new Error(`Pricing is required for ${item.medicineName}`);
@@ -80,6 +92,7 @@ const calculatePrescriptionPricing = (prescription, pricingItems) => {
     };
 };
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -89,6 +102,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate doctor exists.
 const validateDoctorExists = async (doctorId) => {
     requireObjectId(doctorId, 'doctor id');
     const doctor = await userDao.getUserById(doctorId);
@@ -98,6 +112,7 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
+// Validate medical record exists.
 const validateMedicalRecordExists = async (medicalRecordId) => {
     if (!medicalRecordId) {
         return;
@@ -111,6 +126,7 @@ const validateMedicalRecordExists = async (medicalRecordId) => {
     }
 };
 
+// Validate medicine exists.
 const validateMedicineExists = async (medicineId) => {
     if (!medicineId) {
         return;
@@ -124,6 +140,7 @@ const validateMedicineExists = async (medicineId) => {
     }
 };
 
+// Prepare prescription query.
 const buildPrescriptionQuery = (queryParams, user) => {
     const query = {};
 
@@ -158,6 +175,7 @@ const buildPrescriptionQuery = (queryParams, user) => {
     return query;
 };
 
+// Prepare prescription items.
 const buildPrescriptionItems = async (items) => {
     if (!Array.isArray(items) || items.length === 0) {
         throw new Error('At least one medicine is required');
@@ -193,6 +211,7 @@ const buildPrescriptionItems = async (items) => {
     return prescriptionItems;
 };
 
+// Load medicine summary.
 const getMedicineSummary = (items = []) => {
     const names = items
         .map((item) => item.medicineName)
@@ -206,6 +225,7 @@ const getMedicineSummary = (items = []) => {
     return names.join(', ');
 };
 
+// Send prescription issued sms.
 const sendPrescriptionIssuedSms = async (prescription) => {
     if (!prescription?.patient?.phone) {
         return;
@@ -220,6 +240,7 @@ const sendPrescriptionIssuedSms = async (prescription) => {
     });
 };
 
+// Create prescription.
 const createPrescription = async (data, user) => {
     const patient = toCleanString(data.patient);
     const doctor = user.role === 'doctor' ? user.id : toCleanString(data.doctor);
@@ -271,12 +292,14 @@ const createPrescription = async (data, user) => {
     return sanitizePrescription(populatedPrescription);
 };
 
+// Load prescriptions.
 const getPrescriptions = async (queryParams, user) => {
     const query = buildPrescriptionQuery(queryParams, user);
     const prescriptions = await prescriptionDao.getPrescriptions(query);
     return prescriptions.map(sanitizePrescription);
 };
 
+// Load my prescriptions.
 const getMyPrescriptions = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
 
@@ -288,6 +311,7 @@ const getMyPrescriptions = async (userId) => {
     return prescriptions.map(sanitizePrescription);
 };
 
+// Load prescription by id.
 const getPrescriptionById = async (id, user) => {
     requireObjectId(id, 'prescription id');
     const prescription = await prescriptionDao.getPrescriptionById(id);
@@ -302,6 +326,7 @@ const getPrescriptionById = async (id, user) => {
     return sanitizePrescription(prescription);
 };
 
+// Update prescription.
 const updatePrescription = async (id, data, user) => {
     const existingPrescription = await getPrescriptionById(id, user);
 
@@ -384,6 +409,7 @@ const updatePrescription = async (id, data, user) => {
     return sanitizePrescription(prescription);
 };
 
+// Update prescription paid.
 const markPrescriptionPaid = async (id, data, user) => {
     requireObjectId(id, 'prescription id');
     const prescription = await prescriptionDao.getPrescriptionById(id);
@@ -419,12 +445,14 @@ const markPrescriptionPaid = async (id, data, user) => {
     return { prescription: sanitizePrescription(updatedPrescription), bill };
 };
 
+// Remove prescription.
 const deletePrescription = async (id) => {
     const prescription = await getPrescriptionById(id, { role: 'admin' });
     await prescriptionDao.deletePrescription(id);
     return prescription;
 };
 
+// Handle prescription service.
 const prescriptionService = {
     createPrescription,
     getPrescriptions,

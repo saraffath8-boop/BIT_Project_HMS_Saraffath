@@ -1,8 +1,12 @@
+// This file contains the medicine service business workflow.
+
 import mongoose from 'mongoose';
 import medicineDao from '../dao/medicineDao.js';
 
+// Store the medicine statuses setting used by this file.
 const MEDICINE_STATUSES = ['active', 'inactive'];
 
+// Prepare medicine.
 const sanitizeMedicine = (medicine) => ({
     id: medicine._id.toString(),
     name: medicine.name,
@@ -19,14 +23,17 @@ const sanitizeMedicine = (medicine) => ({
     updatedAt: medicine.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Handle to number.
 const toNumber = (value, fieldName) => {
     const numberValue = Number(value);
 
@@ -37,6 +44,7 @@ const toNumber = (value, fieldName) => {
     return numberValue;
 };
 
+// Handle to optional date.
 const toOptionalDate = (value, fieldName) => {
     if (!value) {
         return undefined;
@@ -50,6 +58,7 @@ const toOptionalDate = (value, fieldName) => {
     return date;
 };
 
+// Prepare medicine query.
 const buildMedicineQuery = (queryParams) => {
     const query = {};
 
@@ -81,6 +90,7 @@ const buildMedicineQuery = (queryParams) => {
     return query;
 };
 
+// Load medicine or throw.
 const getMedicineOrThrow = async (id) => {
     requireObjectId(id, 'medicine id');
     const medicine = await medicineDao.getMedicineById(id);
@@ -92,6 +102,7 @@ const getMedicineOrThrow = async (id) => {
     return medicine;
 };
 
+// Create medicine.
 const createMedicine = async (data, user) => {
     const name = toCleanString(data.name);
     const sku = toCleanString(data.sku)?.toUpperCase();
@@ -124,17 +135,20 @@ const createMedicine = async (data, user) => {
     return sanitizeMedicine(populatedMedicine);
 };
 
+// Load medicines.
 const getMedicines = async (queryParams) => {
     const query = buildMedicineQuery(queryParams);
     const medicines = await medicineDao.getMedicines(query);
     return medicines.map(sanitizeMedicine);
 };
 
+// Load medicine by id.
 const getMedicineById = async (id) => {
     const medicine = await getMedicineOrThrow(id);
     return sanitizeMedicine(medicine);
 };
 
+// Update medicine.
 const updateMedicine = async (id, data) => {
     await getMedicineOrThrow(id);
 
@@ -187,12 +201,14 @@ const updateMedicine = async (id, data) => {
     return sanitizeMedicine(medicine);
 };
 
+// Remove medicine.
 const deleteMedicine = async (id) => {
     const medicine = await getMedicineOrThrow(id);
     await medicineDao.deleteMedicine(id);
     return sanitizeMedicine(medicine);
 };
 
+// Handle medicine service.
 const medicineService = {
     createMedicine,
     getMedicines,

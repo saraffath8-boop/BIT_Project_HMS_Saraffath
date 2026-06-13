@@ -1,3 +1,5 @@
+// This file contains the queue create page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -6,6 +8,7 @@ import { createQueueEntry } from '../../services/queueService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
+// Show the queue create page interface.
 const QueueCreatePage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -21,6 +24,7 @@ const QueueCreatePage = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    // Load patients.
     const loadPatients = useCallback(async () => {
         setLoadingPatients(true);
         try {
@@ -33,13 +37,16 @@ const QueueCreatePage = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         loadPatients();
     }, [loadPatients]);
 
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
 
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

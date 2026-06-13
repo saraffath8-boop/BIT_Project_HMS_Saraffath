@@ -1,11 +1,15 @@
+// This file contains the appointment edit page interface.
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAppointmentById, updateAppointment } from '../../services/appointmentService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 
+// Handle to date time input.
 const toDateTimeInput = (value) => (value ? new Date(value).toISOString().slice(0, 16) : '');
 
+// Show the appointment edit page interface.
 const AppointmentEditPage = () => {
     const { id } = useParams();
     const { token } = useAuth();
@@ -20,7 +24,9 @@ const AppointmentEditPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load appointment.
         const loadAppointment = async () => {
             try {
                 const { appointment } = await getAppointmentById(id, token);
@@ -39,8 +45,10 @@ const AppointmentEditPage = () => {
         loadAppointment();
     }, [id, token]);
 
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

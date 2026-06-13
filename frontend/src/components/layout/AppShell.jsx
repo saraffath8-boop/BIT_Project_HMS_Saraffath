@@ -1,3 +1,5 @@
+// This file contains the app shell shared interface.
+
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';

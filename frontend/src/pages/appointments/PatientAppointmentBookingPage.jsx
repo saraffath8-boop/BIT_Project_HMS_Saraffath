@@ -1,3 +1,5 @@
+// This file contains the patient appointment booking page interface.
+
 import { ArrowLeft, CalendarDays, Clock, HeartPulse, Stethoscope } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -21,6 +23,7 @@ import {
     requestAppointment,
 } from '../../services/bookingService';
 
+// Handle tomorrow.
 const tomorrow = () => {
     const date = new Date();
     date.setDate(date.getDate() + 1);
@@ -30,8 +33,10 @@ const tomorrow = () => {
     return `${year}-${month}-${day}`;
 };
 
+// Prepare fee.
 const formatFee = (fee) =>
     fee ? `LKR ${Number(fee).toLocaleString()}` : 'Fee confirmed by receptionist';
+// Handle day names.
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function PatientAppointmentBookingPage() {
@@ -63,6 +68,7 @@ export default function PatientAppointmentBookingPage() {
     const isPatient =
         typeof user?.role === 'string' && user.role.trim().toLowerCase() === 'patient';
 
+    // Run this work when the listed values change.
     useEffect(() => {
         getDepartments()
             .then((response) => setDepartments(response.departments || []))
@@ -70,6 +76,7 @@ export default function PatientAppointmentBookingPage() {
             .finally(() => setLoading(false));
     }, []);
 
+    // Handle select department.
     const selectDepartment = async (event) => {
         const departmentId = event.target.value;
         setDepartment(departmentId);
@@ -94,6 +101,7 @@ export default function PatientAppointmentBookingPage() {
         }
     };
 
+    // Handle select doctor.
     const selectDoctor = (selectedDoctor) => {
         setDoctor(selectedDoctor);
         setDate('');
@@ -107,6 +115,7 @@ export default function PatientAppointmentBookingPage() {
         );
     };
 
+    // Handle select date.
     const selectDate = async (event) => {
         const selectedDate = event.target.value;
         setDate(selectedDate);
@@ -126,6 +135,7 @@ export default function PatientAppointmentBookingPage() {
         }
     };
 
+    // Handle submit.
     const submit = async (event) => {
         event.preventDefault();
         setError('');

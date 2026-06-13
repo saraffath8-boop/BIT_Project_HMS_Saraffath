@@ -1,5 +1,8 @@
+// This file contains the report service business workflow.
+
 import reportDao from '../dao/reportDao.js';
 
+// Prepare date match.
 const buildDateMatch = (queryParams) => {
     const match = {};
 
@@ -26,6 +29,7 @@ const buildDateMatch = (queryParams) => {
     return match;
 };
 
+// Load dashboard report.
 const getDashboardReport = async () => {
     const counts = await reportDao.getDashboardCounts();
     const revenue = await reportDao.getRevenueSummary();
@@ -40,6 +44,7 @@ const getDashboardReport = async () => {
     };
 };
 
+// Load revenue report.
 const getRevenueReport = async (queryParams) => {
     const match = buildDateMatch(queryParams);
     const revenue = await reportDao.getRevenueSummary(match);
@@ -55,6 +60,7 @@ const getRevenueReport = async (queryParams) => {
     };
 };
 
+// Handle report service.
 const reportService = {
     getDashboardReport,
     getRevenueReport,

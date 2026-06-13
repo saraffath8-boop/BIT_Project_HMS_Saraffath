@@ -1,5 +1,8 @@
+// This file contains the prescription database model.
+
 import mongoose from 'mongoose';
 
+// Define the prescription item schema database fields and rules.
 const prescriptionItemSchema = new mongoose.Schema(
     {
         medicine: {
@@ -41,6 +44,7 @@ const prescriptionItemSchema = new mongoose.Schema(
     { _id: true },
 );
 
+// Define the prescription schema database fields and rules.
 const prescriptionSchema = new mongoose.Schema(
     {
         patient: {
@@ -110,6 +114,7 @@ prescriptionSchema.index({ patient: 1, createdAt: -1 });
 prescriptionSchema.index({ doctor: 1, createdAt: -1 });
 prescriptionSchema.index({ status: 1 });
 
+// Handle prescription.
 const Prescription =
     mongoose.models.Prescription || mongoose.model('Prescription', prescriptionSchema);
 

@@ -1,3 +1,5 @@
+// This file contains the radiology request processing page interface.
+
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert } from '../../components/ui/alert';
@@ -34,6 +36,7 @@ export default function RadiologyRequestProcessingPage() {
     const [success, setSuccess] = useState('');
     const canProcess = ['admin', 'radiologist'].includes(user?.role);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         getRadiologyRequestById(id, token)
             .then(({ radiologyRequest }) => {
@@ -51,7 +54,9 @@ export default function RadiologyRequestProcessingPage() {
             .finally(() => setLoading(false));
     }, [id, token]);
 
+    // Update change.
     const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+    // Handle save.
     const save = async (event) => {
         event.preventDefault();
         setSaving(true);
@@ -169,6 +174,7 @@ export default function RadiologyRequestProcessingPage() {
     );
 }
 
+// Show the field interface.
 const Field = ({ label, children }) => (
     <label className="block space-y-2">
         <Label>{label}</Label>

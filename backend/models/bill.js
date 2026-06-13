@@ -1,5 +1,8 @@
+// This file contains the bill database model.
+
 import mongoose from 'mongoose';
 
+// Define the bill item schema database fields and rules.
 const billItemSchema = new mongoose.Schema(
     {
         description: {
@@ -50,6 +53,7 @@ const billItemSchema = new mongoose.Schema(
     { _id: true },
 );
 
+// Define the payment schema database fields and rules.
 const paymentSchema = new mongoose.Schema(
     {
         amount: {
@@ -80,6 +84,7 @@ const paymentSchema = new mongoose.Schema(
     { _id: true },
 );
 
+// Define the bill schema database fields and rules.
 const billSchema = new mongoose.Schema(
     {
         billNumber: {
@@ -158,6 +163,7 @@ const billSchema = new mongoose.Schema(
 billSchema.index({ patient: 1, createdAt: -1 });
 billSchema.index({ status: 1 });
 
+// Handle bill.
 const Bill = mongoose.models.Bill || mongoose.model('Bill', billSchema);
 
 export default Bill;

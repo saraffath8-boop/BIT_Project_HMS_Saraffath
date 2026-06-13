@@ -1,3 +1,5 @@
+// This file contains the lab request create page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -7,8 +9,10 @@ import { getUsers } from '../../services/userService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
+// Load user label.
 const getUserLabel = (user) => `${user.name || 'Unnamed User'} (${user.email})`;
 
+// Show the lab request create page interface.
 const LabRequestCreatePage = () => {
     const { token, user } = useAuth();
     const navigate = useNavigate();
@@ -26,6 +30,7 @@ const LabRequestCreatePage = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    // Load patients.
     const loadPatients = useCallback(async () => {
         setLoadingPatients(true);
         try {
@@ -41,11 +46,14 @@ const LabRequestCreatePage = () => {
             setLoadingPatients(false);
         }
     }, [token, user?.role]);
+    // Run this work when the listed values change.
     useEffect(() => {
         loadPatients();
     }, [loadPatients]);
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

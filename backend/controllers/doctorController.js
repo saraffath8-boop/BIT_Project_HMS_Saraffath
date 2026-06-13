@@ -1,8 +1,12 @@
+// This file contains the doctor controller HTTP request handlers.
+
 import doctorService from '../services/doctorService.js';
 
+// Create the send error.
 const sendError = (res, error) =>
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
 
+// Load doctors.
 export const getDoctors = async (req, res) => {
     try {
         const doctors = await doctorService.getDoctors(req.query.departmentId);
@@ -12,6 +16,7 @@ export const getDoctors = async (req, res) => {
     }
 };
 
+// Load doctor availability.
 export const getDoctorAvailability = async (req, res) => {
     try {
         const availability = await doctorService.getDoctorAvailability(

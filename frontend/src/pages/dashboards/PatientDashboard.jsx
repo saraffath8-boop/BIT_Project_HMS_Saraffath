@@ -1,8 +1,11 @@
+// This file contains the patient dashboard interface.
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getMyPatientProfile } from '../../services/patientService';
 
+// Handle linked cards.
 const linkedCards = [
     {
         title: 'Feedback',
@@ -32,6 +35,7 @@ const linkedCards = [
     { title: 'Bills', description: 'View bills linked to your patient profile.', to: '/my/bills' },
 ];
 
+// Handle unlinked cards.
 const unlinkedCards = [
     {
         title: 'Feedback',
@@ -45,13 +49,16 @@ const unlinkedCards = [
     },
 ];
 
+// Show the patient dashboard interface.
 const PatientDashboard = () => {
     const { token, user } = useAuth();
     const [patientProfile, setPatientProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load profile.
         const loadProfile = async () => {
             setLoading(true);
             setError('');
@@ -148,6 +155,7 @@ const PatientDashboard = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

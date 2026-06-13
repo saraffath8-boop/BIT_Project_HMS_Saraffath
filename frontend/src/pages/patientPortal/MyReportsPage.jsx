@@ -1,3 +1,5 @@
+// This file contains the my reports page interface.
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -6,16 +8,19 @@ import { getMyRadiologyRequests } from '../../services/radiologyRequestService';
 import { getMyMedicalRecords } from '../../services/medicalRecordService';
 import { downloadMedicalRecordPdf } from '../../lib/medicalRecordPdf';
 
+// Prepare date.
 const formatDate = (dateValue) => {
     if (!dateValue) return 'N/A';
     return new Date(dateValue).toLocaleDateString();
 };
 
+// Prepare person.
 const formatPerson = (person) => {
     if (!person) return 'N/A';
     return person.name || person.email || 'N/A';
 };
 
+// Prepare status.
 const formatStatus = (status) =>
     status
         ? status
@@ -24,6 +29,7 @@ const formatStatus = (status) =>
               .join(' ')
         : 'N/A';
 
+// Handle summarize lab results.
 const summarizeLabResults = (tests = []) => {
     const completedResults = tests
         .filter((test) => test.result || test.remarks)
@@ -32,6 +38,7 @@ const summarizeLabResults = (tests = []) => {
     return completedResults.length > 0 ? completedResults.join('; ') : 'N/A';
 };
 
+// Prepare test names.
 const formatTestNames = (tests = []) => {
     if (tests.length === 0) return 'N/A';
     return (
@@ -42,6 +49,7 @@ const formatTestNames = (tests = []) => {
     );
 };
 
+// Show the my reports page interface.
 const MyReportsPage = () => {
     const { token } = useAuth();
     const [labRequests, setLabRequests] = useState([]);
@@ -50,7 +58,9 @@ const MyReportsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load reports.
         const loadReports = async () => {
             setLoading(true);
             setError('');
@@ -257,6 +267,7 @@ const MyReportsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

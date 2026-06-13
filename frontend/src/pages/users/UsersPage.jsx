@@ -1,3 +1,5 @@
+// This file contains the users page interface.
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Eye, EyeOff, Pencil, UserPlus } from 'lucide-react';
@@ -27,11 +29,13 @@ import {
     TableRow,
 } from '../../components/ui/table';
 
+// Prepare role.
 const formatRole = (role = '') =>
     role
         .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+// Handle defaults.
 const defaults = {
     firstName: '',
     lastName: '',
@@ -67,6 +71,7 @@ export default function UsersPage() {
     } = useForm({ resolver: zodResolver(staffUserSchema), defaultValues: defaults });
     const selectedRole = watch('role');
 
+    // Load staff users.
     const loadStaffUsers = useCallback(async () => {
         if (!token) return;
         setLoadingUsers(true);
@@ -85,10 +90,12 @@ export default function UsersPage() {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         loadStaffUsers();
     }, [loadStaffUsers]);
 
+    // Handle submit.
     const submit = async (formData) => {
         setSubmitError('');
         setSuccess('');
@@ -322,6 +329,7 @@ export default function UsersPage() {
     );
 }
 
+// Handle select.
 const Select = forwardRef(function Select(props, ref) {
     return (
         <select
@@ -331,6 +339,7 @@ const Select = forwardRef(function Select(props, ref) {
         />
     );
 });
+// Show the field interface.
 const Field = ({ label, error, children }) => (
     <div className="space-y-2">
         <Label>{label}</Label>
@@ -339,6 +348,7 @@ const Field = ({ label, error, children }) => (
     </div>
 );
 
+// Show the doctor booking setup interface.
 const DoctorBookingSetup = ({ doctor, departments, token, onSaved }) => {
     const [department, setDepartment] = useState(
         doctor.department?._id || doctor.department?.id || '',
@@ -349,6 +359,7 @@ const DoctorBookingSetup = ({ doctor, departments, token, onSaved }) => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
 
+    // Handle reset values.
     const resetValues = () => {
         setDepartment(doctor.department?._id || doctor.department?.id || '');
         setSpecialization(doctor.specialization || '');
@@ -356,6 +367,7 @@ const DoctorBookingSetup = ({ doctor, departments, token, onSaved }) => {
         setMessage('');
     };
 
+    // Handle save.
     const save = async () => {
         setSaving(true);
         setMessage('');

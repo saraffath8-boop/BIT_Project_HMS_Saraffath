@@ -1,5 +1,8 @@
+// This file contains the auth middleware request checks.
+
 import authService from '../services/authService.js';
 
+// Load token from header.
 const getTokenFromHeader = (authorizationHeader) => {
     if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         return null;
@@ -8,6 +11,7 @@ const getTokenFromHeader = (authorizationHeader) => {
     return authorizationHeader.split(' ')[1];
 };
 
+// Handle protect.
 export const protect = async (req, res, next) => {
     try {
         const token = getTokenFromHeader(req.headers.authorization);

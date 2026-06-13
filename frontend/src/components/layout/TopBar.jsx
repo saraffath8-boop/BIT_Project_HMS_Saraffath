@@ -1,8 +1,11 @@
+// This file contains the top bar shared interface.
+
 import { Bell, LogOut, Menu, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
 
+// Handle titles.
 const titles = {
     patients: 'Patient Management',
     appointments: 'Appointments',
@@ -35,6 +38,7 @@ export default function TopBar({ onMenu, unreadCount = 0 }) {
             .join('')
             .toUpperCase() || 'HM';
 
+    // Handle handle logout.
     const handleLogout = () => {
         logout();
         navigate('/login', { replace: true });

@@ -1,3 +1,5 @@
+// This file contains the lab request processing page interface.
+
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert } from '../../components/ui/alert';
@@ -27,6 +29,7 @@ export default function LabRequestProcessingPage() {
     const [success, setSuccess] = useState('');
     const canProcess = ['admin', 'lab_technician'].includes(user?.role);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         getLabRequestById(id, token)
             .then(({ labRequest }) => {
@@ -38,12 +41,14 @@ export default function LabRequestProcessingPage() {
             .finally(() => setLoading(false));
     }, [id, token]);
 
+    // Update test.
     const updateTest = (index, field, value) =>
         setTests((items) =>
             items.map((test, testIndex) =>
                 testIndex === index ? { ...test, [field]: value } : test,
             ),
         );
+    // Handle save.
     const save = async (event) => {
         event.preventDefault();
         setSaving(true);
@@ -183,6 +188,7 @@ export default function LabRequestProcessingPage() {
     );
 }
 
+// Show the field interface.
 const Field = ({ label, children }) => (
     <label className="space-y-2">
         <Label>{label}</Label>

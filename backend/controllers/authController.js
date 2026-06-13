@@ -1,15 +1,21 @@
+// This file contains the auth controller HTTP request handlers.
+
 import authService from '../services/authService.js';
 import { validateUserCreateInput } from '../utils/userValidation.js';
 
+// Check whether is valid email.
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+// Check whether is valid mobile.
 const isValidMobile = (phone) => /^07[0-9]{8}$/.test(String(phone || '').trim());
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load error status code.
 const getErrorStatusCode = (error) => {
     if (error.code === 11000 || error.message.includes('already exists')) return 409;
     if (
@@ -20,6 +26,7 @@ const getErrorStatusCode = (error) => {
     return 500;
 };
 
+// Create user.
 export const signupUser = async (req, res) => {
     try {
         const {
@@ -76,6 +83,7 @@ export const signupUser = async (req, res) => {
     }
 };
 
+// Handle login user.
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -102,6 +110,7 @@ export const loginUser = async (req, res) => {
     }
 };
 
+// Handle request patient password reset.
 export const requestPatientPasswordReset = async (req, res) => {
     try {
         const { phone } = req.body;
@@ -119,6 +128,7 @@ export const requestPatientPasswordReset = async (req, res) => {
     }
 };
 
+// Handle reset patient password.
 export const resetPatientPassword = async (req, res) => {
     try {
         const { phone, otp, newPassword } = req.body;
@@ -140,6 +150,7 @@ export const resetPatientPassword = async (req, res) => {
     }
 };
 
+// Load current user.
 export const getCurrentUser = async (req, res) => {
     try {
         const user = await authService.getCurrentUser(req.user.id);

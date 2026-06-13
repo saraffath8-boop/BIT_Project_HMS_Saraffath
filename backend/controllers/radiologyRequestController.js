@@ -1,11 +1,15 @@
+// This file contains the radiology request controller HTTP request handlers.
+
 import radiologyRequestService from '../services/radiologyRequestService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
@@ -22,6 +26,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create radiology request.
 export const createRadiologyRequest = async (req, res) => {
     try {
         const radiologyRequest = await radiologyRequestService.createRadiologyRequest(
@@ -39,6 +44,7 @@ export const createRadiologyRequest = async (req, res) => {
     }
 };
 
+// Load radiology requests.
 export const getRadiologyRequests = async (req, res) => {
     try {
         const radiologyRequests = await radiologyRequestService.getRadiologyRequests(
@@ -55,6 +61,7 @@ export const getRadiologyRequests = async (req, res) => {
     }
 };
 
+// Load my radiology requests.
 export const getMyRadiologyRequests = async (req, res) => {
     try {
         const radiologyRequests = await radiologyRequestService.getMyRadiologyRequests(req.user.id);
@@ -68,6 +75,7 @@ export const getMyRadiologyRequests = async (req, res) => {
     }
 };
 
+// Load radiology request by id.
 export const getRadiologyRequestById = async (req, res) => {
     try {
         const radiologyRequest = await radiologyRequestService.getRadiologyRequestById(
@@ -84,6 +92,7 @@ export const getRadiologyRequestById = async (req, res) => {
     }
 };
 
+// Update radiology request.
 export const updateRadiologyRequest = async (req, res) => {
     try {
         const radiologyRequest = await radiologyRequestService.updateRadiologyRequest(
@@ -102,6 +111,7 @@ export const updateRadiologyRequest = async (req, res) => {
     }
 };
 
+// Update radiology request paid.
 export const markRadiologyRequestPaid = async (req, res) => {
     try {
         const result = await radiologyRequestService.markRadiologyRequestPaid(
@@ -119,6 +129,7 @@ export const markRadiologyRequestPaid = async (req, res) => {
     }
 };
 
+// Remove radiology request.
 export const deleteRadiologyRequest = async (req, res) => {
     try {
         const radiologyRequest = await radiologyRequestService.deleteRadiologyRequest(

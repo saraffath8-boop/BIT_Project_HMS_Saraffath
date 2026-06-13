@@ -1,11 +1,15 @@
+// This file contains the prescription controller HTTP request handlers.
+
 import prescriptionService from '../services/prescriptionService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('already paid') || error.message.includes('cannot be paid'))
@@ -23,6 +27,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create prescription.
 export const createPrescription = async (req, res) => {
     try {
         const prescription = await prescriptionService.createPrescription(req.body, req.user);
@@ -37,6 +42,7 @@ export const createPrescription = async (req, res) => {
     }
 };
 
+// Load prescriptions.
 export const getPrescriptions = async (req, res) => {
     try {
         const prescriptions = await prescriptionService.getPrescriptions(req.query, req.user);
@@ -50,6 +56,7 @@ export const getPrescriptions = async (req, res) => {
     }
 };
 
+// Load my prescriptions.
 export const getMyPrescriptions = async (req, res) => {
     try {
         const prescriptions = await prescriptionService.getMyPrescriptions(req.user.id);
@@ -63,6 +70,7 @@ export const getMyPrescriptions = async (req, res) => {
     }
 };
 
+// Load prescription by id.
 export const getPrescriptionById = async (req, res) => {
     try {
         const prescription = await prescriptionService.getPrescriptionById(req.params.id, req.user);
@@ -76,6 +84,7 @@ export const getPrescriptionById = async (req, res) => {
     }
 };
 
+// Update prescription.
 export const updatePrescription = async (req, res) => {
     try {
         const prescription = await prescriptionService.updatePrescription(
@@ -94,6 +103,7 @@ export const updatePrescription = async (req, res) => {
     }
 };
 
+// Update prescription paid.
 export const markPrescriptionPaid = async (req, res) => {
     try {
         const result = await prescriptionService.markPrescriptionPaid(
@@ -112,6 +122,7 @@ export const markPrescriptionPaid = async (req, res) => {
     }
 };
 
+// Remove prescription.
 export const deletePrescription = async (req, res) => {
     try {
         const prescription = await prescriptionService.deletePrescription(req.params.id);

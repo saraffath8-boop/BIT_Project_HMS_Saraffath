@@ -1,3 +1,5 @@
+// This file contains the module page utils interface.
+
 export const formatDateTime = (value) => {
     if (!value) return 'Not recorded';
     const date = new Date(value);
@@ -5,4 +7,5 @@ export const formatDateTime = (value) => {
     return date.toLocaleString();
 };
 
+// Load person name.
 export const getPersonName = (person) => person?.fullName || person?.name || 'Not assigned';

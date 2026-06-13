@@ -1,19 +1,24 @@
+// This file contains the my prescriptions page interface.
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getMyPrescriptions } from '../../services/prescriptionService';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Prepare date.
 const formatDate = (dateValue) => {
     if (!dateValue) return 'N/A';
     return new Date(dateValue).toLocaleDateString();
 };
 
+// Prepare doctor.
 const formatDoctor = (doctor) => {
     if (!doctor) return 'N/A';
     return doctor.name || doctor.email || 'N/A';
 };
 
+// Prepare status.
 const formatStatus = (status) =>
     status
         ? status
@@ -22,15 +27,19 @@ const formatStatus = (status) =>
               .join(' ')
         : 'N/A';
 
+// Prepare medicine name.
 const formatMedicineName = (item) => item.medicineName || item.medicine?.name || 'Medicine';
 
+// Show the my prescriptions page interface.
 const MyPrescriptionsPage = () => {
     const { token } = useAuth();
     const [prescriptions, setPrescriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load prescriptions.
         const loadPrescriptions = async () => {
             setLoading(true);
             setError('');
@@ -148,6 +157,7 @@ const MyPrescriptionsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

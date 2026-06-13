@@ -1,3 +1,5 @@
+// This file contains the navbar interface.
+
 function Navbar() {
     return (
         <nav className="flex justify-between items-center bg-blue-600 text-white p-4 shadow-md">

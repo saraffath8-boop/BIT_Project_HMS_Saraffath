@@ -1,11 +1,15 @@
+// This file contains the lab request controller HTTP request handlers.
+
 import labRequestService from '../services/labRequestService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
         message,
     });
 
+// Load status code.
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
@@ -23,6 +27,7 @@ const getStatusCode = (error) => {
     return 500;
 };
 
+// Create lab request.
 export const createLabRequest = async (req, res) => {
     try {
         const labRequest = await labRequestService.createLabRequest(req.body, req.user);
@@ -37,6 +42,7 @@ export const createLabRequest = async (req, res) => {
     }
 };
 
+// Load lab requests.
 export const getLabRequests = async (req, res) => {
     try {
         const labRequests = await labRequestService.getLabRequests(req.query, req.user);
@@ -50,6 +56,7 @@ export const getLabRequests = async (req, res) => {
     }
 };
 
+// Load my lab requests.
 export const getMyLabRequests = async (req, res) => {
     try {
         const labRequests = await labRequestService.getMyLabRequests(req.user.id);
@@ -63,6 +70,7 @@ export const getMyLabRequests = async (req, res) => {
     }
 };
 
+// Load lab request by id.
 export const getLabRequestById = async (req, res) => {
     try {
         const labRequest = await labRequestService.getLabRequestById(req.params.id, req.user);
@@ -76,6 +84,7 @@ export const getLabRequestById = async (req, res) => {
     }
 };
 
+// Update lab request.
 export const updateLabRequest = async (req, res) => {
     try {
         const labRequest = await labRequestService.updateLabRequest(
@@ -94,6 +103,7 @@ export const updateLabRequest = async (req, res) => {
     }
 };
 
+// Update lab request paid.
 export const markLabRequestPaid = async (req, res) => {
     try {
         const result = await labRequestService.markLabRequestPaid(
@@ -111,6 +121,7 @@ export const markLabRequestPaid = async (req, res) => {
     }
 };
 
+// Remove lab request.
 export const deleteLabRequest = async (req, res) => {
     try {
         const labRequest = await labRequestService.deleteLabRequest(req.params.id);

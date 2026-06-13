@@ -1,9 +1,12 @@
+// This file contains the notifications page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { getNotifications, markNotificationAsRead } from '../../services/notificationService';
 
+// Show the notifications page interface.
 const NotificationsPage = () => {
     const { token, user } = useAuth();
     const { refreshUnreadCount } = useNotifications();
@@ -11,6 +14,7 @@ const NotificationsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Load notifications.
     const loadNotifications = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -26,7 +30,9 @@ const NotificationsPage = () => {
         }
     }, [token, refreshUnreadCount]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Handle timeout id.
         const timeoutId = setTimeout(() => {
             loadNotifications();
         }, 0);
@@ -34,6 +40,7 @@ const NotificationsPage = () => {
         return () => clearTimeout(timeoutId);
     }, [loadNotifications]);
 
+    // Handle handle mark as read.
     const handleMarkAsRead = async (id) => {
         setError('');
 
@@ -113,6 +120,7 @@ const NotificationsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

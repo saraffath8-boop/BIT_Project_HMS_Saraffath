@@ -1,8 +1,11 @@
+// This file contains the reports page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getDashboardReport } from '../../services/reportService';
 
+// Handle report labels.
 const reportLabels = {
     totalPatients: 'Total Patients',
     totalStaff: 'Total Staff',
@@ -17,12 +20,14 @@ const reportLabels = {
     openFeedback: 'Open Feedback',
 };
 
+// Show the reports page interface.
 const ReportsPage = () => {
     const { token } = useAuth();
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Load report.
     const loadReport = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -37,7 +42,9 @@ const ReportsPage = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Handle timeout id.
         const timeoutId = setTimeout(() => {
             loadReport();
         }, 0);
@@ -101,6 +108,7 @@ const ReportsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

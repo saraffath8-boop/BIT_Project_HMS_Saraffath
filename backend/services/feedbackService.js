@@ -1,10 +1,15 @@
+// This file contains the feedback service business workflow.
+
 import mongoose from 'mongoose';
 import feedbackDao from '../dao/feedbackDao.js';
 import patientDao from '../dao/patientDao.js';
 
+// Store the feedback categories setting used by this file.
 const FEEDBACK_CATEGORIES = ['feedback', 'complaint', 'service_request'];
+// Store the feedback statuses setting used by this file.
 const FEEDBACK_STATUSES = ['open', 'in_review', 'resolved', 'closed'];
 
+// Prepare feedback.
 const sanitizeFeedback = (feedback) => ({
     id: feedback._id.toString(),
     submittedBy: feedback.submittedBy,
@@ -20,14 +25,17 @@ const sanitizeFeedback = (feedback) => ({
     updatedAt: feedback.updatedAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     if (!patientId) {
         return;
@@ -41,6 +49,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Prepare feedback query.
 const buildFeedbackQuery = (queryParams, user) => {
     const query = {};
 
@@ -75,6 +84,7 @@ const buildFeedbackQuery = (queryParams, user) => {
     return query;
 };
 
+// Create feedback.
 const createFeedback = async (data, user) => {
     const category = toCleanString(data.category) || 'feedback';
     const subject = toCleanString(data.subject);
@@ -105,12 +115,14 @@ const createFeedback = async (data, user) => {
     return sanitizeFeedback(populatedFeedback);
 };
 
+// Load feedback entries.
 const getFeedbackEntries = async (queryParams, user) => {
     const query = buildFeedbackQuery(queryParams, user);
     const feedbackEntries = await feedbackDao.getFeedbackEntries(query);
     return feedbackEntries.map(sanitizeFeedback);
 };
 
+// Load feedback by id.
 const getFeedbackById = async (id, user) => {
     requireObjectId(id, 'feedback id');
     const feedback = await feedbackDao.getFeedbackById(id);
@@ -126,6 +138,7 @@ const getFeedbackById = async (id, user) => {
     return sanitizeFeedback(feedback);
 };
 
+// Update feedback.
 const updateFeedback = async (id, data, user) => {
     await getFeedbackById(id, { role: 'admin' });
 
@@ -161,12 +174,14 @@ const updateFeedback = async (id, data, user) => {
     return sanitizeFeedback(feedback);
 };
 
+// Remove feedback.
 const deleteFeedback = async (id) => {
     const feedback = await getFeedbackById(id, { role: 'admin' });
     await feedbackDao.deleteFeedback(id);
     return feedback;
 };
 
+// Handle feedback service.
 const feedbackService = {
     createFeedback,
     getFeedbackEntries,

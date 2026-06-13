@@ -1,3 +1,5 @@
+// This file contains the bill create page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +13,9 @@ import {
     getPatientLabel,
 } from '../shared/formHelpers';
 
+// Handle empty item.
 const emptyItem = { description: '', category: 'other', quantity: '1', unitPrice: '0' };
+// Handle categories.
 const categories = [
     'consultation',
     'medicine',
@@ -22,6 +26,7 @@ const categories = [
     'other',
 ];
 
+// Show the bill create page interface.
 const BillCreatePage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -32,6 +37,7 @@ const BillCreatePage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    // Load patients.
     const loadPatients = useCallback(async () => {
         setLoadingPatients(true);
         try {
@@ -43,19 +49,25 @@ const BillCreatePage = () => {
             setLoadingPatients(false);
         }
     }, [token]);
+    // Run this work when the listed values change.
     useEffect(() => {
         loadPatients();
     }, [loadPatients]);
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle item change.
     const handleItemChange = (index, event) =>
         setItems(
             items.map((item, itemIndex) =>
                 itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item,
             ),
         );
+    // Create item.
     const addItem = () => setItems([...items, { ...emptyItem }]);
+    // Remove item.
     const removeItem = (index) => setItems(items.filter((item, itemIndex) => itemIndex !== index));
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

@@ -1,6 +1,9 @@
+// This file contains the inventory page interface.
+
 import ModuleListPage from '../shared/ModuleListPage';
 import { getInventoryItems } from '../../services/inventoryService';
 
+// Show the inventory page interface.
 const InventoryPage = () => (
     <ModuleListPage
         title="Inventory and Supplies"

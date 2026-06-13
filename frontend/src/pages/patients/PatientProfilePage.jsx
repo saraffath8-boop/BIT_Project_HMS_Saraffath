@@ -1,3 +1,5 @@
+// This file contains the patient profile page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -8,8 +10,10 @@ import { deletePatient, getPatientById, linkPatientUser } from '../../services/p
 
 import { getUsers } from '../../services/userService';
 
+// Prepare date.
 const formatDate = (dateValue) => (dateValue ? new Date(dateValue).toLocaleDateString() : 'N/A');
 
+// Show the patient profile page interface.
 const PatientProfilePage = () => {
     const { id } = useParams();
 
@@ -35,6 +39,7 @@ const PatientProfilePage = () => {
 
     const [linkSuccess, setLinkSuccess] = useState('');
 
+    // Load patient profile.
     const loadPatientProfile = useCallback(async () => {
         const response = await getPatientById(id, token);
 
@@ -43,7 +48,9 @@ const PatientProfilePage = () => {
         setSelectedUserId(response.patient?.userAccount?.id || '');
     }, [id, token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load current patient.
         const loadCurrentPatient = async () => {
             try {
                 await loadPatientProfile();
@@ -57,9 +64,11 @@ const PatientProfilePage = () => {
         loadCurrentPatient();
     }, [loadPatientProfile]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         if (user?.role !== 'admin') return;
 
+        // Load patient users.
         const loadPatientUsers = async () => {
             setLoadingUsers(true);
 
@@ -79,6 +88,7 @@ const PatientProfilePage = () => {
         loadPatientUsers();
     }, [token, user?.role]);
 
+    // Handle handle delete.
     const handleDelete = async () => {
         const confirmed = window.confirm(
             'Delete this patient record? This action cannot be undone.',
@@ -95,6 +105,7 @@ const PatientProfilePage = () => {
         }
     };
 
+    // Handle handle link account.
     const handleLinkAccount = async () => {
         if (!selectedUserId) {
             setLinkError('Select a patient user account');
@@ -266,6 +277,7 @@ const PatientProfilePage = () => {
     );
 };
 
+// Show the info interface.
 const Info = ({ label, value }) => (
     <article style={styles.infoCard}>
         <span style={styles.infoLabel}>{label}</span>
@@ -274,6 +286,7 @@ const Info = ({ label, value }) => (
     </article>
 );
 
+// Handle styles.
 const styles = {
     page: { color: '#0f172a' },
 

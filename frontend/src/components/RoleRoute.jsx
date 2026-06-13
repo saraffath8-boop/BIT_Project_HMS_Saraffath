@@ -1,6 +1,9 @@
+// This file contains the role route shared interface.
+
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Show the role route interface.
 const RoleRoute = ({ allowedRoles, children }) => {
     const { user } = useAuth();
     const location = useLocation();

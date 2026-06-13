@@ -1,3 +1,5 @@
+// This file contains the role middleware request checks.
+
 export const authorizeRoles =
     (...allowedRoles) =>
     (req, res, next) => {

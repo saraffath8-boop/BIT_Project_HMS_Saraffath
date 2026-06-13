@@ -1,6 +1,9 @@
+// This file contains the unauthorized interface.
+
 import { Link, useLocation } from 'react-router-dom';
 import { getDashboardPath, useAuth } from '../context/AuthContext';
 
+// Show the unauthorized interface.
 const Unauthorized = () => {
     const { user, logout } = useAuth();
     const location = useLocation();
@@ -44,6 +47,7 @@ const Unauthorized = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: {
         minHeight: '100vh',

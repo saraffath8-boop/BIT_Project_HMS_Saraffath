@@ -1,5 +1,8 @@
+// This file contains the inventory item database model.
+
 import mongoose from 'mongoose';
 
+// Define the inventory item schema database fields and rules.
 const inventoryItemSchema = new mongoose.Schema(
     {
         name: {
@@ -67,6 +70,7 @@ const inventoryItemSchema = new mongoose.Schema(
 inventoryItemSchema.index({ name: 'text', itemCode: 'text', category: 'text' });
 inventoryItemSchema.index({ stockQuantity: 1, reorderLevel: 1 });
 
+// Handle inventory item.
 const InventoryItem =
     mongoose.models.InventoryItem || mongoose.model('InventoryItem', inventoryItemSchema);
 

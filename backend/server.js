@@ -1,3 +1,5 @@
+// This file contains the server shared application logic.
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -29,28 +31,49 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 dotenv.config();
 
+// Handle app.
 const app = express();
+// Store the port setting used by this file.
 const PORT = process.env.PORT || 5000;
 
+// Attach this middleware or route group to the server.
 app.use(cors());
+// Attach this middleware or route group to the server.
 app.use(express.json());
 
+// Attach this middleware or route group to the server.
 app.use('/api/users', authRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/users', userRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/patients', patientRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/appointments', appointmentRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/queue', queueRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/medical-records', medicalRecordRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/prescriptions', prescriptionRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/medicines', medicineRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/lab-requests', labRequestRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/radiology-requests', radiologyRequestRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/bills', billRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/inventory', inventoryRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/feedback', feedbackRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/notifications', notificationRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/reports', reportRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/departments', departmentRoutes);
+// Attach this middleware or route group to the server.
 app.use('/api/doctors', doctorRoutes);
 
 app.get('/', (req, res) => {
@@ -60,6 +83,7 @@ app.get('/', (req, res) => {
     });
 });
 
+// Handle start server.
 const startServer = async () => {
     if (!process.env.MONGO_URI) {
         throw new Error('MONGO_URI is not configured');

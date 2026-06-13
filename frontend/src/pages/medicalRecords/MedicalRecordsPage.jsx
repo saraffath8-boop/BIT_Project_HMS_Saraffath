@@ -1,8 +1,11 @@
+// This file contains the medical records page interface.
+
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getMedicalRecords } from '../../services/medicalRecordService';
 import { downloadMedicalRecordPdf } from '../../lib/medicalRecordPdf';
 
+// Show the medical records page interface.
 const MedicalRecordsPage = () => (
     <ModuleListPage
         title="Medical Records"

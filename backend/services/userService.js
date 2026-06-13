@@ -1,3 +1,5 @@
+// This file contains the user service business workflow.
+
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import userDao from '../dao/userDao.js';
@@ -5,8 +7,10 @@ import departmentDao from '../dao/departmentDao.js';
 import { ADMIN_CREATABLE_ROLES, ALL_USER_ROLES, USER_ROLES } from '../types/userRoles.js';
 import { normalizeNic, validateUserCreateInput } from '../utils/userValidation.js';
 
+// Store the salt rounds setting used by this file.
 const SALT_ROUNDS = 12;
 
+// Store the listable roles setting used by this file.
 const LISTABLE_ROLES = [
     USER_ROLES.ADMIN,
     USER_ROLES.DOCTOR,
@@ -18,10 +22,13 @@ const LISTABLE_ROLES = [
     USER_ROLES.PATIENT,
 ];
 
+// Prepare email.
 const normalizeEmail = (email) => email.toLowerCase().trim();
 
+// Create the secure hash password.
 const hashPassword = async (password) => bcrypt.hash(password, SALT_ROUNDS);
 
+// Prepare user.
 const sanitizeUser = (user) => ({
     id: user._id.toString(),
     name: user.name,
@@ -44,6 +51,7 @@ const sanitizeUser = (user) => ({
     updatedAt: user.updatedAt,
 });
 
+// Prepare listed user.
 const sanitizeListedUser = (user) => ({
     id: user._id.toString(),
     name: user.name,
@@ -64,6 +72,7 @@ const sanitizeListedUser = (user) => ({
     availableTimeSlots: user.availableTimeSlots,
 });
 
+// Create user with role.
 const createUserWithRole = async ({
     firstName,
     lastName,
@@ -151,6 +160,7 @@ const createUserWithRole = async ({
     return user;
 };
 
+// Create user by admin.
 const createUserByAdmin = async (userData) => {
     const { role } = userData;
     if (!ADMIN_CREATABLE_ROLES.includes(role)) {
@@ -164,6 +174,7 @@ const createUserByAdmin = async (userData) => {
     return sanitizeUser(user);
 };
 
+// Update doctor booking profile.
 const updateDoctorBookingProfile = async (doctorId, data) => {
     if (!mongoose.Types.ObjectId.isValid(doctorId)) throw new Error('Invalid doctor id');
     if (!mongoose.Types.ObjectId.isValid(data.department))
@@ -184,12 +195,14 @@ const updateDoctorBookingProfile = async (doctorId, data) => {
     return sanitizeUser(updatedDoctor);
 };
 
+// Prepare lookup user.
 const sanitizeLookupUser = (user) => ({
     id: user._id.toString(),
     name: user.name,
     role: user.role,
 });
 
+// Load users.
 const getUsers = async (queryParams = {}, requestingUser = {}) => {
     const query = {};
 
@@ -215,6 +228,7 @@ const getUsers = async (queryParams = {}, requestingUser = {}) => {
     return users.map(sanitizeListedUser);
 };
 
+// Validate default admin.
 const ensureDefaultAdmin = async () => {
     const adminCount = await userDao.countUsersByRole(USER_ROLES.ADMIN);
     if (adminCount > 0) {
@@ -254,6 +268,7 @@ const ensureDefaultAdmin = async () => {
     return sanitizeUser(admin);
 };
 
+// Handle user service.
 const userService = {
     createUserByAdmin,
     updateDoctorBookingProfile,

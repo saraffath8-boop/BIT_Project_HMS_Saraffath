@@ -1,5 +1,8 @@
+// This file contains the doctor dashboard interface.
+
 import DashboardLayout from './DashboardLayout';
 
+// Handle cards.
 const cards = [
     {
         title: 'Appointments',
@@ -43,6 +46,7 @@ const cards = [
     },
 ];
 
+// Show the doctor dashboard interface.
 const DoctorDashboard = () => (
     <DashboardLayout
         kicker="Doctor Dashboard"

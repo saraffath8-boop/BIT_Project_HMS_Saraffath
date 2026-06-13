@@ -1,6 +1,9 @@
+// This file contains the separator shared interface.
+
 import * as SeparatorPrimitive from '@radix-ui/react-separator';
 import { cn } from '../../lib/utils';
 
+// Handle separator.
 export function Separator({ className, orientation = 'horizontal', ...props }) {
     return (
         <SeparatorPrimitive.Root

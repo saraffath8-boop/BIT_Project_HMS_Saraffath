@@ -1,3 +1,5 @@
+// This file contains the bill service business workflow.
+
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import billDao from '../dao/billDao.js';
@@ -9,7 +11,9 @@ import radiologyRequestDao from '../dao/radiologyRequestDao.js';
 import userDao from '../dao/userDao.js';
 import notificationService from './notificationService.js';
 
+// Store the bill statuses setting used by this file.
 const BILL_STATUSES = ['unpaid', 'partially_paid', 'paid', 'cancelled'];
+// Store the bill categories setting used by this file.
 const BILL_CATEGORIES = [
     'consultation',
     'medicine',
@@ -19,8 +23,10 @@ const BILL_CATEGORIES = [
     'procedure',
     'other',
 ];
+// Store the payment methods setting used by this file.
 const PAYMENT_METHODS = ['cash', 'card', 'bank_transfer', 'insurance', 'other'];
 
+// Prepare bill.
 const sanitizeBill = (bill) => ({
     id: bill._id.toString(),
     billNumber: bill.billNumber,
@@ -41,6 +47,7 @@ const sanitizeBill = (bill) => ({
     updatedAt: bill.updatedAt,
 });
 
+// Prepare billing status.
 const sanitizeBillingStatus = (bill) => ({
     id: bill._id.toString(),
     billNumber: bill.billNumber,
@@ -62,14 +69,17 @@ const sanitizeBillingStatus = (bill) => ({
     createdAt: bill.createdAt,
 });
 
+// Validate object id.
 const requireObjectId = (id, fieldName) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error(`Invalid ${fieldName}`);
     }
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Handle to number.
 const toNumber = (value, fieldName, minimum = 0) => {
     const numberValue = Number(value);
 
@@ -80,6 +90,7 @@ const toNumber = (value, fieldName, minimum = 0) => {
     return numberValue;
 };
 
+// Validate patient exists.
 const validatePatientExists = async (patientId) => {
     requireObjectId(patientId, 'patient id');
     const patient = await patientDao.getPatientByMongoId(patientId);
@@ -89,6 +100,7 @@ const validatePatientExists = async (patientId) => {
     }
 };
 
+// Validate appointment exists.
 const validateAppointmentExists = async (appointmentId) => {
     if (!appointmentId) {
         return;
@@ -102,6 +114,7 @@ const validateAppointmentExists = async (appointmentId) => {
     }
 };
 
+// Prepare bill query.
 const buildBillQuery = (queryParams, user = {}) => {
     const query = {};
 
@@ -138,6 +151,7 @@ const buildBillQuery = (queryParams, user = {}) => {
     return query;
 };
 
+// Prepare bill items.
 const buildBillItems = (items) => {
     if (!Array.isArray(items) || items.length === 0) {
         throw new Error('At least one bill item is required');
@@ -169,6 +183,7 @@ const buildBillItems = (items) => {
     });
 };
 
+// Store the request config setting used by this file.
 const REQUEST_CONFIG = {
     prescription: {
         get: (id) => prescriptionDao.getPrescriptionById(id),
@@ -199,6 +214,7 @@ const REQUEST_CONFIG = {
     },
 };
 
+// Prepare pending request.
 const sanitizePendingRequest = (request, type) => ({
     id: request._id.toString(),
     type,
@@ -211,6 +227,7 @@ const sanitizePendingRequest = (request, type) => ({
     createdAt: request.createdAt,
 });
 
+// Load allowed request types.
 const getAllowedRequestTypes = (user = {}) => {
     if (user.role === 'pharmacist') return ['prescription'];
     if (user.role === 'lab_technician') return ['laboratory'];
@@ -218,6 +235,7 @@ const getAllowedRequestTypes = (user = {}) => {
     return Object.keys(REQUEST_CONFIG);
 };
 
+// Load pending patient decisions.
 const getPendingPatientDecisions = async (user = {}) => {
     const [prescriptions, laboratory, radiology] = await Promise.all([
         prescriptionDao.getPrescriptions({ patientDecisionStatus: 'pending_patient_decision' }),
@@ -236,6 +254,7 @@ const getPendingPatientDecisions = async (user = {}) => {
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 };
 
+// Update patient decisions.
 const processPatientDecisions = async (data, user) => {
     if (!Array.isArray(data.decisions) || data.decisions.length === 0)
         throw new Error('At least one patient decision is required');
@@ -280,7 +299,9 @@ const processPatientDecisions = async (data, user) => {
     ) {
         throw new Error('Process every pending request for this consultation together');
     }
+    // Handle selected.
     const selected = loaded.filter(({ decision }) => Boolean(decision.selected));
+    // Handle items.
     const items = selected.map(({ decision, request, config }) => ({
         description: config.description(request),
         category: config.category,
@@ -303,6 +324,7 @@ const processPatientDecisions = async (data, user) => {
             user,
         );
         const paidTotals = calculateBillTotals(builtItems, 0, [payment]);
+        // Handle selected bill types.
         const selectedBillTypes = [...new Set(selected.map(({ config }) => config.type))];
         bill = await billDao.createBill({
             billNumber: await billDao.getNextBillNumber(),
@@ -331,6 +353,7 @@ const processPatientDecisions = async (data, user) => {
         await appointmentDao.updateAppointment(appointmentId, { status: 'completed' });
     }
 
+    // Handle selected types.
     const selectedTypes = [...new Set(selected.map(({ decision }) => decision.type))];
     await Promise.all(
         selectedTypes.map(async (type) => {
@@ -361,7 +384,9 @@ const processPatientDecisions = async (data, user) => {
     };
 };
 
+// Prepare bill totals.
 const calculateBillTotals = (items, discount = 0, payments = []) => {
+    // Handle subtotal.
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const safeDiscount = toNumber(discount, 'discount');
 
@@ -370,6 +395,7 @@ const calculateBillTotals = (items, discount = 0, payments = []) => {
     }
 
     const totalAmount = subtotal - safeDiscount;
+    // Handle paid amount.
     const paidAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
     if (paidAmount > totalAmount) {
@@ -393,6 +419,7 @@ const calculateBillTotals = (items, discount = 0, payments = []) => {
     };
 };
 
+// Prepare payment.
 const buildPayment = (paymentData, user) => {
     const amount = toNumber(paymentData.amount, 'payment amount', 0.01);
     const method = toCleanString(paymentData.method) || 'cash';
@@ -410,6 +437,7 @@ const buildPayment = (paymentData, user) => {
     };
 };
 
+// Handle assign doctor room number.
 const assignDoctorRoomNumber = async (doctor) => {
     if (doctor.roomNumber) return doctor.roomNumber;
 
@@ -427,6 +455,7 @@ const assignDoctorRoomNumber = async (doctor) => {
     throw new Error('No available two-digit doctor room number');
 };
 
+// Create paid appointment bill.
 const createPaidAppointmentBill = async (appointment, user) => {
     const appointmentId = appointment._id?.toString() || appointment.id;
     const existingBill = await billDao.getConsultationBillByAppointment(appointmentId);
@@ -475,6 +504,7 @@ const createPaidAppointmentBill = async (appointment, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
+// Create paid prescription bill.
 const createPaidPrescriptionBill = async (prescription, pricing, user) => {
     const prescriptionId = prescription._id?.toString() || prescription.id;
     const existingBill = await billDao.getPharmacyBillByPrescription(prescriptionId);
@@ -526,6 +556,7 @@ const createPaidPrescriptionBill = async (prescription, pricing, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
+// Create paid clinical service bill.
 const createPaidClinicalServiceBill = async ({
     request,
     amount,
@@ -581,6 +612,7 @@ const createPaidClinicalServiceBill = async ({
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
+// Validate doctor room numbers.
 const ensureDoctorRoomNumbers = async () => {
     const doctors = await userDao.getUsers({ role: 'doctor' });
     let assignedCount = 0;
@@ -592,6 +624,7 @@ const ensureDoctorRoomNumbers = async () => {
     return assignedCount;
 };
 
+// Validate paid appointment bills.
 const ensurePaidAppointmentBills = async () => {
     const [appointments, receptionists] = await Promise.all([
         appointmentDao.getAppointments({ status: 'paid', paymentStatus: 'paid' }),
@@ -608,6 +641,7 @@ const ensurePaidAppointmentBills = async () => {
     return createdCount;
 };
 
+// Load bill or throw.
 const getBillOrThrow = async (id) => {
     requireObjectId(id, 'bill id');
     const bill = await billDao.getBillById(id);
@@ -619,6 +653,7 @@ const getBillOrThrow = async (id) => {
     return bill;
 };
 
+// Create bill.
 const createBill = async (data, user) => {
     const patient = toCleanString(data.patient);
     const appointment = toCleanString(data.appointment) || null;
@@ -648,12 +683,14 @@ const createBill = async (data, user) => {
     return sanitizeBill(populatedBill);
 };
 
+// Load bills.
 const getBills = async (queryParams, user = {}) => {
     const query = buildBillQuery(queryParams, user);
     const bills = await billDao.getBills(query);
     return bills.map(user.role === 'receptionist' ? sanitizeBillingStatus : sanitizeBill);
 };
 
+// Load my bills.
 const getMyBills = async (userId) => {
     const patient = await patientDao.getPatientByUserAccount(userId);
 
@@ -665,15 +702,18 @@ const getMyBills = async (userId) => {
     return bills.map(sanitizeBill);
 };
 
+// Load bill by id.
 const getBillById = async (id) => {
     const bill = await getBillOrThrow(id);
     return sanitizeBill(bill);
 };
 
+// Update bill.
 const updateBill = async (id, data, user) => {
     const existingBill = await getBillOrThrow(id);
 
     const updateData = {};
+    // Handle items.
     let items = existingBill.items.map((item) => ({
         description: item.description,
         category: item.category,
@@ -682,6 +722,7 @@ const updateBill = async (id, data, user) => {
         total: item.total,
     }));
     let discount = existingBill.discount;
+    // Handle payments.
     const payments = existingBill.payments.map((payment) => ({
         amount: payment.amount,
         method: payment.method,
@@ -730,12 +771,14 @@ const updateBill = async (id, data, user) => {
     return sanitizeBill(bill);
 };
 
+// Remove bill.
 const deleteBill = async (id) => {
     const bill = await getBillOrThrow(id);
     await billDao.deleteBill(id);
     return sanitizeBill(bill);
 };
 
+// Handle bill service.
 const billService = {
     createBill,
     getBills,

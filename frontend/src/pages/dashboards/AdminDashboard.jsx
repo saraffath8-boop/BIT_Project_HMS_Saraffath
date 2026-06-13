@@ -1,8 +1,11 @@
+// This file contains the admin dashboard interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getDashboardReport } from '../../services/reportService';
 
+// Handle summary cards.
 const summaryCards = [
     { label: 'Total Patients', key: 'totalPatients' },
     { label: 'Total Staff', key: 'totalStaff' },
@@ -17,12 +20,14 @@ const summaryCards = [
     { label: 'Open Feedback', key: 'openFeedback' },
 ];
 
+// Handle revenue cards.
 const revenueCards = [
     { label: 'Total Amount', key: 'totalAmount' },
     { label: 'Paid Amount', key: 'paidAmount' },
     { label: 'Outstanding Amount', key: 'outstandingAmount' },
 ];
 
+// Handle quick actions.
 const quickActions = [
     { label: 'Add Patient Record', to: '/patients/new' },
     { label: 'Create Staff User', to: '/users' },
@@ -32,6 +37,7 @@ const quickActions = [
     { label: 'View Reports', to: '/reports' },
 ];
 
+// Handle management sections.
 const managementSections = [
     {
         title: 'Patient Management',
@@ -105,22 +111,27 @@ const managementSections = [
     },
 ];
 
+// Load number.
 const getNumber = (value) => Number(value || 0);
 
+// Prepare count.
 const formatCount = (value) => getNumber(value).toLocaleString();
 
+// Prepare amount.
 const formatAmount = (value) =>
     getNumber(value).toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
 
+// Show the admin dashboard interface.
 const AdminDashboard = () => {
     const { user, token } = useAuth();
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Load report.
     const loadReport = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -136,6 +147,7 @@ const AdminDashboard = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         loadReport();
     }, [loadReport]);
@@ -227,6 +239,7 @@ const AdminDashboard = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: {
         minHeight: '100vh',

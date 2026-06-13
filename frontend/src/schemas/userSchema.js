@@ -1,5 +1,8 @@
+// This file contains the user schema shared application logic.
+
 import { z } from 'zod';
 
+// Handle user roles.
 export const userRoles = [
     'admin',
     'doctor',
@@ -10,15 +13,23 @@ export const userRoles = [
     'radiologist',
     'patient',
 ];
+// Handle staff roles.
 export const staffRoles = userRoles.filter((role) => role !== 'patient');
+// Handle gender options.
 export const genderOptions = ['Male', 'Female', 'Other'];
+// Handle sri lankan phone regex.
 export const sriLankanPhoneRegex = /^0[1-9][0-9]{8}$/;
+// Handle sri lankan nic regex.
 export const sriLankanNicRegex = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
+// Handle person name regex.
 export const personNameRegex = /^[\p{L}][\p{L}\s.'-]*$/u;
+// Handle patient name regex.
 export const patientNameRegex = /^[\p{L}\p{N}][\p{L}\p{N}\s.'-]*$/u;
 
+// Validate required text.
 const requiredText = (label) => z.string().trim().min(1, `${label} is required`);
 
+// Define the common user schema database fields and rules.
 export const commonUserSchema = z.object({
     firstName: requiredText('First name')
         .min(2, 'First name must be at least 2 characters')
@@ -41,10 +52,12 @@ export const commonUserSchema = z.object({
     gender: z.enum(genderOptions, { error: 'Please select a valid gender.' }),
 });
 
+// Define the credential user schema database fields and rules.
 const credentialUserSchema = commonUserSchema.extend({
     password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+// Define the signup schema database fields and rules.
 export const signupSchema = credentialUserSchema.extend({
     address: requiredText('Address').max(300, 'Address cannot exceed 300 characters'),
     emergencyContactName: requiredText('Emergency contact name')
@@ -56,6 +69,7 @@ export const signupSchema = credentialUserSchema.extend({
     ),
 });
 
+// Define the staff user schema database fields and rules.
 export const staffUserSchema = credentialUserSchema
     .extend({
         role: z.enum(staffRoles, { error: 'Please select a valid staff role.' }),

@@ -1,11 +1,16 @@
+// This file contains the radiology request dao database queries.
+
 import RadiologyRequest from '../models/radiologyRequest.js';
 
+// Group the radiology request dao database queries.
 class RadiologyRequestDao {
+    // Create radiology request.
     async createRadiologyRequest(requestData) {
         const request = new RadiologyRequest(requestData);
         return request.save();
     }
 
+    // Load radiology requests.
     async getRadiologyRequests(query = {}) {
         return RadiologyRequest.find(query)
             .populate('patient', 'patientId fullName phone')
@@ -17,6 +22,7 @@ class RadiologyRequestDao {
             .exec();
     }
 
+    // Load radiology request by id.
     async getRadiologyRequestById(id) {
         return RadiologyRequest.findById(id)
             .populate('patient', 'patientId fullName phone')
@@ -27,6 +33,7 @@ class RadiologyRequestDao {
             .exec();
     }
 
+    // Update radiology request.
     async updateRadiologyRequest(id, updateData) {
         return RadiologyRequest.findByIdAndUpdate(id, updateData, {
             new: true,
@@ -40,10 +47,12 @@ class RadiologyRequestDao {
             .exec();
     }
 
+    // Remove radiology request.
     async deleteRadiologyRequest(id) {
         return RadiologyRequest.findByIdAndDelete(id).exec();
     }
 
+    // Handle count radiology requests.
     async countRadiologyRequests(query = {}) {
         return RadiologyRequest.countDocuments(query).exec();
     }

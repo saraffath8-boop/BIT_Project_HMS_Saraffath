@@ -1,3 +1,5 @@
+// This file contains the create page styles interface.
+
 export const createPageStyles = {
     page: { color: '#0f172a' },
     header: {

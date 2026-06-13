@@ -1,6 +1,9 @@
+// This file contains the collapsible section shared interface.
+
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
+// Handle collapsible section.
 export function CollapsibleSection({ title, count, children, defaultExpanded = true }) {
     const [expanded, setExpanded] = useState(defaultExpanded);
 

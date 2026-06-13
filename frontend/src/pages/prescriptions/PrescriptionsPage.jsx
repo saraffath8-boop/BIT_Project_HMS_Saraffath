@@ -1,3 +1,5 @@
+// This file contains the prescriptions page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -5,6 +7,7 @@ import { getPrescriptions, updatePrescription } from '../../services/prescriptio
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Handle status labels.
 const statusLabels = {
     pending: 'Pending',
     partially_issued: 'Partially Issued',
@@ -12,6 +15,7 @@ const statusLabels = {
     cancelled: 'Cancelled',
 };
 
+// Show the prescriptions page interface.
 const PrescriptionsPage = () => {
     const { token, user } = useAuth();
     const [prescriptions, setPrescriptions] = useState([]);
@@ -20,6 +24,7 @@ const PrescriptionsPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Load prescriptions.
     const loadPrescriptions = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -34,10 +39,12 @@ const PrescriptionsPage = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         loadPrescriptions();
     }, [loadPrescriptions]);
 
+    // Handle handle status update.
     const handleStatusUpdate = async (prescription, status) => {
         setUpdatingId(prescription.id);
         setSuccess('');
@@ -71,6 +78,7 @@ const PrescriptionsPage = () => {
         (prescription) => prescription.status === 'issued',
     );
 
+    // Handle render actions.
     const renderActions = (prescription) => {
         if (!canIssue)
             return prescription.paymentStatus === 'paid'
@@ -219,6 +227,7 @@ const PrescriptionsPage = () => {
     );
 };
 
+// Show the prescription section interface.
 const PrescriptionSection = ({ title, prescriptions, emptyMessage, action, history = false }) => (
     <CollapsibleSection title={title} count={prescriptions.length}>
         {prescriptions.length === 0 && <div style={styles.notice}>{emptyMessage}</div>}
@@ -284,6 +293,7 @@ const PrescriptionSection = ({ title, prescriptions, emptyMessage, action, histo
     </CollapsibleSection>
 );
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

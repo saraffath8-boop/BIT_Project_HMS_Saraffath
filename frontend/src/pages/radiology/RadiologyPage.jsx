@@ -1,9 +1,12 @@
+// This file contains the radiology page interface.
+
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getRadiologyRequests } from '../../services/radiologyRequestService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+// Show the radiology page interface.
 const RadiologyPage = () => {
     const { user } = useAuth();
     return (

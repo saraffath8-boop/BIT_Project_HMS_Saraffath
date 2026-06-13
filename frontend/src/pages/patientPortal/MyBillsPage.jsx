@@ -1,3 +1,5 @@
+// This file contains the my bills page interface.
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -5,11 +7,13 @@ import { downloadHospitalBillPdf } from '../../lib/hospitalBillPdf';
 import { getMyBills } from '../../services/billService';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Prepare money.
 const formatMoney = (value) => {
     const numberValue = Number(value || 0);
     return `LKR ${numberValue.toLocaleString()}`;
 };
 
+// Prepare status.
 const formatStatus = (status) =>
     status
         ? status
@@ -18,13 +22,16 @@ const formatStatus = (status) =>
               .join(' ')
         : 'N/A';
 
+// Show the my bills page interface.
 const MyBillsPage = () => {
     const { token } = useAuth();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Load bills.
         const loadBills = async () => {
             setLoading(true);
             setError('');
@@ -103,6 +110,7 @@ const MyBillsPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

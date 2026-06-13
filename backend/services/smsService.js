@@ -1,5 +1,8 @@
+// This file contains the sms service business workflow.
+
 import https from 'https';
 
+// Prepare phone number.
 const normalizePhoneNumber = (phoneNumber) => {
     const cleanPhone = String(phoneNumber || '')
         .trim()
@@ -22,6 +25,7 @@ const normalizePhoneNumber = (phoneNumber) => {
     return cleanPhone;
 };
 
+// Handle post form.
 const postForm = ({ hostname, path, auth, formData }) => {
     const body = new URLSearchParams(formData).toString();
 
@@ -69,6 +73,7 @@ const postForm = ({ hostname, path, auth, formData }) => {
     });
 };
 
+// Send twilio sms.
 const sendTwilioSms = async ({ to, message }) => {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -91,6 +96,7 @@ const sendTwilioSms = async ({ to, message }) => {
     });
 };
 
+// Send sms.
 const sendSms = async ({ to, message }) => {
     const phoneNumber = normalizePhoneNumber(to);
     const cleanMessage = String(message || '').trim();

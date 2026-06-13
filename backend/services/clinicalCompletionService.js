@@ -1,8 +1,12 @@
+// This file contains the clinical completion service business workflow.
+
 import patientDao from '../dao/patientDao.js';
 import notificationService from './notificationService.js';
 
+// Load id.
 const getId = (value) => value?._id?.toString() || value?.id || value?.toString();
 
+// Send clinical completion.
 const notifyClinicalCompletion = async ({ request, title, message, type }) => {
     const patientId = getId(request.patient);
     const doctorId = getId(request.doctor);

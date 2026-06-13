@@ -1,19 +1,26 @@
+// This file contains the patient service business workflow.
+
 import axios from 'axios';
 
+// Store the api base url setting used by this file.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Store the patients url setting used by this file.
 const PATIENTS_URL = `${API_BASE_URL}/patients`;
 
+// Handle auth headers.
 const authHeaders = (token) => ({
     headers: {
         Authorization: `Bearer ${token}`,
     },
 });
 
+// Load error message.
 const getErrorMessage = (error, fallbackMessage) => {
     return error.response?.data?.message || error.message || fallbackMessage;
 };
 
+// Load patients.
 export const getPatients = async ({ token, search = '', page = 1, limit = 20 }) => {
     try {
         const response = await axios.get(PATIENTS_URL, {
@@ -28,6 +35,7 @@ export const getPatients = async ({ token, search = '', page = 1, limit = 20 }) 
     }
 };
 
+// Load patient by id.
 export const getPatientById = async (id, token) => {
     try {
         const response = await axios.get(`${PATIENTS_URL}/${id}`, authHeaders(token));
@@ -38,6 +46,7 @@ export const getPatientById = async (id, token) => {
     }
 };
 
+// Load my patient profile.
 export const getMyPatientProfile = async (token) => {
     try {
         const response = await axios.get(`${PATIENTS_URL}/me`, authHeaders(token));
@@ -50,6 +59,7 @@ export const getMyPatientProfile = async (token) => {
     }
 };
 
+// Create patient.
 export const createPatient = async (patientData, token) => {
     try {
         const response = await axios.post(PATIENTS_URL, patientData, authHeaders(token));
@@ -60,6 +70,7 @@ export const createPatient = async (patientData, token) => {
     }
 };
 
+// Update patient.
 export const updatePatient = async (id, patientData, token) => {
     try {
         const response = await axios.patch(
@@ -74,6 +85,7 @@ export const updatePatient = async (id, patientData, token) => {
     }
 };
 
+// Handle link patient user.
 export const linkPatientUser = async (id, userId, token) => {
     try {
         const response = await axios.patch(
@@ -90,6 +102,7 @@ export const linkPatientUser = async (id, userId, token) => {
     }
 };
 
+// Remove patient.
 export const deletePatient = async (id, token) => {
     try {
         const response = await axios.delete(`${PATIENTS_URL}/${id}`, authHeaders(token));

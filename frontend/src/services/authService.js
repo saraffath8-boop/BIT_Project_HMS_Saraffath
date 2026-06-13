@@ -1,12 +1,18 @@
+// This file contains the auth service business workflow.
+
 import axios from 'axios';
 
+// Store the api base url setting used by this file.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Store the auth url setting used by this file.
 const AUTH_URL = `${API_BASE_URL}/users`;
 
+// Load error message.
 const getErrorMessage = (error, fallbackMessage) => {
     return error.response?.data?.message || error.message || fallbackMessage;
 };
 
+// Create user.
 export const signupUser = async (formData) => {
     try {
         const response = await axios.post(`${AUTH_URL}/signup`, formData);
@@ -16,6 +22,7 @@ export const signupUser = async (formData) => {
     }
 };
 
+// Handle login user.
 export const loginUser = async (formData) => {
     try {
         const response = await axios.post(`${AUTH_URL}/login`, formData);
@@ -25,6 +32,7 @@ export const loginUser = async (formData) => {
     }
 };
 
+// Handle request patient password reset.
 export const requestPatientPasswordReset = async (phone) => {
     try {
         const response = await axios.post(`${AUTH_URL}/forgot-password`, { phone });
@@ -36,6 +44,7 @@ export const requestPatientPasswordReset = async (phone) => {
     }
 };
 
+// Handle reset patient password.
 export const resetPatientPassword = async (formData) => {
     try {
         const response = await axios.post(`${AUTH_URL}/reset-password`, formData);
@@ -45,6 +54,7 @@ export const resetPatientPassword = async (formData) => {
     }
 };
 
+// Load current user.
 export const getCurrentUser = async (token) => {
     try {
         const response = await axios.get(`${AUTH_URL}/me`, {
@@ -58,6 +68,7 @@ export const getCurrentUser = async (token) => {
     }
 };
 
+// Create user by admin.
 export const createUserByAdmin = async (formData, token) => {
     try {
         const response = await axios.post(`${AUTH_URL}/admin/create-user`, formData, {

@@ -1,12 +1,20 @@
+// This file contains the dialog shared interface.
+
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+// Handle dialog.
 export const Dialog = DialogPrimitive.Root;
+// Handle dialog trigger.
 export const DialogTrigger = DialogPrimitive.Trigger;
+// Handle dialog close.
 export const DialogClose = DialogPrimitive.Close;
+// Handle dialog title.
 export const DialogTitle = DialogPrimitive.Title;
+// Handle dialog description.
 export const DialogDescription = DialogPrimitive.Description;
+// Handle dialog content.
 export function DialogContent({ className, children, ...props }) {
     return (
         <DialogPrimitive.Portal>

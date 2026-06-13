@@ -1,9 +1,12 @@
+// This file contains the patient service business workflow.
+
 import mongoose from 'mongoose';
 
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
+// Store the admin update fields setting used by this file.
 const ADMIN_UPDATE_FIELDS = [
     'fullName',
 
@@ -28,6 +31,7 @@ const ADMIN_UPDATE_FIELDS = [
     'status',
 ];
 
+// Store the nurse update fields setting used by this file.
 const NURSE_UPDATE_FIELDS = [
     'phone',
     'address',
@@ -38,6 +42,7 @@ const NURSE_UPDATE_FIELDS = [
     'status',
 ];
 
+// Store the receptionist update fields setting used by this file.
 const RECEPTIONIST_UPDATE_FIELDS = [
     'fullName',
     'dateOfBirth',
@@ -48,6 +53,7 @@ const RECEPTIONIST_UPDATE_FIELDS = [
     'emergencyContactPhone',
 ];
 
+// Prepare patient.
 const sanitizePatient = (patient, userRole) => {
     const sanitized = {
         id: patient._id.toString(),
@@ -86,8 +92,10 @@ const sanitizePatient = (patient, userRole) => {
     return sanitized;
 };
 
+// Handle to clean string.
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
+// Prepare patient payload.
 const buildPatientPayload = (data) => ({
     fullName: toCleanString(data.fullName),
 
@@ -113,6 +121,7 @@ const buildPatientPayload = (data) => ({
     status: toCleanString(data.status)?.toLowerCase() || 'active',
 });
 
+// Validate required patient fields.
 const validateRequiredPatientFields = (payload) => {
     const requiredFields = [
         'fullName',
@@ -130,6 +139,7 @@ const validateRequiredPatientFields = (payload) => {
         'emergencyContactPhone',
     ];
 
+    // Handle missing field.
     const missingField = requiredFields.find((field) => !payload[field]);
 
     if (missingField) {
@@ -165,6 +175,7 @@ const validateRequiredPatientFields = (payload) => {
     }
 };
 
+// Handle pick allowed fields.
 const pickAllowedFields = (data, allowedFields) => {
     const updateData = {};
 
@@ -182,6 +193,7 @@ const pickAllowedFields = (data, allowedFields) => {
     return updateData;
 };
 
+// Load patient or throw.
 const getPatientOrThrow = async (id) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new Error('Invalid patient id');
@@ -196,6 +208,7 @@ const getPatientOrThrow = async (id) => {
     return patient;
 };
 
+// Create patient.
 const createPatient = async (patientData, createdByUserId, userRole) => {
     const payload = buildPatientPayload(patientData);
 
@@ -214,6 +227,7 @@ const createPatient = async (patientData, createdByUserId, userRole) => {
     return sanitizePatient(patient, userRole);
 };
 
+// Create patient for user.
 const createPatientForUser = async (user, patientData) => {
     const existingPatient = await patientDao.getPatientByUserAccount(user._id);
     if (existingPatient) return sanitizePatient(existingPatient, 'patient');
@@ -252,6 +266,7 @@ const createPatientForUser = async (user, patientData) => {
     );
 };
 
+// Validate patient profiles for patient users.
 const ensurePatientProfilesForPatientUsers = async () => {
     const patientUsers = await userDao.getUsers({ role: 'patient' });
     let repairedCount = 0;
@@ -273,6 +288,7 @@ const ensurePatientProfilesForPatientUsers = async () => {
     return repairedCount;
 };
 
+// Load patients.
 const getPatients = async ({ search, page, limit }, userRole) => {
     const safePage = Math.max(Number(page) || 1, 1);
 
@@ -293,12 +309,14 @@ const getPatients = async ({ search, page, limit }, userRole) => {
     };
 };
 
+// Load patient by id.
 const getPatientById = async (id, userRole) => {
     const patient = await getPatientOrThrow(id);
 
     return sanitizePatient(patient, userRole);
 };
 
+// Load my patient profile.
 const getMyPatientProfile = async (userId) => {
     const patient = await patientDao.getPatientByUserAccountId(userId);
 
@@ -309,6 +327,7 @@ const getMyPatientProfile = async (userId) => {
     return sanitizePatient(patient, 'patient');
 };
 
+// Update patient.
 const updatePatient = async (id, updateData, userRole) => {
     await getPatientOrThrow(id);
 
@@ -359,6 +378,7 @@ const updatePatient = async (id, updateData, userRole) => {
     return sanitizePatient(patient, userRole);
 };
 
+// Handle link patient user.
 const linkPatientUser = async (id, userId) => {
     const patient = await getPatientOrThrow(id);
 
@@ -387,6 +407,7 @@ const linkPatientUser = async (id, userId) => {
     return sanitizePatient(updatedPatient);
 };
 
+// Remove patient.
 const deletePatient = async (id) => {
     const patient = await getPatientOrThrow(id);
 
@@ -395,6 +416,7 @@ const deletePatient = async (id) => {
     return sanitizePatient(patient);
 };
 
+// Handle patient service.
 const patientService = {
     createPatient,
     createPatientForUser,

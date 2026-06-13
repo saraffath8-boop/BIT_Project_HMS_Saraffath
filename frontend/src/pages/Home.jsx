@@ -1,3 +1,5 @@
+// This file contains the home interface.
+
 function Home() {
     return (
         <div>

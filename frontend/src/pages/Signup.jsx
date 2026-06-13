@@ -1,3 +1,5 @@
+// This file contains the signup interface.
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { HeartPulse, UserRoundPlus } from 'lucide-react';
@@ -36,11 +38,13 @@ export default function Signup() {
         },
     });
 
+    // Run this work when the listed values change.
     useEffect(() => {
         if (!loading && isAuthenticated && user)
             navigate(getDashboardPath(user.role), { replace: true });
     }, [isAuthenticated, loading, navigate, user]);
 
+    // Handle submit.
     const submit = async (formData) => {
         setError('');
         try {
@@ -164,6 +168,7 @@ export default function Signup() {
     );
 }
 
+// Show the field interface.
 const Field = ({ label, error, children }) => (
     <div className="space-y-2">
         <Label>{label}</Label>

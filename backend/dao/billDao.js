@@ -1,7 +1,11 @@
+// This file contains the bill dao database queries.
+
 import Bill from '../models/bill.js';
 import { Counter } from '../models/patient.js';
 
+// Group the bill dao database queries.
 class BillDao {
+    // Load next bill number.
     async getNextBillNumber() {
         const counter = await Counter.findByIdAndUpdate(
             'billNumber',
@@ -12,11 +16,13 @@ class BillDao {
         return `BILL-${String(counter.sequenceValue).padStart(6, '0')}`;
     }
 
+    // Create bill.
     async createBill(billData) {
         const bill = new Bill(billData);
         return bill.save();
     }
 
+    // Load bills.
     async getBills(query = {}) {
         return Bill.find(query)
             .populate('patient', 'patientId fullName phone')
@@ -28,6 +34,7 @@ class BillDao {
             .exec();
     }
 
+    // Load bill by id.
     async getBillById(id) {
         return Bill.findById(id)
             .populate('patient', 'patientId fullName phone')
@@ -38,6 +45,7 @@ class BillDao {
             .exec();
     }
 
+    // Update bill.
     async updateBill(id, updateData) {
         return Bill.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone')
@@ -48,14 +56,17 @@ class BillDao {
             .exec();
     }
 
+    // Remove bill.
     async deleteBill(id) {
         return Bill.findByIdAndDelete(id).exec();
     }
 
+    // Handle count bills.
     async countBills(query = {}) {
         return Bill.countDocuments(query).exec();
     }
 
+    // Load consultation bill by appointment.
     async getConsultationBillByAppointment(appointmentId) {
         return Bill.findOne({ appointment: appointmentId, billType: 'consultation' })
             .populate('patient', 'patientId fullName phone')
@@ -66,6 +77,7 @@ class BillDao {
             .exec();
     }
 
+    // Load pharmacy bill by prescription.
     async getPharmacyBillByPrescription(prescriptionId) {
         return Bill.findOne({
             billType: 'pharmacy',
@@ -80,6 +92,7 @@ class BillDao {
             .exec();
     }
 
+    // Load service bill by source.
     async getServiceBillBySource(billType, sourceType, sourceId) {
         return Bill.findOne({
             billType,
@@ -94,6 +107,7 @@ class BillDao {
             .exec();
     }
 
+    // Handle sum bill totals.
     async sumBillTotals(match = {}) {
         const result = await Bill.aggregate([
             { $match: match },

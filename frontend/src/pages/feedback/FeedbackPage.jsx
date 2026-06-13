@@ -1,8 +1,11 @@
+// This file contains the feedback page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { createFeedback, getFeedbackEntries } from '../../services/feedbackService';
 
+// Show the feedback page interface.
 const FeedbackPage = () => {
     const { token, user } = useAuth();
     const [feedbackEntries, setFeedbackEntries] = useState([]);
@@ -12,6 +15,7 @@ const FeedbackPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Load feedback.
     const loadFeedback = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -26,7 +30,9 @@ const FeedbackPage = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
+        // Handle timeout id.
         const timeoutId = setTimeout(() => {
             loadFeedback();
         }, 0);
@@ -34,11 +40,13 @@ const FeedbackPage = () => {
         return () => clearTimeout(timeoutId);
     }, [loadFeedback]);
 
+    // Handle handle change.
     const handleChange = (event) => {
         const { name, value } = event.target;
         setFormData((current) => ({ ...current, [name]: value }));
     };
 
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSaving(true);
@@ -136,6 +144,7 @@ const FeedbackPage = () => {
     );
 };
 
+// Handle styles.
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
     header: {

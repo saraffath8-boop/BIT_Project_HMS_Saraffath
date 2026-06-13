@@ -1,11 +1,16 @@
+// This file contains the appointment dao database queries.
+
 import Appointment from '../models/appointment.js';
 
+// Group the appointment dao database queries.
 class AppointmentDao {
+    // Create appointment.
     async createAppointment(appointmentData) {
         const appointment = new Appointment(appointmentData);
         return appointment.save();
     }
 
+    // Load appointments.
     async getAppointments(query = {}) {
         return Appointment.find(query)
             .populate('patient', 'patientId fullName phone gender')
@@ -17,6 +22,7 @@ class AppointmentDao {
             .exec();
     }
 
+    // Load appointment by id.
     async getAppointmentById(id) {
         return Appointment.findById(id)
             .populate('patient', 'patientId fullName phone gender')
@@ -27,6 +33,7 @@ class AppointmentDao {
             .exec();
     }
 
+    // Update appointment.
     async updateAppointment(id, updateData) {
         return Appointment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
             .populate('patient', 'patientId fullName phone gender')
@@ -37,6 +44,7 @@ class AppointmentDao {
             .exec();
     }
 
+    // Load doctor slot conflict.
     async findDoctorSlotConflict(doctorId, appointmentDate) {
         return Appointment.findOne({
             doctor: doctorId,
@@ -45,10 +53,12 @@ class AppointmentDao {
         }).exec();
     }
 
+    // Remove appointment.
     async deleteAppointment(id) {
         return Appointment.findByIdAndDelete(id).exec();
     }
 
+    // Handle count appointments.
     async countAppointments(query = {}) {
         return Appointment.countDocuments(query).exec();
     }

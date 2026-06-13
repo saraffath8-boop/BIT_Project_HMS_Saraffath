@@ -1,5 +1,8 @@
+// This file contains the radiology dashboard interface.
+
 import DashboardLayout from './DashboardLayout';
 
+// Handle cards.
 const cards = [
     {
         title: 'Radiology Requests',
@@ -23,6 +26,7 @@ const cards = [
     },
 ];
 
+// Show the radiology dashboard interface.
 const RadiologyDashboard = () => (
     <DashboardLayout
         kicker="Radiology Dashboard"

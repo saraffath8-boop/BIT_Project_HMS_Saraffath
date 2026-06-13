@@ -1,5 +1,8 @@
+// This file contains the pharmacist dashboard interface.
+
 import DashboardLayout from './DashboardLayout';
 
+// Handle cards.
 const cards = [
     {
         title: 'Prescriptions',
@@ -28,6 +31,7 @@ const cards = [
     },
 ];
 
+// Show the pharmacist dashboard interface.
 const PharmacistDashboard = () => (
     <DashboardLayout
         kicker="Pharmacist Dashboard"

@@ -1,12 +1,19 @@
+// This file contains the hospital bill pdf shared application logic.
+
 const ascii = (value) => String(value ?? '').replace(/[^\x20-\x7E]/g, '');
+// Handle escape pdf text.
 const escapePdfText = (value) =>
     ascii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+// Handle money.
 const money = (value) => `LKR ${Number(value || 0).toLocaleString()}`;
+// Handle date time.
 const dateTime = (value) => (value ? new Date(value).toLocaleString() : 'Not recorded');
 
+// Handle text command.
 const textCommand = (text, x, y, size = 10, bold = false) =>
     `BT /F${bold ? 2 : 1} ${size} Tf ${x} ${y} Td (${escapePdfText(text)}) Tj ET`;
 
+// Prepare pdf.
 const buildPdf = (bill) => {
     const patient = bill.patient || {};
     const doctor = bill.doctor || {};
@@ -93,6 +100,7 @@ const buildPdf = (bill) => {
     return pdf;
 };
 
+// Handle download hospital bill pdf.
 export const downloadHospitalBillPdf = (bill) => {
     const blob = new Blob([buildPdf(bill)], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);

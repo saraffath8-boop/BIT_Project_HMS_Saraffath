@@ -1,3 +1,5 @@
+// This file contains the queue page interface.
+
 import { useCallback, useEffect, useState } from 'react';
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
@@ -22,6 +24,7 @@ import {
 } from '../../components/ui/table';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 
+// Show the queue page interface.
 const QueuePage = () => {
     const { user } = useAuth();
     if (['receptionist', 'doctor'].includes(user?.role)) return <ConfirmedAppointmentQueue />;
@@ -57,6 +60,7 @@ const QueuePage = () => {
     );
 };
 
+// Show the confirmed appointment queue interface.
 const ConfirmedAppointmentQueue = () => {
     const { token, user } = useAuth();
     const [appointments, setAppointments] = useState([]);
@@ -64,6 +68,7 @@ const ConfirmedAppointmentQueue = () => {
     const [updatingId, setUpdatingId] = useState('');
     const [error, setError] = useState('');
 
+    // Load queue.
     const loadQueue = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -77,18 +82,21 @@ const ConfirmedAppointmentQueue = () => {
         }
     }, [token]);
 
+    // Run this work when the listed values change.
     useEffect(() => {
         const id = setTimeout(loadQueue, 0);
         return () => clearTimeout(id);
     }, [loadQueue]);
 
     const isDoctor = user?.role === 'doctor';
+    // Update confirmed appointments.
     const confirmedAppointments = appointments.filter((appointment) =>
         ['confirmed', 'paid'].includes(appointment.status),
     );
     const checkedAppointments = appointments.filter(
         (appointment) => appointment.status === 'in_consultation',
     );
+    // Update checked.
     const markChecked = async (appointment) => {
         setUpdatingId(appointment.id);
         setError('');
@@ -174,6 +182,7 @@ const ConfirmedAppointmentQueue = () => {
     );
 };
 
+// Show the queue section interface.
 const QueueSection = ({ title, appointments, emptyMessage, action }) => (
     <CollapsibleSection title={title} count={appointments.length}>
         {appointments.length === 0 ? (
@@ -229,6 +238,7 @@ const QueueSection = ({ title, appointments, emptyMessage, action }) => (
     </CollapsibleSection>
 );
 
+// Show the compact detail interface.
 const CompactDetail = ({ title, subtitle }) => (
     <div className="min-w-44">
         <p className="font-medium text-slate-900">{title}</p>

@@ -1,3 +1,5 @@
+// This file contains the patient create page interface.
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -11,6 +13,7 @@ import {
 } from '../../schemas/patientSchema';
 import { createPatient } from '../../services/patientService';
 
+// Handle defaults.
 const defaults = {
     fullName: '',
     dateOfBirth: '',
@@ -35,6 +38,7 @@ export default function PatientCreatePage() {
         formState: { errors, isSubmitting },
     } = useForm({ resolver: zodResolver(patientSchema), defaultValues: defaults });
 
+    // Handle submit.
     const submit = async (formData) => {
         setError('');
         try {
@@ -160,9 +164,11 @@ export default function PatientCreatePage() {
     );
 }
 
+// Handle select.
 const Select = forwardRef(function Select(props, ref) {
     return <select ref={ref} style={styles.input} {...props} />;
 });
+// Show the field interface.
 const Field = ({ label, error, children }) => (
     <label style={styles.label}>
         {label}
@@ -170,6 +176,7 @@ const Field = ({ label, error, children }) => (
         {error && <span style={styles.fieldError}>{error}</span>}
     </label>
 );
+// Handle styles.
 const styles = {
     page: { color: '#0f172a' },
     header: {

@@ -1,9 +1,12 @@
+// This file contains the laboratory page interface.
+
 import ModuleListPage from '../shared/ModuleListPage';
 import { formatDateTime, getPersonName } from '../shared/modulePageUtils';
 import { getLabRequests } from '../../services/labRequestService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+// Show the laboratory page interface.
 const LaboratoryPage = () => {
     const { user } = useAuth();
     return (

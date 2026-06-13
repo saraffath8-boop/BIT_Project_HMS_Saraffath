@@ -1,5 +1,8 @@
+// This file contains the department controller HTTP request handlers.
+
 import departmentService from '../services/departmentService.js';
 
+// Load departments.
 export const getDepartments = async (_req, res) => {
     try {
         const departments = await departmentService.getActiveDepartments();

@@ -1,3 +1,5 @@
+// This file contains the inventory create page interface.
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -5,6 +7,7 @@ import { createInventoryItem } from '../../services/inventoryService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getNumberValue, getOptionalValue } from '../shared/formHelpers';
 
+// Show the inventory create page interface.
 const InventoryCreatePage = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -22,8 +25,10 @@ const InventoryCreatePage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    // Handle handle change.
     const handleChange = (event) =>
         setFormData({ ...formData, [event.target.name]: event.target.value });
+    // Handle handle submit.
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true);

@@ -1,5 +1,8 @@
+// This file contains the patient controller HTTP request handlers.
+
 import patientService from '../services/patientService.js';
 
+// Create the send error.
 const sendError = (res, statusCode, message) =>
     res.status(statusCode).json({
         success: false,
@@ -7,6 +10,7 @@ const sendError = (res, statusCode, message) =>
         message,
     });
 
+// Load error status code.
 const getErrorStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
 
@@ -28,6 +32,7 @@ const getErrorStatusCode = (error) => {
     return 500;
 };
 
+// Create patient.
 export const createPatient = async (req, res) => {
     try {
         const patient = await patientService.createPatient(req.body, req.user.id, req.user.role);
@@ -44,6 +49,7 @@ export const createPatient = async (req, res) => {
     }
 };
 
+// Load patients.
 export const getPatients = async (req, res) => {
     try {
         const result = await patientService.getPatients(req.query, req.user.role);
@@ -58,6 +64,7 @@ export const getPatients = async (req, res) => {
     }
 };
 
+// Load patient by id.
 export const getPatientById = async (req, res) => {
     try {
         const patient = await patientService.getPatientById(req.params.id, req.user.role);
@@ -72,6 +79,7 @@ export const getPatientById = async (req, res) => {
     }
 };
 
+// Load my patient profile.
 export const getMyPatientProfile = async (req, res) => {
     try {
         const patient = await patientService.getMyPatientProfile(req.user.id);
@@ -86,6 +94,7 @@ export const getMyPatientProfile = async (req, res) => {
     }
 };
 
+// Update patient.
 export const updatePatient = async (req, res) => {
     try {
         const patient = await patientService.updatePatient(req.params.id, req.body, req.user.role);
@@ -102,6 +111,7 @@ export const updatePatient = async (req, res) => {
     }
 };
 
+// Handle link patient user.
 export const linkPatientUser = async (req, res) => {
     try {
         const patient = await patientService.linkPatientUser(req.params.id, req.body.userId);
@@ -118,6 +128,7 @@ export const linkPatientUser = async (req, res) => {
     }
 };
 
+// Remove patient.
 export const deletePatient = async (req, res) => {
     try {
         const patient = await patientService.deletePatient(req.params.id);
