@@ -5,10 +5,11 @@ const queueCounterSchema = new mongoose.Schema(
         _id: { type: String, required: true },
         sequenceValue: { type: Number, default: 0 },
     },
-    { versionKey: false }
+    { versionKey: false },
 );
 
-export const QueueCounter = mongoose.models.QueueCounter || mongoose.model('QueueCounter', queueCounterSchema);
+export const QueueCounter =
+    mongoose.models.QueueCounter || mongoose.model('QueueCounter', queueCounterSchema);
 
 const queueEntrySchema = new mongoose.Schema(
     {
@@ -52,7 +53,7 @@ const queueEntrySchema = new mongoose.Schema(
         calledAt: Date,
         completedAt: Date,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 queueEntrySchema.index({ status: 1, createdAt: 1 });

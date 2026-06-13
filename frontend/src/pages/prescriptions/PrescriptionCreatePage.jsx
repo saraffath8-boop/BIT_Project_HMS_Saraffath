@@ -7,7 +7,14 @@ import { getUsers } from '../../services/userService';
 import { createPageStyles as styles } from '../shared/createPageStyles';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 
-const emptyItem = { medicine: '', medicineName: '', dosage: '', frequency: '', duration: '', instructions: '' };
+const emptyItem = {
+    medicine: '',
+    medicineName: '',
+    dosage: '',
+    frequency: '',
+    duration: '',
+    instructions: '',
+};
 const getUserLabel = (user) => `${user.name || 'Unnamed User'} (${user.email})`;
 
 const PrescriptionCreatePage = () => {
@@ -15,7 +22,12 @@ const PrescriptionCreatePage = () => {
     const navigate = useNavigate();
     const [patients, setPatients] = useState([]);
     const [doctors, setDoctors] = useState([]);
-    const [formData, setFormData] = useState({ patient: '', doctor: '', medicalRecord: '', notes: '' });
+    const [formData, setFormData] = useState({
+        patient: '',
+        doctor: '',
+        medicalRecord: '',
+        notes: '',
+    });
     const [items, setItems] = useState([{ ...emptyItem }]);
     const [loadingPatients, setLoadingPatients] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -38,10 +50,18 @@ const PrescriptionCreatePage = () => {
         }
     }, [token, user?.role]);
 
-    useEffect(() => { loadPatients(); }, [loadPatients]);
+    useEffect(() => {
+        loadPatients();
+    }, [loadPatients]);
 
-    const handleChange = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
-    const handleItemChange = (index, event) => setItems(items.map((item, itemIndex) => itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item));
+    const handleChange = (event) =>
+        setFormData({ ...formData, [event.target.name]: event.target.value });
+    const handleItemChange = (index, event) =>
+        setItems(
+            items.map((item, itemIndex) =>
+                itemIndex === index ? { ...item, [event.target.name]: event.target.value } : item,
+            ),
+        );
     const addItem = () => setItems([...items, { ...emptyItem }]);
     const removeItem = (index) => setItems(items.filter((item, itemIndex) => itemIndex !== index));
 
@@ -76,11 +96,17 @@ const PrescriptionCreatePage = () => {
                 <div>
                     <p style={styles.kicker}>Prescription Management</p>
                     <h1 style={styles.title}>Create Prescription</h1>
-                    <p style={styles.subtitle}>Create a prescription with one or more medicines for a selected patient.</p>
+                    <p style={styles.subtitle}>
+                        Create a prescription with one or more medicines for a selected patient.
+                    </p>
                 </div>
                 <div style={styles.actions}>
-                    <Link style={styles.secondaryLink} to="/prescriptions">Prescriptions</Link>
-                    <Link style={styles.secondaryLink} to="/dashboard">Dashboard</Link>
+                    <Link style={styles.secondaryLink} to="/prescriptions">
+                        Prescriptions
+                    </Link>
+                    <Link style={styles.secondaryLink} to="/dashboard">
+                        Dashboard
+                    </Link>
                 </div>
             </section>
 
@@ -90,32 +116,130 @@ const PrescriptionCreatePage = () => {
 
             <form style={styles.form} onSubmit={handleSubmit}>
                 <div style={styles.grid}>
-                    <label style={styles.label}>Patient
-                        <select style={styles.input} name="patient" value={formData.patient} onChange={handleChange} required>
+                    <label style={styles.label}>
+                        Patient
+                        <select
+                            style={styles.input}
+                            name="patient"
+                            value={formData.patient}
+                            onChange={handleChange}
+                            required
+                        >
                             <option value="">Select patient</option>
-                            {patients.map((patient) => <option key={getPatientId(patient)} value={getPatientId(patient)}>{getPatientLabel(patient)}</option>)}
+                            {patients.map((patient) => (
+                                <option key={getPatientId(patient)} value={getPatientId(patient)}>
+                                    {getPatientLabel(patient)}
+                                </option>
+                            ))}
                         </select>
                     </label>
-                    {user?.role !== 'doctor' && <label style={styles.label}>Doctor<select style={styles.input} name="doctor" value={formData.doctor} onChange={handleChange} required><option value="">Select doctor</option>{doctors.map((doctor) => <option key={doctor.id} value={doctor.id}>{getUserLabel(doctor)}</option>)}</select></label>}
-                    <label style={styles.label}>Related Medical Record<input style={styles.input} name="medicalRecord" value={formData.medicalRecord} onChange={handleChange} placeholder="Optional linked medical record reference" /></label>
+                    {user?.role !== 'doctor' && (
+                        <label style={styles.label}>
+                            Doctor
+                            <select
+                                style={styles.input}
+                                name="doctor"
+                                value={formData.doctor}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select doctor</option>
+                                {doctors.map((doctor) => (
+                                    <option key={doctor.id} value={doctor.id}>
+                                        {getUserLabel(doctor)}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    )}
+                    <label style={styles.label}>
+                        Related Medical Record
+                        <input
+                            style={styles.input}
+                            name="medicalRecord"
+                            value={formData.medicalRecord}
+                            onChange={handleChange}
+                            placeholder="Optional linked medical record reference"
+                        />
+                    </label>
                 </div>
-                <label style={styles.label}>Notes<textarea style={styles.textarea} name="notes" value={formData.notes} onChange={handleChange} /></label>
+                <label style={styles.label}>
+                    Notes
+                    <textarea
+                        style={styles.textarea}
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                    />
+                </label>
                 <section style={styles.section}>
                     <h2 style={styles.sectionTitle}>Prescription Items</h2>
                     {items.map((item, index) => (
                         <div key={index} style={styles.row}>
-                            <input style={styles.input} name="medicine" value={item.medicine} onChange={(event) => handleItemChange(index, event)} placeholder="Optional inventory medicine reference" />
-                            <input style={styles.input} name="medicineName" value={item.medicineName} onChange={(event) => handleItemChange(index, event)} placeholder="Medicine name" required />
-                            <input style={styles.input} name="dosage" value={item.dosage} onChange={(event) => handleItemChange(index, event)} placeholder="Dosage" required />
-                            <input style={styles.input} name="frequency" value={item.frequency} onChange={(event) => handleItemChange(index, event)} placeholder="Frequency" required />
-                            <input style={styles.input} name="duration" value={item.duration} onChange={(event) => handleItemChange(index, event)} placeholder="Duration" required />
-                            <input style={styles.input} name="instructions" value={item.instructions} onChange={(event) => handleItemChange(index, event)} placeholder="Instructions" />
-                            {items.length > 1 && <button style={styles.secondaryButton} type="button" onClick={() => removeItem(index)}>Remove</button>}
+                            <input
+                                style={styles.input}
+                                name="medicine"
+                                value={item.medicine}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Optional inventory medicine reference"
+                            />
+                            <input
+                                style={styles.input}
+                                name="medicineName"
+                                value={item.medicineName}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Medicine name"
+                                required
+                            />
+                            <input
+                                style={styles.input}
+                                name="dosage"
+                                value={item.dosage}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Dosage"
+                                required
+                            />
+                            <input
+                                style={styles.input}
+                                name="frequency"
+                                value={item.frequency}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Frequency"
+                                required
+                            />
+                            <input
+                                style={styles.input}
+                                name="duration"
+                                value={item.duration}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Duration"
+                                required
+                            />
+                            <input
+                                style={styles.input}
+                                name="instructions"
+                                value={item.instructions}
+                                onChange={(event) => handleItemChange(index, event)}
+                                placeholder="Instructions"
+                            />
+                            {items.length > 1 && (
+                                <button
+                                    style={styles.secondaryButton}
+                                    type="button"
+                                    onClick={() => removeItem(index)}
+                                >
+                                    Remove
+                                </button>
+                            )}
                         </div>
                     ))}
-                    <button style={styles.secondaryButton} type="button" onClick={addItem}>Add Medicine Row</button>
+                    <button style={styles.secondaryButton} type="button" onClick={addItem}>
+                        Add Medicine Row
+                    </button>
                 </section>
-                <button style={styles.primaryButton} type="submit" disabled={submitting}>{submitting ? 'Creating Prescription...' : 'Create Prescription'}</button>
+                <button style={styles.primaryButton} type="submit" disabled={submitting}>
+                    {submitting ? 'Creating Prescription...' : 'Create Prescription'}
+                </button>
             </form>
         </main>
     );

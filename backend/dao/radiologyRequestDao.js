@@ -28,7 +28,10 @@ class RadiologyRequestDao {
     }
 
     async updateRadiologyRequest(id, updateData) {
-        return RadiologyRequest.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+        return RadiologyRequest.findByIdAndUpdate(id, updateData, {
+            new: true,
+            runValidators: true,
+        })
             .populate('patient', 'patientId fullName phone')
             .populate('doctor', 'name email role')
             .populate('radiologist', 'name email role')

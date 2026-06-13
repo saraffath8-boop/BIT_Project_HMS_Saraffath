@@ -8,5 +8,21 @@ export const DialogClose = DialogPrimitive.Close;
 export const DialogTitle = DialogPrimitive.Title;
 export const DialogDescription = DialogPrimitive.Description;
 export function DialogContent({ className, children, ...props }) {
-    return <DialogPrimitive.Portal><DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/50" /><DialogPrimitive.Content className={cn('fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-white p-6 shadow-xl', className)} {...props}>{children}<DialogPrimitive.Close className="absolute right-4 top-4 text-slate-500"><X className="size-4" /></DialogPrimitive.Close></DialogPrimitive.Content></DialogPrimitive.Portal>;
+    return (
+        <DialogPrimitive.Portal>
+            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/50" />
+            <DialogPrimitive.Content
+                className={cn(
+                    'fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-white p-6 shadow-xl',
+                    className,
+                )}
+                {...props}
+            >
+                {children}
+                <DialogPrimitive.Close className="absolute right-4 top-4 text-slate-500">
+                    <X className="size-4" />
+                </DialogPrimitive.Close>
+            </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+    );
 }

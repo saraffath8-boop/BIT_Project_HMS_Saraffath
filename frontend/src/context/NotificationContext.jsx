@@ -38,7 +38,10 @@ export const NotificationProvider = ({ children }) => {
         };
     }, [refreshUnreadCount]);
 
-    const value = useMemo(() => ({ unreadCount, refreshUnreadCount }), [unreadCount, refreshUnreadCount]);
+    const value = useMemo(
+        () => ({ unreadCount, refreshUnreadCount }),
+        [unreadCount, refreshUnreadCount],
+    );
 
     return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };

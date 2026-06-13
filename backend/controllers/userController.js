@@ -1,21 +1,53 @@
 import userService, { ADMIN_CREATABLE_ROLES } from '../services/userService.js';
 import { validateUserCreateInput } from '../utils/userValidation.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getErrorStatusCode = (error) => {
     if (error.code === 11000 || error.message.includes('already exists')) return 409;
-    if (error.name === 'ValidationError' || /required|must|valid|invalid|characters/i.test(error.message)) return 400;
+    if (
+        error.name === 'ValidationError' ||
+        /required|must|valid|invalid|characters/i.test(error.message)
+    )
+        return 400;
     return 500;
 };
 
 export const createUserByAdmin = async (req, res) => {
     try {
-        const { firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar, department, specialization, consultationFee, availableDays, availableTimeSlots } = req.body;
-        const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role });
+        const {
+            firstName,
+            lastName,
+            email,
+            phone,
+            nic,
+            dob,
+            gender,
+            password,
+            role,
+            isActive,
+            avatar,
+            department,
+            specialization,
+            consultationFee,
+            availableDays,
+            availableTimeSlots,
+        } = req.body;
+        const validationError = validateUserCreateInput({
+            firstName,
+            lastName,
+            email,
+            phone,
+            nic,
+            dob,
+            gender,
+            password,
+            role,
+        });
 
         if (validationError) {
             return sendError(res, 400, validationError);
@@ -26,10 +58,31 @@ export const createUserByAdmin = async (req, res) => {
         }
 
         if (!ADMIN_CREATABLE_ROLES.includes(role)) {
-            return sendError(res, 400, `Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`);
+            return sendError(
+                res,
+                400,
+                `Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`,
+            );
         }
 
-        const user = await userService.createUserByAdmin({ firstName, lastName, email, phone, nic, dob, gender, password, role, isActive, avatar, department, specialization, consultationFee, availableDays, availableTimeSlots });
+        const user = await userService.createUserByAdmin({
+            firstName,
+            lastName,
+            email,
+            phone,
+            nic,
+            dob,
+            gender,
+            password,
+            role,
+            isActive,
+            avatar,
+            department,
+            specialization,
+            consultationFee,
+            availableDays,
+            availableTimeSlots,
+        });
 
         return res.status(201).json({
             success: true,
@@ -58,7 +111,9 @@ export const getUsers = async (req, res) => {
 export const updateDoctorBookingProfile = async (req, res) => {
     try {
         const user = await userService.updateDoctorBookingProfile(req.params.id, req.body);
-        return res.status(200).json({ success: true, message: 'Doctor booking profile updated successfully', user });
+        return res
+            .status(200)
+            .json({ success: true, message: 'Doctor booking profile updated successfully', user });
     } catch (error) {
         const statusCode = error.message === 'Doctor not found' ? 404 : getErrorStatusCode(error);
         return sendError(res, statusCode, error.message);

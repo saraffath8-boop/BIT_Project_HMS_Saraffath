@@ -56,7 +56,7 @@ const medicineSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 medicineSchema.index({ name: 'text', sku: 'text', category: 'text' });

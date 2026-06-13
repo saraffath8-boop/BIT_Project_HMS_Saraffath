@@ -108,7 +108,14 @@ const buildMedicalRecordQuery = (queryParams, user) => {
 };
 
 const pickVitalSigns = (vitalSigns = {}) => {
-    const allowedFields = ['temperature', 'bloodPressure', 'pulse', 'respiratoryRate', 'oxygenSaturation', 'weight'];
+    const allowedFields = [
+        'temperature',
+        'bloodPressure',
+        'pulse',
+        'respiratoryRate',
+        'oxygenSaturation',
+        'weight',
+    ];
     const cleanVitalSigns = {};
 
     allowedFields.forEach((field) => {
@@ -142,7 +149,7 @@ const createMedicalRecord = async (data, user) => {
         consultationNotes: toCleanString(data.consultationNotes) || '',
         vitalSigns: pickVitalSigns(data.vitalSigns),
         followUpDate: validateDate(data.followUpDate, 'followUpDate'),
-		doctorComment: toCleanString(data.doctorComment) || '',
+        doctorComment: toCleanString(data.doctorComment) || '',
         status: data.status || 'open',
         createdBy: user.id,
     });

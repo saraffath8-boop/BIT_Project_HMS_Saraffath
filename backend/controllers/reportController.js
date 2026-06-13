@@ -1,9 +1,10 @@
 import reportService from '../services/reportService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message.includes('valid date')) return 400;

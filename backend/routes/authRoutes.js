@@ -1,5 +1,11 @@
 import express from 'express';
-import { getCurrentUser, loginUser, requestPatientPasswordReset, resetPatientPassword, signupUser } from '../controllers/authController.js';
+import {
+    getCurrentUser,
+    loginUser,
+    requestPatientPasswordReset,
+    resetPatientPassword,
+    signupUser,
+} from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();

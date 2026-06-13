@@ -112,7 +112,8 @@ const buildLabRequestQuery = (queryParams, user) => {
         query.priority = queryParams.priority;
     }
     if (queryParams.paymentStatus) {
-        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus)) throw new Error('Invalid lab request payment status');
+        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus))
+            throw new Error('Invalid lab request payment status');
         query.paymentStatus = queryParams.paymentStatus;
     }
 
@@ -180,14 +181,21 @@ const createLabRequest = async (data, user) => {
 
     const populatedLabRequest = await labRequestDao.getLabRequestById(labRequest._id);
     const technicians = await userDao.getUsers({ role: 'lab_technician', isActive: true });
-    await Promise.all(technicians.map((technician) => notificationService.createNotification({
-        recipient: technician._id.toString(),
-        title: 'New laboratory request',
-        message: `${populatedLabRequest.patient.fullName}'s laboratory request is awaiting payment.`,
-        type: 'laboratory',
-        relatedPatient: populatedLabRequest.patient._id.toString(),
-        sendSms: false,
-    }, {})));
+    await Promise.all(
+        technicians.map((technician) =>
+            notificationService.createNotification(
+                {
+                    recipient: technician._id.toString(),
+                    title: 'New laboratory request',
+                    message: `${populatedLabRequest.patient.fullName}'s laboratory request is awaiting payment.`,
+                    type: 'laboratory',
+                    relatedPatient: populatedLabRequest.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return sanitizeLabRequest(populatedLabRequest);
 };
 
@@ -221,11 +229,9 @@ const getLabRequestById = async (id, user) => {
     }
 
     if (
-        user.role === 'lab_technician'
-        && (
-            labRequest.paymentStatus !== 'paid' && labRequest.status !== 'completed'
-            || (labRequest.technician && labRequest.technician._id.toString() !== user.id)
-        )
+        user.role === 'lab_technician' &&
+        ((labRequest.paymentStatus !== 'paid' && labRequest.status !== 'completed') ||
+            (labRequest.technician && labRequest.technician._id.toString() !== user.id))
     ) {
         throw new Error('Lab request not found');
     }
@@ -238,19 +244,42 @@ const markLabRequestPaid = async (id, data, user) => {
     const request = await labRequestDao.getLabRequestById(id);
     if (!request) throw new Error('Lab request not found');
     if (request.paymentStatus === 'paid') throw new Error('Lab request is already paid');
-    if (request.patientDecisionStatus === 'pending_patient_decision') throw new Error('Pending patient decision request cannot be paid directly');
-    if (['completed', 'cancelled'].includes(request.status)) throw new Error(`${request.status === 'completed' ? 'Completed' : 'Cancelled'} lab request cannot be paid`);
+    if (request.patientDecisionStatus === 'pending_patient_decision')
+        throw new Error('Pending patient decision request cannot be paid directly');
+    if (['completed', 'cancelled'].includes(request.status))
+        throw new Error(
+            `${request.status === 'completed' ? 'Completed' : 'Cancelled'} lab request cannot be paid`,
+        );
     const bill = await billService.createPaidClinicalServiceBill({
-        request, amount: data.amount, user, billType: 'laboratory', sourceType: 'laboratory',
+        request,
+        amount: data.amount,
+        user,
+        billType: 'laboratory',
+        sourceType: 'laboratory',
         description: `Laboratory tests: ${request.tests.map((test) => test.testName).join(', ')}`,
     });
-    const labRequest = await labRequestDao.updateLabRequest(id, { paymentStatus: 'paid', patientDecisionStatus: 'paid', paidBy: user.id, paidAt: new Date() });
+    const labRequest = await labRequestDao.updateLabRequest(id, {
+        paymentStatus: 'paid',
+        patientDecisionStatus: 'paid',
+        paidBy: user.id,
+        paidAt: new Date(),
+    });
     const recipients = await userDao.getUsers({ role: 'lab_technician', isActive: true });
-    await Promise.all(recipients.map((recipient) => notificationService.createNotification({
-        recipient: recipient._id.toString(), title: 'Paid laboratory request ready',
-        message: `${labRequest.patient.fullName}'s laboratory request is paid and ready for processing.`,
-        type: 'laboratory', relatedPatient: labRequest.patient._id.toString(), sendSms: false,
-    }, {})));
+    await Promise.all(
+        recipients.map((recipient) =>
+            notificationService.createNotification(
+                {
+                    recipient: recipient._id.toString(),
+                    title: 'Paid laboratory request ready',
+                    message: `${labRequest.patient.fullName}'s laboratory request is paid and ready for processing.`,
+                    type: 'laboratory',
+                    relatedPatient: labRequest.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return { labRequest: sanitizeLabRequest(labRequest), bill };
 };
 
@@ -269,13 +298,19 @@ const updateLabRequest = async (id, data, user) => {
         updateData.doctor = data.doctor;
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'medicalRecord')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'medicalRecord')
+    ) {
         const medicalRecord = toCleanString(data.medicalRecord) || null;
         await validateMedicalRecordExists(medicalRecord);
         updateData.medicalRecord = medicalRecord;
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'priority')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'priority')
+    ) {
         const priority = toCleanString(data.priority);
         if (!LAB_PRIORITIES.includes(priority)) {
             throw new Error('Invalid lab request priority');
@@ -286,7 +321,12 @@ const updateLabRequest = async (id, data, user) => {
     if (Object.prototype.hasOwnProperty.call(data, 'tests')) {
         const updatedTests = buildTests(data.tests);
         if (user.role === 'lab_technician') {
-            if (updatedTests.length !== existingRequest.tests.length || updatedTests.some((test, index) => test.testName !== existingRequest.tests[index].testName)) {
+            if (
+                updatedTests.length !== existingRequest.tests.length ||
+                updatedTests.some(
+                    (test, index) => test.testName !== existingRequest.tests[index].testName,
+                )
+            ) {
                 throw new Error('Lab technicians cannot change requested test names');
             }
         }
@@ -294,7 +334,8 @@ const updateLabRequest = async (id, data, user) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(data, 'technician')) {
-        const technician = user.role === 'lab_technician' ? user.id : toCleanString(data.technician) || null;
+        const technician =
+            user.role === 'lab_technician' ? user.id : toCleanString(data.technician) || null;
         await validateTechnicianExists(technician);
         updateData.technician = technician;
     }
@@ -308,8 +349,14 @@ const updateLabRequest = async (id, data, user) => {
 
         if (status === 'completed') {
             const completedTests = updateData.tests || existingRequest.tests;
-            if (!completedTests.every((test) => toCleanString(test.result) || toCleanString(test.remarks))) {
-                throw new Error('A result or remarks is required for every lab test before completion');
+            if (
+                !completedTests.every(
+                    (test) => toCleanString(test.result) || toCleanString(test.remarks),
+                )
+            ) {
+                throw new Error(
+                    'A result or remarks is required for every lab test before completion',
+                );
             }
             updateData.completedAt = new Date();
             if (!updateData.technician && user.role === 'lab_technician') {

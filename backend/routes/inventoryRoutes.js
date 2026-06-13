@@ -14,10 +14,7 @@ const router = express.Router();
 router.use(protect);
 router.use(authorizeRoles('admin'));
 
-router
-    .route('/')
-    .get(getInventoryItems)
-    .post(createInventoryItem);
+router.route('/').get(getInventoryItems).post(createInventoryItem);
 
 router
     .route('/:id')

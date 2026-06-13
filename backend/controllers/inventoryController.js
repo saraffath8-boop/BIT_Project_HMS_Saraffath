@@ -1,13 +1,22 @@
 import inventoryService from '../services/inventoryService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('already exists') || error.message.includes('cannot be empty') || error.message.includes('greater than') || error.message.includes('No inventory')) return 400;
+    if (
+        error.message.includes('Invalid') ||
+        error.message.includes('required') ||
+        error.message.includes('already exists') ||
+        error.message.includes('cannot be empty') ||
+        error.message.includes('greater than') ||
+        error.message.includes('No inventory')
+    )
+        return 400;
     return 500;
 };
 

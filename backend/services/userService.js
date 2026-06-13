@@ -64,8 +64,35 @@ const sanitizeListedUser = (user) => ({
     availableTimeSlots: user.availableTimeSlots,
 });
 
-const createUserWithRole = async ({ firstName, lastName, email, phone, nic, dob, gender, password, role, isActive = true, avatar, department, specialization, consultationFee, availableDays, availableTimeSlots }) => {
-    const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role });
+const createUserWithRole = async ({
+    firstName,
+    lastName,
+    email,
+    phone,
+    nic,
+    dob,
+    gender,
+    password,
+    role,
+    isActive = true,
+    avatar,
+    department,
+    specialization,
+    consultationFee,
+    availableDays,
+    availableTimeSlots,
+}) => {
+    const validationError = validateUserCreateInput({
+        firstName,
+        lastName,
+        email,
+        phone,
+        nic,
+        dob,
+        gender,
+        password,
+        role,
+    });
     if (validationError) throw new Error(validationError);
     const normalizedEmail = normalizeEmail(email);
     const normalizedNic = normalizeNic(nic);
@@ -88,7 +115,8 @@ const createUserWithRole = async ({ firstName, lastName, email, phone, nic, dob,
     if (role === USER_ROLES.DOCTOR) {
         if (!department) throw new Error('Department is required for doctors');
         const doctorDepartment = await departmentDao.getDepartmentById(department);
-        if (!doctorDepartment || doctorDepartment.status !== 'active') throw new Error('Invalid doctor department');
+        if (!doctorDepartment || doctorDepartment.status !== 'active')
+            throw new Error('Invalid doctor department');
     }
 
     const user = await userDao.createUser({
@@ -103,13 +131,21 @@ const createUserWithRole = async ({ firstName, lastName, email, phone, nic, dob,
         role,
         isActive,
         ...(avatar ? { avatar } : {}),
-        ...(role === USER_ROLES.DOCTOR ? {
-            department,
-            specialization: specialization?.trim() || '',
-            consultationFee: Number(consultationFee) || 0,
-            availableDays: Array.isArray(availableDays) && availableDays.length ? availableDays.map(Number) : [1, 2, 3, 4, 5],
-            availableTimeSlots: Array.isArray(availableTimeSlots) && availableTimeSlots.length ? availableTimeSlots : ['09:00', '10:00', '11:00', '14:00', '15:00'],
-        } : {}),
+        ...(role === USER_ROLES.DOCTOR
+            ? {
+                  department,
+                  specialization: specialization?.trim() || '',
+                  consultationFee: Number(consultationFee) || 0,
+                  availableDays:
+                      Array.isArray(availableDays) && availableDays.length
+                          ? availableDays.map(Number)
+                          : [1, 2, 3, 4, 5],
+                  availableTimeSlots:
+                      Array.isArray(availableTimeSlots) && availableTimeSlots.length
+                          ? availableTimeSlots
+                          : ['09:00', '10:00', '11:00', '14:00', '15:00'],
+              }
+            : {}),
     });
 
     return user;
@@ -118,7 +154,9 @@ const createUserWithRole = async ({ firstName, lastName, email, phone, nic, dob,
 const createUserByAdmin = async (userData) => {
     const { role } = userData;
     if (!ADMIN_CREATABLE_ROLES.includes(role)) {
-        throw new Error(`Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`);
+        throw new Error(
+            `Invalid staff role. Admin can create: ${ADMIN_CREATABLE_ROLES.join(', ')}`,
+        );
     }
 
     const user = await createUserWithRole(userData);
@@ -128,7 +166,8 @@ const createUserByAdmin = async (userData) => {
 
 const updateDoctorBookingProfile = async (doctorId, data) => {
     if (!mongoose.Types.ObjectId.isValid(doctorId)) throw new Error('Invalid doctor id');
-    if (!mongoose.Types.ObjectId.isValid(data.department)) throw new Error('Invalid doctor department');
+    if (!mongoose.Types.ObjectId.isValid(data.department))
+        throw new Error('Invalid doctor department');
 
     const [doctor, department] = await Promise.all([
         userDao.getUserById(doctorId),
@@ -189,7 +228,9 @@ const ensureDefaultAdmin = async () => {
     const password = process.env.DEFAULT_ADMIN_PASSWORD;
 
     if (!email || !password) {
-        console.log('Default admin was not created because DEFAULT_ADMIN_EMAIL or DEFAULT_ADMIN_PASSWORD is missing');
+        console.log(
+            'Default admin was not created because DEFAULT_ADMIN_EMAIL or DEFAULT_ADMIN_PASSWORD is missing',
+        );
         return null;
     }
 

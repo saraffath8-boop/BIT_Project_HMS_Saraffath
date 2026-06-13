@@ -38,7 +38,8 @@ const requireObjectId = (id, fieldName) => {
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 const getPositiveNumber = (value, fieldName) => {
     const number = Number(value);
-    if (!Number.isFinite(number) || number <= 0) throw new Error(`${fieldName} must be greater than zero`);
+    if (!Number.isFinite(number) || number <= 0)
+        throw new Error(`${fieldName} must be greater than zero`);
     return number;
 };
 const getPrescribedMultiplier = (value, fieldName) => {
@@ -172,7 +173,9 @@ const buildPrescriptionItems = async (items) => {
         const duration = toCleanString(item.duration);
 
         if (!medicineName || !dosage || !frequency || !duration) {
-            throw new Error('medicineName, dosage, frequency, and duration are required for each prescription item');
+            throw new Error(
+                'medicineName, dosage, frequency, and duration are required for each prescription item',
+            );
         }
 
         await validateMedicineExists(medicine);
@@ -250,14 +253,21 @@ const createPrescription = async (data, user) => {
         ...pharmacists.map((pharmacist) => pharmacist._id.toString()),
         linkedPatient?.userAccount?._id?.toString(),
     ].filter(Boolean);
-    await Promise.all([...new Set(recipients)].map((recipient) => notificationService.createNotification({
-        recipient,
-        title: 'New prescription created',
-        message: `A prescription for ${populatedPrescription.patient.fullName} is awaiting payment.`,
-        type: 'pharmacy',
-        relatedPatient: populatedPrescription.patient._id.toString(),
-        sendSms: false,
-    }, {})));
+    await Promise.all(
+        [...new Set(recipients)].map((recipient) =>
+            notificationService.createNotification(
+                {
+                    recipient,
+                    title: 'New prescription created',
+                    message: `A prescription for ${populatedPrescription.patient.fullName} is awaiting payment.`,
+                    type: 'pharmacy',
+                    relatedPatient: populatedPrescription.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return sanitizePrescription(populatedPrescription);
 };
 
@@ -307,17 +317,26 @@ const updatePrescription = async (id, data, user) => {
         updateData.doctor = data.doctor;
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'medicalRecord')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'medicalRecord')
+    ) {
         const medicalRecord = toCleanString(data.medicalRecord) || null;
         await validateMedicalRecordExists(medicalRecord);
         updateData.medicalRecord = medicalRecord;
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'items')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'items')
+    ) {
         updateData.items = await buildPrescriptionItems(data.items);
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'notes')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'notes')
+    ) {
         updateData.notes = toCleanString(data.notes) || '';
     }
 
@@ -332,7 +351,10 @@ const updatePrescription = async (id, data, user) => {
         if (user.role === 'pharmacist' && status !== 'issued') {
             throw new Error('Pharmacists can only mark prescriptions as distributed');
         }
-        if ((status === 'issued' || status === 'partially_issued') && existingPrescription.paymentStatus !== 'paid') {
+        if (
+            (status === 'issued' || status === 'partially_issued') &&
+            existingPrescription.paymentStatus !== 'paid'
+        ) {
             throw new Error('Prescription must be paid before it can be distributed');
         }
         updateData.status = status;
@@ -367,7 +389,8 @@ const markPrescriptionPaid = async (id, data, user) => {
     const prescription = await prescriptionDao.getPrescriptionById(id);
     if (!prescription) throw new Error('Prescription not found');
     if (prescription.paymentStatus === 'paid') throw new Error('Prescription is already paid');
-    if (prescription.status === 'cancelled') throw new Error('Cancelled prescription cannot be paid');
+    if (prescription.status === 'cancelled')
+        throw new Error('Cancelled prescription cannot be paid');
 
     const pricing = calculatePrescriptionPricing(prescription, data.pricingItems);
     const bill = await billService.createPaidPrescriptionBill(prescription, pricing, user);
@@ -378,14 +401,21 @@ const markPrescriptionPaid = async (id, data, user) => {
         paidAt: new Date(),
     });
     const pharmacists = await userDao.getUsers({ role: 'pharmacist', isActive: true });
-    await Promise.all(pharmacists.map((pharmacist) => notificationService.createNotification({
-        recipient: pharmacist._id.toString(),
-        title: 'Paid prescription ready',
-        message: `${updatedPrescription.patient.fullName}'s prescription is paid and ready for distribution.`,
-        type: 'pharmacy',
-        relatedPatient: updatedPrescription.patient._id.toString(),
-        sendSms: false,
-    }, {})));
+    await Promise.all(
+        pharmacists.map((pharmacist) =>
+            notificationService.createNotification(
+                {
+                    recipient: pharmacist._id.toString(),
+                    title: 'Paid prescription ready',
+                    message: `${updatedPrescription.patient.fullName}'s prescription is paid and ready for distribution.`,
+                    type: 'pharmacy',
+                    relatedPatient: updatedPrescription.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return { prescription: sanitizePrescription(updatedPrescription), bill };
 };
 

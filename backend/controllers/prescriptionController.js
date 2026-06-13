@@ -1,15 +1,25 @@
 import prescriptionService from '../services/prescriptionService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
-    if (error.message.includes('already paid') || error.message.includes('cannot be paid')) return 409;
+    if (error.message.includes('already paid') || error.message.includes('cannot be paid'))
+        return 409;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('At least one') || error.message.includes('No prescription') || error.message.includes('greater than') || error.message.includes('must contain')) return 400;
+    if (
+        error.message.includes('Invalid') ||
+        error.message.includes('required') ||
+        error.message.includes('At least one') ||
+        error.message.includes('No prescription') ||
+        error.message.includes('greater than') ||
+        error.message.includes('must contain')
+    )
+        return 400;
     return 500;
 };
 
@@ -68,7 +78,11 @@ export const getPrescriptionById = async (req, res) => {
 
 export const updatePrescription = async (req, res) => {
     try {
-        const prescription = await prescriptionService.updatePrescription(req.params.id, req.body, req.user);
+        const prescription = await prescriptionService.updatePrescription(
+            req.params.id,
+            req.body,
+            req.user,
+        );
 
         return res.status(200).json({
             success: true,
@@ -82,10 +96,15 @@ export const updatePrescription = async (req, res) => {
 
 export const markPrescriptionPaid = async (req, res) => {
     try {
-        const result = await prescriptionService.markPrescriptionPaid(req.params.id, req.body, req.user);
+        const result = await prescriptionService.markPrescriptionPaid(
+            req.params.id,
+            req.body,
+            req.user,
+        );
         return res.status(200).json({
             success: true,
-            message: 'Prescription marked as paid, pharmacy bill created, and sent to the pharmacist queue',
+            message:
+                'Prescription marked as paid, pharmacy bill created, and sent to the pharmacist queue',
             ...result,
         });
     } catch (error) {

@@ -1,7 +1,14 @@
 import mongoose from 'mongoose';
 import inventoryDao from '../dao/inventoryDao.js';
 
-const INVENTORY_CATEGORIES = ['medical_supply', 'equipment', 'laboratory', 'radiology', 'office', 'other'];
+const INVENTORY_CATEGORIES = [
+    'medical_supply',
+    'equipment',
+    'laboratory',
+    'radiology',
+    'office',
+    'other',
+];
 const INVENTORY_STATUSES = ['active', 'inactive'];
 
 const sanitizeInventoryItem = (item) => ({
@@ -107,8 +114,10 @@ const createInventoryItem = async (data, user) => {
         itemCode,
         category,
         unit,
-        stockQuantity: data.stockQuantity === undefined ? 0 : toNumber(data.stockQuantity, 'stockQuantity'),
-        reorderLevel: data.reorderLevel === undefined ? 10 : toNumber(data.reorderLevel, 'reorderLevel'),
+        stockQuantity:
+            data.stockQuantity === undefined ? 0 : toNumber(data.stockQuantity, 'stockQuantity'),
+        reorderLevel:
+            data.reorderLevel === undefined ? 10 : toNumber(data.reorderLevel, 'reorderLevel'),
         supplier: toCleanString(data.supplier) || '',
         location: toCleanString(data.location) || '',
         status: data.status || 'active',

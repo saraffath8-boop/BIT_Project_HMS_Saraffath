@@ -8,7 +8,9 @@ class UserDao {
 
     async getUsers(query = {}) {
         return User.find(query)
-            .select('name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee roomNumber availableDays availableTimeSlots')
+            .select(
+                'name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee roomNumber availableDays availableTimeSlots',
+            )
             .populate('department', 'name description status')
             .sort({ name: 1 })
             .exec();
@@ -28,7 +30,9 @@ class UserDao {
 
     async getActiveDoctorsByDepartment(departmentId) {
         return User.find({ role: 'doctor', isActive: true, department: departmentId })
-            .select('name firstName lastName department specialization consultationFee availableDays availableTimeSlots')
+            .select(
+                'name firstName lastName department specialization consultationFee availableDays availableTimeSlots',
+            )
             .populate('department', 'name description status')
             .sort({ name: 1 })
             .exec();
@@ -44,7 +48,9 @@ class UserDao {
 
     async getUserByPhoneForPasswordReset(phone) {
         return User.findOne({ phone })
-            .select('+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpLastSentAt +passwordResetOtpAttempts')
+            .select(
+                '+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpLastSentAt +passwordResetOtpAttempts',
+            )
             .exec();
     }
 
@@ -57,7 +63,11 @@ class UserDao {
     }
 
     async updateUser(userId, updateData) {
-        return User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true, context: 'query' }).exec();
+        return User.findByIdAndUpdate(userId, updateData, {
+            new: true,
+            runValidators: true,
+            context: 'query',
+        }).exec();
     }
 
     async deleteUser(userId) {

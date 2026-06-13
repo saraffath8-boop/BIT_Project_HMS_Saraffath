@@ -25,11 +25,18 @@ router
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'receptionist'), getAppointments)
     .post(authorizeRoles('receptionist'), createAppointment);
 
-router
-    .get('/my', authorizeRoles('patient'), getMyAppointments);
+router.get('/my', authorizeRoles('patient'), getMyAppointments);
 
-router.get('/receptionist/pending', authorizeRoles('receptionist'), getReceptionistPendingAppointments);
-router.get('/receptionist/confirmed-queue', authorizeRoles('receptionist', 'doctor'), getReceptionistConfirmedQueue);
+router.get(
+    '/receptionist/pending',
+    authorizeRoles('receptionist'),
+    getReceptionistPendingAppointments,
+);
+router.get(
+    '/receptionist/confirmed-queue',
+    authorizeRoles('receptionist', 'doctor'),
+    getReceptionistConfirmedQueue,
+);
 router.patch('/:id/confirm', authorizeRoles('receptionist'), confirmAppointment);
 router.patch('/:id/mark-paid', authorizeRoles('receptionist'), markAppointmentPaid);
 router.patch('/:id/mark-checked', authorizeRoles('doctor'), markAppointmentChecked);

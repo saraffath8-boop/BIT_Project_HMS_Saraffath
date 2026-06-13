@@ -9,7 +9,11 @@ const PharmacyPage = () => (
         description="Review medicine availability, pricing, reorder levels, expiry dates, and stock status."
         loadData={getMedicines}
         itemsKey="medicines"
-        createAction={{ to: '/pharmacy/new', label: 'Add Medicine', allowedRoles: ['admin', 'pharmacist'] }}
+        createAction={{
+            to: '/pharmacy/new',
+            label: 'Add Medicine',
+            allowedRoles: ['admin', 'pharmacist'],
+        }}
         emptyMessage="No medicines are currently recorded."
         columns={[
             { label: 'Medicine', key: 'name' },

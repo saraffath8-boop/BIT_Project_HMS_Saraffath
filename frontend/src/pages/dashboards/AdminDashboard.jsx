@@ -33,30 +33,87 @@ const quickActions = [
 ];
 
 const managementSections = [
-    { title: 'Patient Management', to: '/patients', description: 'Review patient profiles and hospital registration records.' },
-    { title: 'Staff User Management', to: '/users', description: 'Manage staff accounts for hospital departments and roles.' },
-    { title: 'Appointment Management', to: '/appointments', description: 'Review scheduled visits and appointment status.' },
-    { title: 'Queue Management', to: '/queue', description: 'Monitor waiting entries and patient service flow.' },
-    { title: 'Medical Records', to: '/medical-records', description: 'Open clinical documentation and patient history records.' },
-    { title: 'Prescriptions', to: '/prescriptions', description: 'Review prescription records and issuing status.' },
-    { title: 'Pharmacy Management', to: '/pharmacy', description: 'Manage medicine stock and pharmacy records.' },
-    { title: 'Laboratory Management', to: '/laboratory', description: 'Track laboratory requests, test results, and completion status.' },
-    { title: 'Radiology Management', to: '/radiology', description: 'Track radiology requests, schedules, images, and reports.' },
-    { title: 'Billing Management', to: '/billing', description: 'Review bills, payments, and outstanding balances.' },
-    { title: 'Inventory Management', to: '/inventory', description: 'Manage hospital supplies and equipment stock levels.' },
-    { title: 'Feedback and Complaints', to: '/feedback', description: 'Review patient feedback and complaint status.' },
-    { title: 'Notifications', to: '/notifications', description: 'Review system notifications for hospital activity.' },
-    { title: 'Reports and Analytics', to: '/reports', description: 'Open operational counts and revenue reports.' },
+    {
+        title: 'Patient Management',
+        to: '/patients',
+        description: 'Review patient profiles and hospital registration records.',
+    },
+    {
+        title: 'Staff User Management',
+        to: '/users',
+        description: 'Manage staff accounts for hospital departments and roles.',
+    },
+    {
+        title: 'Appointment Management',
+        to: '/appointments',
+        description: 'Review scheduled visits and appointment status.',
+    },
+    {
+        title: 'Queue Management',
+        to: '/queue',
+        description: 'Monitor waiting entries and patient service flow.',
+    },
+    {
+        title: 'Medical Records',
+        to: '/medical-records',
+        description: 'Open clinical documentation and patient history records.',
+    },
+    {
+        title: 'Prescriptions',
+        to: '/prescriptions',
+        description: 'Review prescription records and issuing status.',
+    },
+    {
+        title: 'Pharmacy Management',
+        to: '/pharmacy',
+        description: 'Manage medicine stock and pharmacy records.',
+    },
+    {
+        title: 'Laboratory Management',
+        to: '/laboratory',
+        description: 'Track laboratory requests, test results, and completion status.',
+    },
+    {
+        title: 'Radiology Management',
+        to: '/radiology',
+        description: 'Track radiology requests, schedules, images, and reports.',
+    },
+    {
+        title: 'Billing Management',
+        to: '/billing',
+        description: 'Review bills, payments, and outstanding balances.',
+    },
+    {
+        title: 'Inventory Management',
+        to: '/inventory',
+        description: 'Manage hospital supplies and equipment stock levels.',
+    },
+    {
+        title: 'Feedback and Complaints',
+        to: '/feedback',
+        description: 'Review patient feedback and complaint status.',
+    },
+    {
+        title: 'Notifications',
+        to: '/notifications',
+        description: 'Review system notifications for hospital activity.',
+    },
+    {
+        title: 'Reports and Analytics',
+        to: '/reports',
+        description: 'Open operational counts and revenue reports.',
+    },
 ];
 
 const getNumber = (value) => Number(value || 0);
 
 const formatCount = (value) => getNumber(value).toLocaleString();
 
-const formatAmount = (value) => getNumber(value).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
+const formatAmount = (value) =>
+    getNumber(value).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 
 const AdminDashboard = () => {
     const { user, token } = useAuth();
@@ -92,7 +149,10 @@ const AdminDashboard = () => {
                 <div>
                     <p style={styles.kicker}>Admin Dashboard</p>
                     <h1 style={styles.title}>{user?.name || 'Admin'} Control Center</h1>
-                    <p style={styles.subtitle}>Monitor live hospital activity, revenue totals, and management areas from one admin workspace.</p>
+                    <p style={styles.subtitle}>
+                        Monitor live hospital activity, revenue totals, and management areas from
+                        one admin workspace.
+                    </p>
                 </div>
             </section>
 
@@ -104,7 +164,9 @@ const AdminDashboard = () => {
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Hospital Summary</h2>
-                            <button type="button" style={styles.refreshButton} onClick={loadReport}>Refresh Report</button>
+                            <button type="button" style={styles.refreshButton} onClick={loadReport}>
+                                Refresh Report
+                            </button>
                         </div>
                         <div style={styles.summaryGrid}>
                             {summaryCards.map((card) => (
@@ -122,7 +184,9 @@ const AdminDashboard = () => {
                             {revenueCards.map((card) => (
                                 <article key={card.key} style={styles.revenueCard}>
                                     <p style={styles.cardLabel}>{card.label}</p>
-                                    <p style={styles.cardValue}>{formatAmount(revenue[card.key])}</p>
+                                    <p style={styles.cardValue}>
+                                        {formatAmount(revenue[card.key])}
+                                    </p>
                                 </article>
                             ))}
                         </div>
@@ -132,7 +196,9 @@ const AdminDashboard = () => {
                         <h2 style={styles.sectionTitle}>Quick Actions</h2>
                         <div style={styles.actionGrid}>
                             {quickActions.map((action) => (
-                                <Link key={action.label} to={action.to} style={styles.actionLink}>{action.label}</Link>
+                                <Link key={action.label} to={action.to} style={styles.actionLink}>
+                                    {action.label}
+                                </Link>
                             ))}
                         </div>
                     </section>
@@ -141,7 +207,11 @@ const AdminDashboard = () => {
                         <h2 style={styles.sectionTitle}>Management Sections</h2>
                         <div style={styles.managementGrid}>
                             {managementSections.map((section) => (
-                                <Link key={section.title} to={section.to} style={styles.managementLink}>
+                                <Link
+                                    key={section.title}
+                                    to={section.to}
+                                    style={styles.managementLink}
+                                >
                                     <article style={styles.managementCard}>
                                         <h3 style={styles.managementTitle}>{section.title}</h3>
                                         <p style={styles.managementText}>{section.description}</p>
@@ -252,11 +322,11 @@ const styles = {
         cursor: 'pointer',
     },
     stickyQuickActions: {
-    position: 'sticky',
-    top: '16px',
-    zIndex: 10,
-    boxShadow: '0 14px 34px rgba(15, 23, 42, 0.12)',
-},
+        position: 'sticky',
+        top: '16px',
+        zIndex: 10,
+        boxShadow: '0 14px 34px rgba(15, 23, 42, 0.12)',
+    },
     summaryGrid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',

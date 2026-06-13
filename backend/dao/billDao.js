@@ -6,7 +6,7 @@ class BillDao {
         const counter = await Counter.findByIdAndUpdate(
             'billNumber',
             { $inc: { sequenceValue: 1 } },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
+            { new: true, upsert: true, setDefaultsOnInsert: true },
         ).exec();
 
         return `BILL-${String(counter.sequenceValue).padStart(6, '0')}`;
@@ -67,7 +67,11 @@ class BillDao {
     }
 
     async getPharmacyBillByPrescription(prescriptionId) {
-        return Bill.findOne({ billType: 'pharmacy', 'items.sourceType': 'prescription', 'items.sourceId': prescriptionId })
+        return Bill.findOne({
+            billType: 'pharmacy',
+            'items.sourceType': 'prescription',
+            'items.sourceId': prescriptionId,
+        })
             .populate('patient', 'patientId fullName phone')
             .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
             .populate('doctor', 'name email role consultationFee roomNumber')
@@ -77,7 +81,11 @@ class BillDao {
     }
 
     async getServiceBillBySource(billType, sourceType, sourceId) {
-        return Bill.findOne({ billType, 'items.sourceType': sourceType, 'items.sourceId': sourceId })
+        return Bill.findOne({
+            billType,
+            'items.sourceType': sourceType,
+            'items.sourceId': sourceId,
+        })
             .populate('patient', 'patientId fullName phone')
             .populate('appointment', 'appointmentDate timeSlot status paymentStatus')
             .populate('doctor', 'name email role consultationFee roomNumber')
@@ -89,7 +97,13 @@ class BillDao {
     async sumBillTotals(match = {}) {
         const result = await Bill.aggregate([
             { $match: match },
-            { $group: { _id: null, totalAmount: { $sum: '$totalAmount' }, paidAmount: { $sum: '$paidAmount' } } },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: '$totalAmount' },
+                    paidAmount: { $sum: '$paidAmount' },
+                },
+            },
         ]);
 
         return result[0] || { totalAmount: 0, paidAmount: 0 };

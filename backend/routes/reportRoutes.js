@@ -1,8 +1,5 @@
 import express from 'express';
-import {
-    getDashboardReport,
-    getRevenueReport,
-} from '../controllers/reportController.js';
+import { getDashboardReport, getRevenueReport } from '../controllers/reportController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 

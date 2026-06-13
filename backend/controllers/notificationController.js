@@ -1,13 +1,20 @@
 import notificationService from '../services/notificationService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('cannot be empty') || error.message.includes('No notification')) return 400;
+    if (
+        error.message.includes('Invalid') ||
+        error.message.includes('required') ||
+        error.message.includes('cannot be empty') ||
+        error.message.includes('No notification')
+    )
+        return 400;
     return 500;
 };
 
@@ -53,7 +60,11 @@ export const getNotificationById = async (req, res) => {
 
 export const updateNotification = async (req, res) => {
     try {
-        const notification = await notificationService.updateNotification(req.params.id, req.body, req.user);
+        const notification = await notificationService.updateNotification(
+            req.params.id,
+            req.body,
+            req.user,
+        );
 
         return res.status(200).json({
             success: true,

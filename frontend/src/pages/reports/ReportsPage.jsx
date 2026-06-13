@@ -54,17 +54,25 @@ const ReportsPage = () => {
                 <div>
                     <p style={styles.kicker}>Reports and Analytics</p>
                     <h1 style={styles.title}>Operational Reports</h1>
-                    <p style={styles.subtitle}>Review live hospital counts and revenue totals from database records.</p>
+                    <p style={styles.subtitle}>
+                        Review live hospital counts and revenue totals from database records.
+                    </p>
                 </div>
                 <div style={styles.actions}>
-                    <button type="button" onClick={loadReport} style={styles.secondaryButton}>Refresh</button>
-                    <Link style={styles.secondaryLink} to="/dashboard">Dashboard</Link>
+                    <button type="button" onClick={loadReport} style={styles.secondaryButton}>
+                        Refresh
+                    </button>
+                    <Link style={styles.secondaryLink} to="/dashboard">
+                        Dashboard
+                    </Link>
                 </div>
             </section>
 
             {loading && <div style={styles.notice}>Loading reports.</div>}
             {!loading && error && <div style={styles.error}>{error}</div>}
-            {!loading && !error && !report && <div style={styles.notice}>No report data is currently available.</div>}
+            {!loading && !error && !report && (
+                <div style={styles.notice}>No report data is currently available.</div>
+            )}
 
             {!loading && !error && report && (
                 <>
@@ -95,22 +103,84 @@ const ReportsPage = () => {
 
 const styles = {
     page: { minHeight: '100vh', background: '#f8fafc', padding: '32px', color: '#0f172a' },
-    header: { display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-start', marginBottom: '24px' },
-    kicker: { margin: 0, color: '#2563eb', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '12px' },
+    header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '20px',
+        alignItems: 'flex-start',
+        marginBottom: '24px',
+    },
+    kicker: {
+        margin: 0,
+        color: '#2563eb',
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        fontSize: '12px',
+    },
     title: { margin: '8px 0', fontSize: '32px', fontWeight: 800 },
     subtitle: { margin: 0, color: '#475569', maxWidth: '680px' },
     actions: { display: 'flex', gap: '12px', flexWrap: 'wrap' },
-    secondaryLink: { textDecoration: 'none', border: '1px solid #cbd5e1', color: '#0f172a', background: '#ffffff', padding: '10px 14px', borderRadius: '10px', fontWeight: 700 },
-    secondaryButton: { border: '1px solid #cbd5e1', color: '#0f172a', background: '#ffffff', padding: '10px 14px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' },
-    notice: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px', color: '#475569' },
-    error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '14px', padding: '18px', color: '#991b1b' },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' },
-    card: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '18px' },
+    secondaryLink: {
+        textDecoration: 'none',
+        border: '1px solid #cbd5e1',
+        color: '#0f172a',
+        background: '#ffffff',
+        padding: '10px 14px',
+        borderRadius: '10px',
+        fontWeight: 700,
+    },
+    secondaryButton: {
+        border: '1px solid #cbd5e1',
+        color: '#0f172a',
+        background: '#ffffff',
+        padding: '10px 14px',
+        borderRadius: '10px',
+        fontWeight: 700,
+        cursor: 'pointer',
+    },
+    notice: {
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '14px',
+        padding: '18px',
+        color: '#475569',
+    },
+    error: {
+        background: '#fef2f2',
+        border: '1px solid #fecaca',
+        borderRadius: '14px',
+        padding: '18px',
+        color: '#991b1b',
+    },
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '16px',
+    },
+    card: {
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '18px',
+    },
     cardLabel: { margin: 0, color: '#64748b', fontWeight: 700 },
     cardValue: { margin: '10px 0 0', fontSize: '30px' },
-    revenueCard: { marginTop: '20px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '18px' },
+    revenueCard: {
+        marginTop: '20px',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '18px',
+    },
     sectionTitle: { margin: '0 0 12px', fontSize: '22px' },
-    revenueGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', color: '#334155', fontWeight: 700 },
+    revenueGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '12px',
+        color: '#334155',
+        fontWeight: 700,
+    },
 };
 
 export default ReportsPage;

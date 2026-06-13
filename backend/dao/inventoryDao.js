@@ -18,7 +18,9 @@ class InventoryDao {
     }
 
     async getInventoryItemByCode(itemCode) {
-        return InventoryItem.findOne({ itemCode: itemCode.trim().toUpperCase() }).populate('createdBy', 'name email role').exec();
+        return InventoryItem.findOne({ itemCode: itemCode.trim().toUpperCase() })
+            .populate('createdBy', 'name email role')
+            .exec();
     }
 
     async updateInventoryItem(id, updateData) {
@@ -36,7 +38,10 @@ class InventoryDao {
     }
 
     async countLowStockItems() {
-        return InventoryItem.countDocuments({ $expr: { $lte: ['$stockQuantity', '$reorderLevel'] }, status: 'active' }).exec();
+        return InventoryItem.countDocuments({
+            $expr: { $lte: ['$stockQuantity', '$reorderLevel'] },
+            status: 'active',
+        }).exec();
     }
 }
 

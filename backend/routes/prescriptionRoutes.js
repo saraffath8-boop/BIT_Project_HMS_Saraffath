@@ -20,8 +20,7 @@ router
     .get(authorizeRoles('admin', 'doctor', 'pharmacist'), getPrescriptions)
     .post(authorizeRoles('admin'), createPrescription);
 
-router
-    .get('/my', authorizeRoles('patient'), getMyPrescriptions);
+router.get('/my', authorizeRoles('patient'), getMyPrescriptions);
 
 router.patch('/:id/mark-paid', authorizeRoles('admin', 'pharmacist'), markPrescriptionPaid);
 

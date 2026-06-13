@@ -30,7 +30,9 @@ export const requestPatientPasswordReset = async (phone) => {
         const response = await axios.post(`${AUTH_URL}/forgot-password`, { phone });
         return response.data;
     } catch (error) {
-        throw new Error(getErrorMessage(error, 'Unable to request password reset'), { cause: error });
+        throw new Error(getErrorMessage(error, 'Unable to request password reset'), {
+            cause: error,
+        });
     }
 };
 

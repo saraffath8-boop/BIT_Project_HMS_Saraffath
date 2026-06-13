@@ -8,19 +8,23 @@ const notifyClinicalCompletion = async ({ request, title, message, type }) => {
     const doctorId = getId(request.doctor);
     const patient = await patientDao.getPatientByMongoId(patientId);
 
-    const recipients = [
-        doctorId,
-        patient?.userAccount?._id?.toString(),
-    ].filter(Boolean);
+    const recipients = [doctorId, patient?.userAccount?._id?.toString()].filter(Boolean);
 
-    await Promise.all([...new Set(recipients)].map((recipient) => notificationService.createNotification({
-        recipient,
-        title,
-        message,
-        type,
-        relatedPatient: patientId,
-        sendSms: false,
-    }, {})));
+    await Promise.all(
+        [...new Set(recipients)].map((recipient) =>
+            notificationService.createNotification(
+                {
+                    recipient,
+                    title,
+                    message,
+                    type,
+                    relatedPatient: patientId,
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
 };
 
 export default { notifyClinicalCompletion };

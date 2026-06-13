@@ -19,11 +19,21 @@ export const createPrescription = async (prescriptionData, token) => {
 };
 
 export const updatePrescription = async (id, prescriptionData, token) => {
-    return apiPatch(`${PRESCRIPTIONS_URL}/${id}`, prescriptionData, token, 'Unable to update prescription');
+    return apiPatch(
+        `${PRESCRIPTIONS_URL}/${id}`,
+        prescriptionData,
+        token,
+        'Unable to update prescription',
+    );
 };
 
 export const markPrescriptionPaid = async (id, pricingItems, token) => {
-    return apiPatch(`${PRESCRIPTIONS_URL}/${id}/mark-paid`, { pricingItems }, token, 'Unable to mark prescription as paid');
+    return apiPatch(
+        `${PRESCRIPTIONS_URL}/${id}/mark-paid`,
+        { pricingItems },
+        token,
+        'Unable to mark prescription as paid',
+    );
 };
 
 export const deletePrescription = async (id, token) => {

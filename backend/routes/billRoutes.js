@@ -18,14 +18,24 @@ router.use(protect);
 
 router
     .route('/')
-    .get(authorizeRoles('admin', 'receptionist', 'pharmacist', 'lab_technician', 'radiologist'), getBills)
+    .get(
+        authorizeRoles('admin', 'receptionist', 'pharmacist', 'lab_technician', 'radiologist'),
+        getBills,
+    )
     .post(authorizeRoles('admin'), createBill);
 
-router
-    .get('/my', authorizeRoles('patient'), getMyBills);
+router.get('/my', authorizeRoles('patient'), getMyBills);
 
-router.get('/pending-decisions', authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'), getPendingPatientDecisions);
-router.post('/patient-decisions', authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'), processPatientDecisions);
+router.get(
+    '/pending-decisions',
+    authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'),
+    getPendingPatientDecisions,
+);
+router.post(
+    '/patient-decisions',
+    authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'),
+    processPatientDecisions,
+);
 
 router
     .route('/:id')

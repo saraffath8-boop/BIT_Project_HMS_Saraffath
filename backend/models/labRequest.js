@@ -27,7 +27,7 @@ const labTestSchema = new mongoose.Schema(
             default: '',
         },
     },
-    { _id: true }
+    { _id: true },
 );
 
 const labRequestSchema = new mongoose.Schema(
@@ -63,7 +63,14 @@ const labRequestSchema = new mongoose.Schema(
         },
         patientDecisionStatus: {
             type: String,
-            enum: ['not_required', 'pending_patient_decision', 'accepted', 'declined', 'paid', 'rejected_by_patient'],
+            enum: [
+                'not_required',
+                'pending_patient_decision',
+                'accepted',
+                'declined',
+                'paid',
+                'rejected_by_patient',
+            ],
             default: 'not_required',
         },
         paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
@@ -76,7 +83,7 @@ const labRequestSchema = new mongoose.Schema(
         },
         completedAt: Date,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 labRequestSchema.index({ patient: 1, createdAt: -1 });

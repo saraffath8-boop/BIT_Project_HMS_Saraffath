@@ -111,8 +111,10 @@ const createMedicine = async (data, user) => {
         category: toCleanString(data.category) || '',
         manufacturer: toCleanString(data.manufacturer) || '',
         unitPrice: toNumber(data.unitPrice, 'unitPrice'),
-        stockQuantity: data.stockQuantity === undefined ? 0 : toNumber(data.stockQuantity, 'stockQuantity'),
-        reorderLevel: data.reorderLevel === undefined ? 10 : toNumber(data.reorderLevel, 'reorderLevel'),
+        stockQuantity:
+            data.stockQuantity === undefined ? 0 : toNumber(data.stockQuantity, 'stockQuantity'),
+        reorderLevel:
+            data.reorderLevel === undefined ? 10 : toNumber(data.reorderLevel, 'reorderLevel'),
         expiryDate: toOptionalDate(data.expiryDate, 'expiryDate'),
         status: data.status || 'active',
         createdBy: user.id,

@@ -54,7 +54,14 @@ const radiologyRequestSchema = new mongoose.Schema(
         },
         patientDecisionStatus: {
             type: String,
-            enum: ['not_required', 'pending_patient_decision', 'accepted', 'declined', 'paid', 'rejected_by_patient'],
+            enum: [
+                'not_required',
+                'pending_patient_decision',
+                'accepted',
+                'declined',
+                'paid',
+                'rejected_by_patient',
+            ],
             default: 'not_required',
         },
         paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
@@ -67,13 +74,14 @@ const radiologyRequestSchema = new mongoose.Schema(
         },
         completedAt: Date,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 radiologyRequestSchema.index({ patient: 1, createdAt: -1 });
 radiologyRequestSchema.index({ doctor: 1, createdAt: -1 });
 radiologyRequestSchema.index({ status: 1 });
 
-const RadiologyRequest = mongoose.models.RadiologyRequest || mongoose.model('RadiologyRequest', radiologyRequestSchema);
+const RadiologyRequest =
+    mongoose.models.RadiologyRequest || mongoose.model('RadiologyRequest', radiologyRequestSchema);
 
 export default RadiologyRequest;

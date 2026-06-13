@@ -10,11 +10,15 @@ class DepartmentDao {
     }
 
     async ensureDepartments(departments) {
-        return Promise.all(departments.map((department) => Department.updateOne(
-            { name: department.name },
-            { $setOnInsert: department },
-            { upsert: true }
-        ).exec()));
+        return Promise.all(
+            departments.map((department) =>
+                Department.updateOne(
+                    { name: department.name },
+                    { $setOnInsert: department },
+                    { upsert: true },
+                ).exec(),
+            ),
+        );
     }
 }
 

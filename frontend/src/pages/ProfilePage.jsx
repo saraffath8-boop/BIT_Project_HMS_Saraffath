@@ -4,7 +4,11 @@ import { Badge } from '../components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { getDashboardPath, useAuth } from '../context/AuthContext';
 
-const formatRole = (role = '') => role.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+const formatRole = (role = '') =>
+    role
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 
 const formatDate = (value) => {
     if (!value) return 'Not recorded';
@@ -22,21 +26,42 @@ const Detail = ({ label, value }) => (
 export default function ProfilePage() {
     const { user } = useAuth();
     const dashboardPath = getDashboardPath(user?.role);
-    const initials = user?.name?.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase() || 'HM';
+    const initials =
+        user?.name
+            ?.split(' ')
+            .map((part) => part[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase() || 'HM';
 
     return (
         <main className="mx-auto max-w-4xl space-y-6">
             <section className="flex flex-wrap items-start justify-between gap-4">
-                <div><p className="page-kicker">Account</p><h1 className="page-title">My Profile</h1><p className="page-description">Your signed-in account and role information.</p></div>
-                <Link to={dashboardPath} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"><ArrowLeft className="size-4" />Dashboard</Link>
+                <div>
+                    <p className="page-kicker">Account</p>
+                    <h1 className="page-title">My Profile</h1>
+                    <p className="page-description">Your signed-in account and role information.</p>
+                </div>
+                <Link
+                    to={dashboardPath}
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                    <ArrowLeft className="size-4" />
+                    Dashboard
+                </Link>
             </section>
 
             <Card>
                 <CardHeader className="flex-row items-center gap-4">
-                    <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-cyan-700 text-xl font-bold text-white">{initials}</div>
+                    <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-cyan-700 text-xl font-bold text-white">
+                        {initials}
+                    </div>
                     <div className="min-w-0">
                         <CardTitle className="truncate">{user?.name || 'User'}</CardTitle>
-                        <CardDescription className="mt-1 flex flex-wrap items-center gap-2"><Badge>{formatRole(user?.role)}</Badge>{user?.isActive !== false && <Badge variant="success">Active</Badge>}</CardDescription>
+                        <CardDescription className="mt-1 flex flex-wrap items-center gap-2">
+                            <Badge>{formatRole(user?.role)}</Badge>
+                            {user?.isActive !== false && <Badge variant="success">Active</Badge>}
+                        </CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -51,10 +76,26 @@ export default function ProfilePage() {
                         <Detail label="Role" value={formatRole(user?.role)} />
                     </div>
                     <div className="flex flex-wrap gap-4 border-t border-slate-200 pt-5 text-sm text-slate-600">
-                        <span className="inline-flex items-center gap-2"><UserRound className="size-4 text-cyan-700" />Personal account</span>
-                        <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-emerald-600" />Secure role-based access</span>
-                        {user?.email && <span className="inline-flex items-center gap-2"><Mail className="size-4 text-cyan-700" />{user.email}</span>}
-                        {user?.phone && <span className="inline-flex items-center gap-2"><Phone className="size-4 text-cyan-700" />{user.phone}</span>}
+                        <span className="inline-flex items-center gap-2">
+                            <UserRound className="size-4 text-cyan-700" />
+                            Personal account
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                            <ShieldCheck className="size-4 text-emerald-600" />
+                            Secure role-based access
+                        </span>
+                        {user?.email && (
+                            <span className="inline-flex items-center gap-2">
+                                <Mail className="size-4 text-cyan-700" />
+                                {user.email}
+                            </span>
+                        )}
+                        {user?.phone && (
+                            <span className="inline-flex items-center gap-2">
+                                <Phone className="size-4 text-cyan-700" />
+                                {user.phone}
+                            </span>
+                        )}
                     </div>
                 </CardContent>
             </Card>

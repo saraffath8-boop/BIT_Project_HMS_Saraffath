@@ -47,7 +47,7 @@ const feedbackSchema = new mongoose.Schema(
         },
         respondedAt: Date,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 feedbackSchema.index({ submittedBy: 1, createdAt: -1 });

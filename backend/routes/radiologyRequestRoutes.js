@@ -20,8 +20,7 @@ router
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'radiologist'), getRadiologyRequests)
     .post(authorizeRoles('admin'), createRadiologyRequest);
 
-router
-    .get('/my', authorizeRoles('patient'), getMyRadiologyRequests);
+router.get('/my', authorizeRoles('patient'), getMyRadiologyRequests);
 
 router.patch('/:id/mark-paid', authorizeRoles('admin', 'radiologist'), markRadiologyRequestPaid);
 

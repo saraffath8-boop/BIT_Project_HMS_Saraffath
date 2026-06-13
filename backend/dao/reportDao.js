@@ -29,12 +29,20 @@ class ReportDao {
             User.countDocuments({ role: { $ne: 'patient' } }).exec(),
             Appointment.countDocuments().exec(),
             QueueEntry.countDocuments({ status: 'waiting' }).exec(),
-            Prescription.countDocuments({ status: { $in: ['pending', 'partially_issued'] } }).exec(),
+            Prescription.countDocuments({
+                status: { $in: ['pending', 'partially_issued'] },
+            }).exec(),
             LabRequest.countDocuments({ status: { $ne: 'completed' } }).exec(),
             RadiologyRequest.countDocuments({ status: { $ne: 'completed' } }).exec(),
             Bill.countDocuments({ status: { $in: ['unpaid', 'partially_paid'] } }).exec(),
-            Medicine.countDocuments({ $expr: { $lte: ['$stockQuantity', '$reorderLevel'] }, status: 'active' }).exec(),
-            InventoryItem.countDocuments({ $expr: { $lte: ['$stockQuantity', '$reorderLevel'] }, status: 'active' }).exec(),
+            Medicine.countDocuments({
+                $expr: { $lte: ['$stockQuantity', '$reorderLevel'] },
+                status: 'active',
+            }).exec(),
+            InventoryItem.countDocuments({
+                $expr: { $lte: ['$stockQuantity', '$reorderLevel'] },
+                status: 'active',
+            }).exec(),
             Feedback.countDocuments({ status: { $in: ['open', 'in_review'] } }).exec(),
         ]);
 
@@ -56,7 +64,13 @@ class ReportDao {
     async getRevenueSummary(match = {}) {
         const result = await Bill.aggregate([
             { $match: match },
-            { $group: { _id: null, totalAmount: { $sum: '$totalAmount' }, paidAmount: { $sum: '$paidAmount' } } },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: '$totalAmount' },
+                    paidAmount: { $sum: '$paidAmount' },
+                },
+            },
         ]);
 
         return result[0] || { totalAmount: 0, paidAmount: 0 };

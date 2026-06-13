@@ -7,7 +7,7 @@ class QueueDao {
         const counter = await QueueCounter.findByIdAndUpdate(
             counterId,
             { $inc: { sequenceValue: 1 } },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
+            { new: true, upsert: true, setDefaultsOnInsert: true },
         ).exec();
 
         return `Q-${datePart}-${String(counter.sequenceValue).padStart(3, '0')}`;

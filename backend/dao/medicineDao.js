@@ -18,7 +18,9 @@ class MedicineDao {
     }
 
     async getMedicineBySku(sku) {
-        return Medicine.findOne({ sku: sku.trim().toUpperCase() }).populate('createdBy', 'name email role').exec();
+        return Medicine.findOne({ sku: sku.trim().toUpperCase() })
+            .populate('createdBy', 'name email role')
+            .exec();
     }
 
     async updateMedicine(id, updateData) {
@@ -36,7 +38,10 @@ class MedicineDao {
     }
 
     async countLowStockMedicines() {
-        return Medicine.countDocuments({ $expr: { $lte: ['$stockQuantity', '$reorderLevel'] }, status: 'active' }).exec();
+        return Medicine.countDocuments({
+            $expr: { $lte: ['$stockQuantity', '$reorderLevel'] },
+            status: 'active',
+        }).exec();
     }
 }
 

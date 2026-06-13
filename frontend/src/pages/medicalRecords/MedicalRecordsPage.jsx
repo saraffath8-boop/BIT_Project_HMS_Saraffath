@@ -10,7 +10,11 @@ const MedicalRecordsPage = () => (
         description="Review patient consultation notes, diagnoses, vital signs, and follow-up status."
         loadData={getMedicalRecords}
         itemsKey="medicalRecords"
-        createAction={{ to: '/medical-records/new', label: 'Add Medical Record', allowedRoles: ['admin', 'doctor'] }}
+        createAction={{
+            to: '/medical-records/new',
+            label: 'Add Medical Record',
+            allowedRoles: ['admin', 'doctor'],
+        }}
         emptyMessage="No medical records are currently available."
         columns={[
             { label: 'Patient', render: (item) => getPersonName(item.patient) },
@@ -18,7 +22,18 @@ const MedicalRecordsPage = () => (
             { label: 'Diagnosis', key: 'diagnosis' },
             { label: 'Status', key: 'status' },
             { label: 'Follow Up', render: (item) => formatDateTime(item.followUpDate) },
-            { label: 'Report', render: (item) => <button className="font-semibold text-cyan-700" type="button" onClick={() => downloadMedicalRecordPdf(item)}>Download PDF</button> },
+            {
+                label: 'Report',
+                render: (item) => (
+                    <button
+                        className="font-semibold text-cyan-700"
+                        type="button"
+                        onClick={() => downloadMedicalRecordPdf(item)}
+                    >
+                        Download PDF
+                    </button>
+                ),
+            },
         ]}
     />
 );

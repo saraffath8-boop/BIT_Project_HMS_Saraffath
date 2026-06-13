@@ -1,13 +1,20 @@
 import queueService from '../services/queueService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('cannot be empty') || error.message.includes('No queue')) return 400;
+    if (
+        error.message.includes('Invalid') ||
+        error.message.includes('required') ||
+        error.message.includes('cannot be empty') ||
+        error.message.includes('No queue')
+    )
+        return 400;
     return 500;
 };
 

@@ -10,7 +10,15 @@ const billItemSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ['consultation', 'medicine', 'laboratory', 'radiology', 'ward', 'procedure', 'other'],
+            enum: [
+                'consultation',
+                'medicine',
+                'laboratory',
+                'radiology',
+                'ward',
+                'procedure',
+                'other',
+            ],
             default: 'other',
         },
         quantity: {
@@ -39,7 +47,7 @@ const billItemSchema = new mongoose.Schema(
             default: null,
         },
     },
-    { _id: true }
+    { _id: true },
 );
 
 const paymentSchema = new mongoose.Schema(
@@ -69,7 +77,7 @@ const paymentSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { _id: true }
+    { _id: true },
 );
 
 const billSchema = new mongoose.Schema(
@@ -144,7 +152,7 @@ const billSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 billSchema.index({ patient: 1, createdAt: -1 });

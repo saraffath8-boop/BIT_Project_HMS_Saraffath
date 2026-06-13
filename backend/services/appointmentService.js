@@ -13,7 +13,19 @@ import notificationService from './notificationService.js';
 import billService from './billService.js';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
-const APPOINTMENT_STATUSES = ['requested', 'pending_confirmation', 'scheduled', 'confirmed', 'paid', 'checked_in', 'in_consultation', 'pending_patient_decision', 'completed', 'cancelled', 'no_show'];
+const APPOINTMENT_STATUSES = [
+    'requested',
+    'pending_confirmation',
+    'scheduled',
+    'confirmed',
+    'paid',
+    'checked_in',
+    'in_consultation',
+    'pending_patient_decision',
+    'completed',
+    'cancelled',
+    'no_show',
+];
 
 const sanitizeAppointment = (appointment) => ({
     id: appointment._id.toString(),
@@ -64,7 +76,8 @@ const validateDoctorExists = async (doctorId) => {
     }
 };
 
-const serviceError = (message, statusCode = 400) => Object.assign(new Error(message), { statusCode });
+const serviceError = (message, statusCode = 400) =>
+    Object.assign(new Error(message), { statusCode });
 
 const buildAppointmentQuery = (queryParams, user) => {
     const query = {};
@@ -143,17 +156,32 @@ const createAppointment = async (data, user) => {
     return sanitizeAppointment(populatedAppointment);
 };
 
-const createRequestedAppointment = async ({ patient, doctor, department, appointmentDate, timeSlot, reason, user = null }) => {
-    if (patient.status === 'inactive') throw serviceError('Inactive patient cannot book an appointment', 403);
-    if (!department || department.status !== 'active') throw serviceError('Department not found', 404);
+const createRequestedAppointment = async ({
+    patient,
+    doctor,
+    department,
+    appointmentDate,
+    timeSlot,
+    reason,
+    user = null,
+}) => {
+    if (patient.status === 'inactive')
+        throw serviceError('Inactive patient cannot book an appointment', 403);
+    if (!department || department.status !== 'active')
+        throw serviceError('Department not found', 404);
     if (!doctor.department || doctor.department._id.toString() !== department._id.toString()) {
         throw serviceError('Selected doctor does not belong to the selected department');
     }
 
     const availableDays = doctor.availableDays?.length ? doctor.availableDays : [1, 2, 3, 4, 5];
-    const availableTimeSlots = doctor.availableTimeSlots?.length ? doctor.availableTimeSlots : ['09:00', '10:00', '11:00', '14:00', '15:00'];
+    const availableTimeSlots = doctor.availableTimeSlots?.length
+        ? doctor.availableTimeSlots
+        : ['09:00', '10:00', '11:00', '14:00', '15:00'];
     const selectedDateTime = buildAppointmentDate(appointmentDate, timeSlot);
-    if (!availableDays.includes(new Date(`${appointmentDate}T00:00:00`).getDay()) || !availableTimeSlots.includes(timeSlot)) {
+    if (
+        !availableDays.includes(new Date(`${appointmentDate}T00:00:00`).getDay()) ||
+        !availableTimeSlots.includes(timeSlot)
+    ) {
         throw serviceError('Doctor is not available for this time slot', 409);
     }
 
@@ -176,7 +204,8 @@ const createRequestedAppointment = async ({ patient, doctor, department, appoint
         });
         return sanitizeAppointment(await appointmentDao.getAppointmentById(appointment._id));
     } catch (error) {
-        if (error.code === 11000) throw serviceError('Doctor is not available for this time slot', 409);
+        if (error.code === 11000)
+            throw serviceError('Doctor is not available for this time slot', 409);
         throw error;
     }
 };
@@ -190,14 +219,29 @@ const getOrCreateNoAccountPatient = async (details = {}, user = null) => {
     const emergencyContactName = details.emergencyContactName?.trim();
     const emergencyContactPhone = details.emergencyContactPhone?.trim();
 
-    if (!fullName || !phone || !dateOfBirth || !gender || !address || !emergencyContactName || !emergencyContactPhone) {
-        throw serviceError('Full name, phone, date of birth, gender, address, and emergency contact details are required');
+    if (
+        !fullName ||
+        !phone ||
+        !dateOfBirth ||
+        !gender ||
+        !address ||
+        !emergencyContactName ||
+        !emergencyContactPhone
+    ) {
+        throw serviceError(
+            'Full name, phone, date of birth, gender, address, and emergency contact details are required',
+        );
     }
     if (!PATIENT_NAME_REGEX.test(fullName) || !PATIENT_NAME_REGEX.test(emergencyContactName)) {
         throw serviceError('Patient and emergency contact names contain invalid characters');
     }
-    if (!SRI_LANKAN_PHONE_REGEX.test(phone) || !SRI_LANKAN_PHONE_REGEX.test(emergencyContactPhone)) {
-        throw serviceError('Phone numbers must be valid Sri Lankan 10-digit numbers starting with 0');
+    if (
+        !SRI_LANKAN_PHONE_REGEX.test(phone) ||
+        !SRI_LANKAN_PHONE_REGEX.test(emergencyContactPhone)
+    ) {
+        throw serviceError(
+            'Phone numbers must be valid Sri Lankan 10-digit numbers starting with 0',
+        );
     }
     if (!['male', 'female', 'other'].includes(gender)) throw serviceError('Invalid gender');
 
@@ -218,9 +262,10 @@ const getOrCreateNoAccountPatient = async (details = {}, user = null) => {
         emergencyContactPhone,
         createdBy: user?.id || null,
         userAccount: null,
-        medicalNotes: user?.role === 'receptionist'
-            ? 'Patient profile created by receptionist during appointment booking.'
-            : 'Patient profile created from public appointment booking.',
+        medicalNotes:
+            user?.role === 'receptionist'
+                ? 'Patient profile created by receptionist during appointment booking.'
+                : 'Patient profile created from public appointment booking.',
     });
 };
 
@@ -248,9 +293,17 @@ const requestPublicAppointment = async (data) => {
 };
 
 const createReceptionistAppointmentRequest = async (data, user) => {
-    const { patient: patientInput, doctor: doctorId, department: departmentId, appointmentDate, timeSlot } = data;
+    const {
+        patient: patientInput,
+        doctor: doctorId,
+        department: departmentId,
+        appointmentDate,
+        timeSlot,
+    } = data;
     if (!patientInput || !doctorId || !departmentId || !appointmentDate || !timeSlot) {
-        throw serviceError('patient, doctor, department, appointmentDate, and timeSlot are required');
+        throw serviceError(
+            'patient, doctor, department, appointmentDate, and timeSlot are required',
+        );
     }
     if (!mongoose.Types.ObjectId.isValid(departmentId)) throw serviceError('Invalid department id');
     if (typeof patientInput === 'string') requireObjectId(patientInput, 'patient id');
@@ -303,68 +356,103 @@ const requestAppointment = async (data, user) => {
 const createConsultation = async (appointmentId, data, user) => {
     const appointment = await getAppointmentById(appointmentId, user);
     if (appointment.status !== 'in_consultation') {
-        throw serviceError('Patient must be marked as checked before creating the diagnosis report');
+        throw serviceError(
+            'Patient must be marked as checked before creating the diagnosis report',
+        );
     }
     const existingRecord = await medicalRecordDao.getMedicalRecordByAppointment(appointmentId);
-    if (existingRecord) throw serviceError('A medical record already exists for this appointment', 409);
+    if (existingRecord)
+        throw serviceError('A medical record already exists for this appointment', 409);
     const patientId = appointment.patient?._id?.toString() || appointment.patient?.id;
     if (!patientId) throw serviceError('Appointment patient not found', 404);
-    if (!data.medicalRecord?.diagnosis?.trim()) throw serviceError('Medical record diagnosis is required');
-    if (data.prescription?.items?.some((item) => !item.medicineName?.trim() || !item.dosage?.trim() || !item.frequency?.trim() || !item.duration?.trim())) {
-        throw serviceError('Every prescription item requires medicine name, dosage, frequency, and duration');
+    if (!data.medicalRecord?.diagnosis?.trim())
+        throw serviceError('Medical record diagnosis is required');
+    if (
+        data.prescription?.items?.some(
+            (item) =>
+                !item.medicineName?.trim() ||
+                !item.dosage?.trim() ||
+                !item.frequency?.trim() ||
+                !item.duration?.trim(),
+        )
+    ) {
+        throw serviceError(
+            'Every prescription item requires medicine name, dosage, frequency, and duration',
+        );
     }
     if (data.labRequest?.tests?.some((test) => !test.testName?.trim())) {
         throw serviceError('Every lab request requires a test name');
     }
 
-    const medicalRecord = await medicalRecordService.createMedicalRecord({
-        ...data.medicalRecord,
-        patient: patientId,
-        appointment: appointmentId,
-        status: 'completed',
-    }, user);
+    const medicalRecord = await medicalRecordService.createMedicalRecord(
+        {
+            ...data.medicalRecord,
+            patient: patientId,
+            appointment: appointmentId,
+            status: 'completed',
+        },
+        user,
+    );
 
     const requests = {};
     if (data.prescription?.items?.length) {
-        requests.prescription = await prescriptionService.createPrescription({
-            ...data.prescription,
-            patient: patientId,
-            medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'not_required',
-        }, user);
+        requests.prescription = await prescriptionService.createPrescription(
+            {
+                ...data.prescription,
+                patient: patientId,
+                medicalRecord: medicalRecord.id,
+                patientDecisionStatus: 'not_required',
+            },
+            user,
+        );
     }
     if (data.labRequest?.tests?.length) {
-        requests.labRequest = await labRequestService.createLabRequest({
-            ...data.labRequest,
-            patient: patientId,
-            medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'not_required',
-        }, user);
+        requests.labRequest = await labRequestService.createLabRequest(
+            {
+                ...data.labRequest,
+                patient: patientId,
+                medicalRecord: medicalRecord.id,
+                patientDecisionStatus: 'not_required',
+            },
+            user,
+        );
     }
     if (data.radiologyRequest?.scanType?.trim()) {
-        requests.radiologyRequest = await radiologyRequestService.createRadiologyRequest({
-            ...data.radiologyRequest,
-            patient: patientId,
-            medicalRecord: medicalRecord.id,
-            patientDecisionStatus: 'not_required',
-        }, user);
+        requests.radiologyRequest = await radiologyRequestService.createRadiologyRequest(
+            {
+                ...data.radiologyRequest,
+                patient: patientId,
+                medicalRecord: medicalRecord.id,
+                patientDecisionStatus: 'not_required',
+            },
+            user,
+        );
     }
 
-    const updatedAppointment = sanitizeAppointment(await appointmentDao.updateAppointment(appointmentId, { status: 'completed' }));
+    const updatedAppointment = sanitizeAppointment(
+        await appointmentDao.updateAppointment(appointmentId, { status: 'completed' }),
+    );
     const cashierRequests = [
         requests.labRequest && 'laboratory request',
         requests.radiologyRequest && 'scan request',
     ].filter(Boolean);
     if (cashierRequests.length) {
         const recipients = await userDao.getUsers({ role: 'receptionist', isActive: true });
-        await Promise.all(recipients.map((recipient) => notificationService.createNotification({
-            recipient: recipient._id.toString(),
-            title: 'Clinical request awaiting payment',
-            message: `${appointment.patient.fullName} has ${cashierRequests.join(' and ')} awaiting payment.`,
-            type: 'billing',
-            relatedPatient: patientId,
-            sendSms: false,
-        }, {})));
+        await Promise.all(
+            recipients.map((recipient) =>
+                notificationService.createNotification(
+                    {
+                        recipient: recipient._id.toString(),
+                        title: 'Clinical request awaiting payment',
+                        message: `${appointment.patient.fullName} has ${cashierRequests.join(' and ')} awaiting payment.`,
+                        type: 'billing',
+                        relatedPatient: patientId,
+                        sendSms: false,
+                    },
+                    {},
+                ),
+            ),
+        );
     }
 
     return { appointment: updatedAppointment, medicalRecord, requests };
@@ -386,16 +474,22 @@ const getReceptionistPendingAppointments = async () => {
 const getReceptionistConfirmedQueue = async (user = {}) => {
     // Older paid appointments used "paid" as the clinical status. Keep them
     // visible until they move into consultation, while new payments remain confirmed.
-    const statuses = user.role === 'doctor' ? ['confirmed', 'paid', 'in_consultation'] : ['confirmed', 'paid'];
+    const statuses =
+        user.role === 'doctor' ? ['confirmed', 'paid', 'in_consultation'] : ['confirmed', 'paid'];
     const [appointments, reportedAppointmentIds] = await Promise.all([
         appointmentDao.getAppointments({ status: { $in: statuses } }),
         medicalRecordDao.getAppointmentIdsWithRecords(),
     ]);
     const reportedIds = new Set(reportedAppointmentIds.map((id) => id.toString()));
-    const eligibleAppointments = appointments.filter((appointment) => !reportedIds.has(appointment._id.toString()));
-    const roleAppointments = user.role === 'doctor'
-        ? eligibleAppointments.filter((appointment) => appointment.doctor?._id.toString() === user.id)
-        : eligibleAppointments;
+    const eligibleAppointments = appointments.filter(
+        (appointment) => !reportedIds.has(appointment._id.toString()),
+    );
+    const roleAppointments =
+        user.role === 'doctor'
+            ? eligibleAppointments.filter(
+                  (appointment) => appointment.doctor?._id.toString() === user.id,
+              )
+            : eligibleAppointments;
     return roleAppointments
         .sort((first, second) => new Date(first.appointmentDate) - new Date(second.appointmentDate))
         .map((appointment, index) => ({
@@ -409,7 +503,9 @@ const markAppointmentChecked = async (id, user) => {
     if (!['confirmed', 'paid'].includes(appointment.status)) {
         throw serviceError('Only confirmed appointments can be marked as checked', 409);
     }
-    return sanitizeAppointment(await appointmentDao.updateAppointment(id, { status: 'in_consultation' }));
+    return sanitizeAppointment(
+        await appointmentDao.updateAppointment(id, { status: 'in_consultation' }),
+    );
 };
 
 const confirmAppointment = async (id, user) => {
@@ -418,7 +514,10 @@ const confirmAppointment = async (id, user) => {
         throw serviceError('Only pending appointment requests can be confirmed', 409);
     }
 
-    const confirmedAppointment = await appointmentDao.updateAppointment(id, { status: 'confirmed', confirmedAt: new Date() });
+    const confirmedAppointment = await appointmentDao.updateAppointment(id, {
+        status: 'confirmed',
+        confirmedAt: new Date(),
+    });
     return sanitizeAppointment(confirmedAppointment);
 };
 

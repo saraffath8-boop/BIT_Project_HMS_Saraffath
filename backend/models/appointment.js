@@ -35,7 +35,19 @@ const appointmentSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['requested', 'pending_confirmation', 'scheduled', 'confirmed', 'paid', 'checked_in', 'in_consultation', 'pending_patient_decision', 'completed', 'cancelled', 'no_show'],
+            enum: [
+                'requested',
+                'pending_confirmation',
+                'scheduled',
+                'confirmed',
+                'paid',
+                'checked_in',
+                'in_consultation',
+                'pending_patient_decision',
+                'completed',
+                'cancelled',
+                'no_show',
+            ],
             default: 'scheduled',
         },
         timeSlot: { type: String, trim: true, default: '' },
@@ -59,7 +71,7 @@ const appointmentSchema = new mongoose.Schema(
             default: null,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 appointmentSchema.index({ patient: 1, appointmentDate: -1 });

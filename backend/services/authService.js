@@ -13,14 +13,14 @@ const PUBLIC_SIGNUP_ROLE = 'patient';
 const OTP_EXPIRY_MINUTES = 10;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 const MAX_OTP_ATTEMPTS = 5;
-const PASSWORD_RESET_REQUEST_MESSAGE = 'If an active patient account uses this mobile number, a password reset OTP has been sent.';
+const PASSWORD_RESET_REQUEST_MESSAGE =
+    'If an active patient account uses this mobile number, a password reset OTP has been sent.';
 
 const serviceError = (message, statusCode) => Object.assign(new Error(message), { statusCode });
-const shouldShowDevelopmentOtp = () => (
-    process.env.NODE_ENV !== 'production'
-    && (process.env.SMS_PROVIDER || 'log').toLowerCase() === 'log'
-    && process.env.SHOW_DEVELOPMENT_OTP === 'true'
-);
+const shouldShowDevelopmentOtp = () =>
+    process.env.NODE_ENV !== 'production' &&
+    (process.env.SMS_PROVIDER || 'log').toLowerCase() === 'log' &&
+    process.env.SHOW_DEVELOPMENT_OTP === 'true';
 
 const hashOtp = (otp) => {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
@@ -66,15 +66,39 @@ const generateToken = (user) => {
             role: user.role,
         },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+        { expiresIn: process.env.JWT_EXPIRES_IN || '1d' },
     );
 };
 
-const signupUser = async ({ firstName, lastName, email, phone, nic, dob, gender, password, address, emergencyContactName, emergencyContactPhone }) => {
-    const validationError = validateUserCreateInput({ firstName, lastName, email, phone, nic, dob, gender, password, role: PUBLIC_SIGNUP_ROLE });
+const signupUser = async ({
+    firstName,
+    lastName,
+    email,
+    phone,
+    nic,
+    dob,
+    gender,
+    password,
+    address,
+    emergencyContactName,
+    emergencyContactPhone,
+}) => {
+    const validationError = validateUserCreateInput({
+        firstName,
+        lastName,
+        email,
+        phone,
+        nic,
+        dob,
+        gender,
+        password,
+        role: PUBLIC_SIGNUP_ROLE,
+    });
     if (validationError) throw new Error(validationError);
     if (!address || !emergencyContactName || !emergencyContactPhone) {
-        throw new Error('Address, emergency contact name, and emergency contact phone are required');
+        throw new Error(
+            'Address, emergency contact name, and emergency contact phone are required',
+        );
     }
     const normalizedEmail = normalizeEmail(email);
     const normalizedNic = normalizeNic(nic);
@@ -103,7 +127,11 @@ const signupUser = async ({ firstName, lastName, email, phone, nic, dob, gender,
     });
 
     try {
-        await patientService.createPatientForUser(user, { address, emergencyContactName, emergencyContactPhone });
+        await patientService.createPatientForUser(user, {
+            address,
+            emergencyContactName,
+            emergencyContactPhone,
+        });
     } catch (error) {
         await userDao.deleteUser(user._id);
         throw error;
@@ -191,7 +219,13 @@ const resetPatientPassword = async ({ phone, otp, newPassword }) => {
     const user = await userDao.getUserByPhoneForPasswordReset(normalizedPhone);
     const invalidOtpError = () => serviceError('The OTP is invalid or has expired.', 400);
 
-    if (!user || user.role !== PUBLIC_SIGNUP_ROLE || !user.isActive || !user.passwordResetOtpHash || !user.passwordResetOtpExpiresAt) {
+    if (
+        !user ||
+        user.role !== PUBLIC_SIGNUP_ROLE ||
+        !user.isActive ||
+        !user.passwordResetOtpHash ||
+        !user.passwordResetOtpExpiresAt
+    ) {
         throw invalidOtpError();
     }
 
@@ -212,7 +246,9 @@ const resetPatientPassword = async ({ phone, otp, newPassword }) => {
     }
 
     if (!otpMatches(String(otp), user.passwordResetOtpHash)) {
-        await userDao.updateUser(user._id, { passwordResetOtpAttempts: (user.passwordResetOtpAttempts || 0) + 1 });
+        await userDao.updateUser(user._id, {
+            passwordResetOtpAttempts: (user.passwordResetOtpAttempts || 0) + 1,
+        });
         throw invalidOtpError();
     }
 
@@ -261,7 +297,10 @@ const verifyTokenAndGetUser = async (token) => {
         throw new Error('Invalid user role');
     }
 
-    if (user.passwordChangedAt && decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+    if (
+        user.passwordChangedAt &&
+        decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
+    ) {
         throw new Error('Password changed after this token was issued');
     }
 

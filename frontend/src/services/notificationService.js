@@ -15,11 +15,21 @@ export const createNotification = async (notificationData, token) => {
 };
 
 export const updateNotification = async (id, notificationData, token) => {
-    return apiPatch(`${NOTIFICATIONS_URL}/${id}`, notificationData, token, 'Unable to update notification');
+    return apiPatch(
+        `${NOTIFICATIONS_URL}/${id}`,
+        notificationData,
+        token,
+        'Unable to update notification',
+    );
 };
 
 export const markNotificationAsRead = async (id, token) => {
-    return apiPatch(`${NOTIFICATIONS_URL}/${id}`, { isRead: true }, token, 'Unable to mark notification as read');
+    return apiPatch(
+        `${NOTIFICATIONS_URL}/${id}`,
+        { isRead: true },
+        token,
+        'Unable to mark notification as read',
+    );
 };
 
 export const deleteNotification = async (id, token) => {

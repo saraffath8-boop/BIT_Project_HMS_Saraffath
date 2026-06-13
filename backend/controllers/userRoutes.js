@@ -5,7 +5,12 @@ import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protect, authorizeRoles('admin', 'doctor', 'nurse', 'pharmacist', 'lab_technician', 'radiologist'), getUsers);
+router.get(
+    '/',
+    protect,
+    authorizeRoles('admin', 'doctor', 'nurse', 'pharmacist', 'lab_technician', 'radiologist'),
+    getUsers,
+);
 router.post('/admin/create-user', protect, authorizeRoles('admin'), createUserByAdmin);
 
 export default router;

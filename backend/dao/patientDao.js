@@ -5,7 +5,7 @@ class PatientDao {
         const counter = await Counter.findByIdAndUpdate(
             'patientId',
             { $inc: { sequenceValue: 1 } },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
+            { new: true, upsert: true, setDefaultsOnInsert: true },
         ).exec();
 
         return `PAT-${String(counter.sequenceValue).padStart(6, '0')}`;

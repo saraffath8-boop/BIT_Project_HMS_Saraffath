@@ -71,11 +71,14 @@ const startServer = async () => {
     await userService.ensureDefaultAdmin();
     await departmentService.ensureDefaultDepartments();
     const repairedPatientProfiles = await patientService.ensurePatientProfilesForPatientUsers();
-    if (repairedPatientProfiles > 0) console.log(`Repaired ${repairedPatientProfiles} patient profile link(s)`);
+    if (repairedPatientProfiles > 0)
+        console.log(`Repaired ${repairedPatientProfiles} patient profile link(s)`);
     const assignedDoctorRooms = await billService.ensureDoctorRoomNumbers();
-    if (assignedDoctorRooms > 0) console.log(`Assigned ${assignedDoctorRooms} doctor room number(s)`);
+    if (assignedDoctorRooms > 0)
+        console.log(`Assigned ${assignedDoctorRooms} doctor room number(s)`);
     const repairedAppointmentBills = await billService.ensurePaidAppointmentBills();
-    if (repairedAppointmentBills > 0) console.log(`Created ${repairedAppointmentBills} missing paid appointment bill(s)`);
+    if (repairedAppointmentBills > 0)
+        console.log(`Created ${repairedAppointmentBills} missing paid appointment bill(s)`);
 
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);

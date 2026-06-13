@@ -20,8 +20,7 @@ router
     .get(authorizeRoles('admin', 'doctor', 'nurse', 'lab_technician'), getLabRequests)
     .post(authorizeRoles('admin'), createLabRequest);
 
-router
-    .get('/my', authorizeRoles('patient'), getMyLabRequests);
+router.get('/my', authorizeRoles('patient'), getMyLabRequests);
 
 router.patch('/:id/mark-paid', authorizeRoles('admin', 'lab_technician'), markLabRequestPaid);
 

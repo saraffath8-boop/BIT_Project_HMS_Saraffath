@@ -125,7 +125,8 @@ const buildRadiologyQuery = (queryParams, user) => {
         query.scanType = toCleanString(queryParams.scanType);
     }
     if (queryParams.paymentStatus) {
-        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus)) throw new Error('Invalid radiology request payment status');
+        if (!['unpaid', 'paid'].includes(queryParams.paymentStatus))
+            throw new Error('Invalid radiology request payment status');
         query.paymentStatus = queryParams.paymentStatus;
     }
 
@@ -172,14 +173,21 @@ const createRadiologyRequest = async (data, user) => {
 
     const populatedRequest = await radiologyRequestDao.getRadiologyRequestById(request._id);
     const radiologists = await userDao.getUsers({ role: 'radiologist', isActive: true });
-    await Promise.all(radiologists.map((radiologist) => notificationService.createNotification({
-        recipient: radiologist._id.toString(),
-        title: 'New radiology request',
-        message: `${populatedRequest.patient.fullName}'s radiology request is awaiting payment.`,
-        type: 'radiology',
-        relatedPatient: populatedRequest.patient._id.toString(),
-        sendSms: false,
-    }, {})));
+    await Promise.all(
+        radiologists.map((radiologist) =>
+            notificationService.createNotification(
+                {
+                    recipient: radiologist._id.toString(),
+                    title: 'New radiology request',
+                    message: `${populatedRequest.patient.fullName}'s radiology request is awaiting payment.`,
+                    type: 'radiology',
+                    relatedPatient: populatedRequest.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return sanitizeRadiologyRequest(populatedRequest);
 };
 
@@ -213,11 +221,9 @@ const getRadiologyRequestById = async (id, user) => {
     }
 
     if (
-        user.role === 'radiologist'
-        && (
-            request.paymentStatus !== 'paid' && request.status !== 'completed'
-            || (request.radiologist && request.radiologist._id.toString() !== user.id)
-        )
+        user.role === 'radiologist' &&
+        ((request.paymentStatus !== 'paid' && request.status !== 'completed') ||
+            (request.radiologist && request.radiologist._id.toString() !== user.id))
     ) {
         throw new Error('Radiology request not found');
     }
@@ -230,19 +236,42 @@ const markRadiologyRequestPaid = async (id, data, user) => {
     const request = await radiologyRequestDao.getRadiologyRequestById(id);
     if (!request) throw new Error('Radiology request not found');
     if (request.paymentStatus === 'paid') throw new Error('Radiology request is already paid');
-    if (request.patientDecisionStatus === 'pending_patient_decision') throw new Error('Pending patient decision request cannot be paid directly');
-    if (['completed', 'cancelled'].includes(request.status)) throw new Error(`${request.status === 'completed' ? 'Completed' : 'Cancelled'} radiology request cannot be paid`);
+    if (request.patientDecisionStatus === 'pending_patient_decision')
+        throw new Error('Pending patient decision request cannot be paid directly');
+    if (['completed', 'cancelled'].includes(request.status))
+        throw new Error(
+            `${request.status === 'completed' ? 'Completed' : 'Cancelled'} radiology request cannot be paid`,
+        );
     const bill = await billService.createPaidClinicalServiceBill({
-        request, amount: data.amount, user, billType: 'radiology', sourceType: 'radiology',
+        request,
+        amount: data.amount,
+        user,
+        billType: 'radiology',
+        sourceType: 'radiology',
         description: `Radiology scan: ${request.scanType}${request.bodyPart ? ` - ${request.bodyPart}` : ''}`,
     });
-    const radiologyRequest = await radiologyRequestDao.updateRadiologyRequest(id, { paymentStatus: 'paid', patientDecisionStatus: 'paid', paidBy: user.id, paidAt: new Date() });
+    const radiologyRequest = await radiologyRequestDao.updateRadiologyRequest(id, {
+        paymentStatus: 'paid',
+        patientDecisionStatus: 'paid',
+        paidBy: user.id,
+        paidAt: new Date(),
+    });
     const recipients = await userDao.getUsers({ role: 'radiologist', isActive: true });
-    await Promise.all(recipients.map((recipient) => notificationService.createNotification({
-        recipient: recipient._id.toString(), title: 'Paid radiology request ready',
-        message: `${radiologyRequest.patient.fullName}'s radiology request is paid and ready for processing.`,
-        type: 'radiology', relatedPatient: radiologyRequest.patient._id.toString(), sendSms: false,
-    }, {})));
+    await Promise.all(
+        recipients.map((recipient) =>
+            notificationService.createNotification(
+                {
+                    recipient: recipient._id.toString(),
+                    title: 'Paid radiology request ready',
+                    message: `${radiologyRequest.patient.fullName}'s radiology request is paid and ready for processing.`,
+                    type: 'radiology',
+                    relatedPatient: radiologyRequest.patient._id.toString(),
+                    sendSms: false,
+                },
+                {},
+            ),
+        ),
+    );
     return { radiologyRequest: sanitizeRadiologyRequest(radiologyRequest), bill };
 };
 
@@ -261,13 +290,19 @@ const updateRadiologyRequest = async (id, data, user) => {
         updateData.doctor = data.doctor;
     }
 
-    if ((user.role === 'admin' || user.role === 'doctor') && Object.prototype.hasOwnProperty.call(data, 'medicalRecord')) {
+    if (
+        (user.role === 'admin' || user.role === 'doctor') &&
+        Object.prototype.hasOwnProperty.call(data, 'medicalRecord')
+    ) {
         const medicalRecord = toCleanString(data.medicalRecord) || null;
         await validateMedicalRecordExists(medicalRecord);
         updateData.medicalRecord = medicalRecord;
     }
 
-    const editableTextFields = user.role === 'radiologist' ? ['imageUrl', 'report'] : ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report'];
+    const editableTextFields =
+        user.role === 'radiologist'
+            ? ['imageUrl', 'report']
+            : ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report'];
     editableTextFields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(data, field)) {
             updateData[field] = toCleanString(data[field]) || '';
@@ -279,7 +314,8 @@ const updateRadiologyRequest = async (id, data, user) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(data, 'radiologist')) {
-        const radiologist = user.role === 'radiologist' ? user.id : toCleanString(data.radiologist) || null;
+        const radiologist =
+            user.role === 'radiologist' ? user.id : toCleanString(data.radiologist) || null;
         await validateRadiologistExists(radiologist);
         updateData.radiologist = radiologist;
     }

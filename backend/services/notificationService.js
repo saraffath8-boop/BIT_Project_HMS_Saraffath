@@ -4,7 +4,14 @@ import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import smsService from './smsService.js';
 
-const NOTIFICATION_TYPES = ['appointment', 'billing', 'laboratory', 'radiology', 'pharmacy', 'system'];
+const NOTIFICATION_TYPES = [
+    'appointment',
+    'billing',
+    'laboratory',
+    'radiology',
+    'pharmacy',
+    'system',
+];
 
 const sanitizeNotification = (notification) => ({
     id: notification._id.toString(),
@@ -112,7 +119,13 @@ const createNotification = async (data, user = {}) => {
     });
 
     const populatedNotification = await notificationDao.getNotificationById(notification._id);
-    const patientForSms = data.sendSms === false ? null : selectedPatient || (recipientUser.role === 'patient' ? await patientDao.getPatientByUserAccount(recipient) : null);
+    const patientForSms =
+        data.sendSms === false
+            ? null
+            : selectedPatient ||
+              (recipientUser.role === 'patient'
+                  ? await patientDao.getPatientByUserAccount(recipient)
+                  : null);
 
     if (patientForSms?.phone) {
         await smsService.sendSms({
@@ -190,7 +203,10 @@ const updateNotification = async (id, data, user) => {
         throw new Error('No notification fields provided for update');
     }
 
-    const notification = await notificationDao.updateNotification(existingNotification.id, updateData);
+    const notification = await notificationDao.updateNotification(
+        existingNotification.id,
+        updateData,
+    );
     return sanitizeNotification(notification);
 };
 

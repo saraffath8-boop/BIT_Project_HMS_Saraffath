@@ -19,7 +19,12 @@ export const createMedicalRecord = async (recordData, token) => {
 };
 
 export const updateMedicalRecord = async (id, recordData, token) => {
-    return apiPatch(`${MEDICAL_RECORDS_URL}/${id}`, recordData, token, 'Unable to update medical record');
+    return apiPatch(
+        `${MEDICAL_RECORDS_URL}/${id}`,
+        recordData,
+        token,
+        'Unable to update medical record',
+    );
 };
 
 export const deleteMedicalRecord = async (id, token) => {

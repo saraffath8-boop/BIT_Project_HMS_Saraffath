@@ -1,9 +1,11 @@
 const ascii = (value) => String(value ?? '').replace(/[^\x20-\x7E]/g, '');
-const escapePdfText = (value) => ascii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+const escapePdfText = (value) =>
+    ascii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 const money = (value) => `LKR ${Number(value || 0).toLocaleString()}`;
-const dateTime = (value) => value ? new Date(value).toLocaleString() : 'Not recorded';
+const dateTime = (value) => (value ? new Date(value).toLocaleString() : 'Not recorded');
 
-const textCommand = (text, x, y, size = 10, bold = false) => `BT /F${bold ? 2 : 1} ${size} Tf ${x} ${y} Td (${escapePdfText(text)}) Tj ET`;
+const textCommand = (text, x, y, size = 10, bold = false) =>
+    `BT /F${bold ? 2 : 1} ${size} Tf ${x} ${y} Td (${escapePdfText(text)}) Tj ET`;
 
 const buildPdf = (bill) => {
     const patient = bill.patient || {};
@@ -12,8 +14,12 @@ const buildPdf = (bill) => {
     const payment = bill.payments?.[0] || {};
     const serviceNames = { pharmacy: 'Pharmacy', laboratory: 'Laboratory', radiology: 'Radiology' };
     const serviceName = serviceNames[bill.billType];
-    const receiptTitle = serviceName ? `Official ${serviceName} Payment Receipt` : 'Official Consultation Payment Receipt';
-    const itemDescription = bill.items?.map((item) => item.description).join('; ') || (serviceName ? `${serviceName} service` : 'Doctor consultation fee');
+    const receiptTitle = serviceName
+        ? `Official ${serviceName} Payment Receipt`
+        : 'Official Consultation Payment Receipt';
+    const itemDescription =
+        bill.items?.map((item) => item.description).join('; ') ||
+        (serviceName ? `${serviceName} service` : 'Doctor consultation fee');
     const lines = [
         textCommand('MEDICORE HOSPITAL', 210, 750, 18, true),
         textCommand(receiptTitle, 210, 730, 11),
@@ -24,7 +30,15 @@ const buildPdf = (bill) => {
         textCommand(`Patient ID: ${patient.patientId || 'Not recorded'}`, 330, 665, 10),
         textCommand(`Phone: ${patient.phone || 'Not recorded'}`, 55, 645, 10),
         textCommand(`Doctor: ${doctor.name || 'Not recorded'}`, 55, 610, 11, true),
-        textCommand(serviceName ? `Service: ${serviceName}` : `Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`, 330, 610, 11, true),
+        textCommand(
+            serviceName
+                ? `Service: ${serviceName}`
+                : `Room Number: ${bill.roomNumber || doctor.roomNumber || 'Not recorded'}`,
+            330,
+            610,
+            11,
+            true,
+        ),
         textCommand(`Appointment: ${dateTime(appointment.appointmentDate)}`, 55, 585, 10),
         textCommand(`Time Slot: ${appointment.timeSlot || 'Not recorded'}`, 330, 585, 10),
         '50 555 m 562 555 l S',
@@ -35,10 +49,21 @@ const buildPdf = (bill) => {
         textCommand(money(bill.totalAmount), 450, 500, 10),
         '50 475 m 562 475 l S',
         textCommand(`Paid Amount: ${money(bill.paidAmount)}`, 330, 445, 13, true),
-        textCommand(`Payment Method: ${String(payment.method || 'cash').replaceAll('_', ' ')}`, 55, 420, 10),
+        textCommand(
+            `Payment Method: ${String(payment.method || 'cash').replaceAll('_', ' ')}`,
+            55,
+            420,
+            10,
+        ),
         textCommand(`Payment Status: ${bill.status || 'paid'}`, 330, 420, 10),
         textCommand('Received by:', 55, 365, 10),
-        textCommand(payment.receivedBy?.name || bill.createdBy?.name || 'Receptionist', 55, 345, 10, true),
+        textCommand(
+            payment.receivedBy?.name || bill.createdBy?.name || 'Receptionist',
+            55,
+            345,
+            10,
+            true,
+        ),
         textCommand('Authorized Signature', 400, 345, 10),
         '390 335 m 540 335 l S',
         textCommand('Thank you for choosing MediCore Hospital.', 190, 275, 10),
@@ -61,7 +86,9 @@ const buildPdf = (bill) => {
     });
     const xrefOffset = pdf.length;
     pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-    offsets.slice(1).forEach((offset) => { pdf += `${String(offset).padStart(10, '0')} 00000 n \n`; });
+    offsets.slice(1).forEach((offset) => {
+        pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    });
     pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
     return pdf;
 };

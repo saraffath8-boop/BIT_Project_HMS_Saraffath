@@ -38,7 +38,7 @@ const prescriptionItemSchema = new mongoose.Schema(
             default: '',
         },
     },
-    { _id: true }
+    { _id: true },
 );
 
 const prescriptionSchema = new mongoose.Schema(
@@ -75,7 +75,14 @@ const prescriptionSchema = new mongoose.Schema(
         },
         patientDecisionStatus: {
             type: String,
-            enum: ['not_required', 'pending_patient_decision', 'accepted', 'declined', 'paid', 'rejected_by_patient'],
+            enum: [
+                'not_required',
+                'pending_patient_decision',
+                'accepted',
+                'declined',
+                'paid',
+                'rejected_by_patient',
+            ],
             default: 'not_required',
         },
         paymentStatus: {
@@ -96,13 +103,14 @@ const prescriptionSchema = new mongoose.Schema(
         },
         issuedAt: Date,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 prescriptionSchema.index({ patient: 1, createdAt: -1 });
 prescriptionSchema.index({ doctor: 1, createdAt: -1 });
 prescriptionSchema.index({ status: 1 });
 
-const Prescription = mongoose.models.Prescription || mongoose.model('Prescription', prescriptionSchema);
+const Prescription =
+    mongoose.models.Prescription || mongoose.model('Prescription', prescriptionSchema);
 
 export default Prescription;

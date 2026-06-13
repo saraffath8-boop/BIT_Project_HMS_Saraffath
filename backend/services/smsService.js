@@ -1,7 +1,9 @@
 import https from 'https';
 
 const normalizePhoneNumber = (phoneNumber) => {
-    const cleanPhone = String(phoneNumber || '').trim().replace(/[\s()-]/g, '');
+    const cleanPhone = String(phoneNumber || '')
+        .trim()
+        .replace(/[\s()-]/g, '');
 
     if (!cleanPhone) {
         return '';
@@ -44,13 +46,21 @@ const postForm = ({ hostname, path, auth, formData }) => {
 
                 response.on('end', () => {
                     if (response.statusCode >= 200 && response.statusCode < 300) {
-                        resolve({ success: true, statusCode: response.statusCode, body: responseBody });
+                        resolve({
+                            success: true,
+                            statusCode: response.statusCode,
+                            body: responseBody,
+                        });
                         return;
                     }
 
-                    reject(new Error(`SMS provider responded with ${response.statusCode}: ${responseBody}`));
+                    reject(
+                        new Error(
+                            `SMS provider responded with ${response.statusCode}: ${responseBody}`,
+                        ),
+                    );
                 });
-            }
+            },
         );
 
         request.on('error', reject);

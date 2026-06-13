@@ -7,10 +7,7 @@ class UserDao {
     }
 
     async getUsers(query = {}) {
-        return User.find(query)
-            .select('name email role isActive')
-            .sort({ name: 1 })
-            .exec();
+        return User.find(query).select('name email role isActive').sort({ name: 1 }).exec();
     }
 
     async getUserByEmail(email, includePassword = false) {

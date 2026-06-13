@@ -11,21 +11,45 @@ export const getRadiologyRequestById = async (id, token) => {
 };
 
 export const getMyRadiologyRequests = async (token) => {
-    return apiGet(`${RADIOLOGY_REQUESTS_URL}/my`, token, {}, 'Unable to load your radiology reports');
+    return apiGet(
+        `${RADIOLOGY_REQUESTS_URL}/my`,
+        token,
+        {},
+        'Unable to load your radiology reports',
+    );
 };
 
 export const createRadiologyRequest = async (radiologyRequestData, token) => {
-    return apiPost(RADIOLOGY_REQUESTS_URL, radiologyRequestData, token, 'Unable to create radiology request');
+    return apiPost(
+        RADIOLOGY_REQUESTS_URL,
+        radiologyRequestData,
+        token,
+        'Unable to create radiology request',
+    );
 };
 
 export const updateRadiologyRequest = async (id, radiologyRequestData, token) => {
-    return apiPatch(`${RADIOLOGY_REQUESTS_URL}/${id}`, radiologyRequestData, token, 'Unable to update radiology request');
+    return apiPatch(
+        `${RADIOLOGY_REQUESTS_URL}/${id}`,
+        radiologyRequestData,
+        token,
+        'Unable to update radiology request',
+    );
 };
 
 export const markRadiologyRequestPaid = async (id, amount, token) => {
-    return apiPatch(`${RADIOLOGY_REQUESTS_URL}/${id}/mark-paid`, { amount }, token, 'Unable to mark radiology request as paid');
+    return apiPatch(
+        `${RADIOLOGY_REQUESTS_URL}/${id}/mark-paid`,
+        { amount },
+        token,
+        'Unable to mark radiology request as paid',
+    );
 };
 
 export const deleteRadiologyRequest = async (id, token) => {
-    return apiDelete(`${RADIOLOGY_REQUESTS_URL}/${id}`, token, 'Unable to delete radiology request');
+    return apiDelete(
+        `${RADIOLOGY_REQUESTS_URL}/${id}`,
+        token,
+        'Unable to delete radiology request',
+    );
 };

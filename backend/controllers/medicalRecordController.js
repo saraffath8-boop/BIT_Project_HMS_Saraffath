@@ -1,14 +1,21 @@
 import medicalRecordService from '../services/medicalRecordService.js';
 
-const sendError = (res, statusCode, message) => res.status(statusCode).json({
-    success: false,
-    message,
-});
+const sendError = (res, statusCode, message) =>
+    res.status(statusCode).json({
+        success: false,
+        message,
+    });
 
 const getStatusCode = (error) => {
     if (error.message === 'No patient profile is linked to this account') return 404;
     if (error.message.includes('not found')) return 404;
-    if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('valid date') || error.message.includes('No medical record')) return 400;
+    if (
+        error.message.includes('Invalid') ||
+        error.message.includes('required') ||
+        error.message.includes('valid date') ||
+        error.message.includes('No medical record')
+    )
+        return 400;
     return 500;
 };
 
@@ -50,7 +57,10 @@ export const getMyMedicalRecords = async (req, res) => {
 
 export const getMedicalRecordById = async (req, res) => {
     try {
-        const medicalRecord = await medicalRecordService.getMedicalRecordById(req.params.id, req.user);
+        const medicalRecord = await medicalRecordService.getMedicalRecordById(
+            req.params.id,
+            req.user,
+        );
 
         return res.status(200).json({
             success: true,
@@ -63,7 +73,11 @@ export const getMedicalRecordById = async (req, res) => {
 
 export const updateMedicalRecord = async (req, res) => {
     try {
-        const medicalRecord = await medicalRecordService.updateMedicalRecord(req.params.id, req.body, req.user);
+        const medicalRecord = await medicalRecordService.updateMedicalRecord(
+            req.params.id,
+            req.body,
+            req.user,
+        );
 
         return res.status(200).json({
             success: true,

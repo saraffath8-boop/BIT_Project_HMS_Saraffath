@@ -9,7 +9,7 @@ const vitalSignsSchema = new mongoose.Schema(
         oxygenSaturation: String,
         weight: String,
     },
-    { _id: false }
+    { _id: false },
 );
 
 const medicalRecordSchema = new mongoose.Schema(
@@ -57,7 +57,7 @@ const medicalRecordSchema = new mongoose.Schema(
             enum: ['open', 'completed', 'archived'],
             default: 'open',
         },
-		doctorComment: {
+        doctorComment: {
             type: String,
             trim: true,
             maxlength: 5000,
@@ -69,13 +69,14 @@ const medicalRecordSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 medicalRecordSchema.index({ patient: 1, createdAt: -1 });
 medicalRecordSchema.index({ doctor: 1, createdAt: -1 });
 medicalRecordSchema.index({ appointment: 1 });
 
-const MedicalRecord = mongoose.models.MedicalRecord || mongoose.model('MedicalRecord', medicalRecordSchema);
+const MedicalRecord =
+    mongoose.models.MedicalRecord || mongoose.model('MedicalRecord', medicalRecordSchema);
 
 export default MedicalRecord;

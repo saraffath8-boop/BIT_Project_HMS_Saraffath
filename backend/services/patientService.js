@@ -4,10 +4,7 @@ import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
-
-
 const ADMIN_UPDATE_FIELDS = [
-
     'fullName',
 
     'dateOfBirth',
@@ -29,10 +26,7 @@ const ADMIN_UPDATE_FIELDS = [
     'medicalNotes',
 
     'status',
-
 ];
-
-
 
 const NURSE_UPDATE_FIELDS = [
     'phone',
@@ -53,8 +47,6 @@ const RECEPTIONIST_UPDATE_FIELDS = [
     'emergencyContactName',
     'emergencyContactPhone',
 ];
-
-
 
 const sanitizePatient = (patient, userRole) => {
     const sanitized = {
@@ -94,14 +86,9 @@ const sanitizePatient = (patient, userRole) => {
     return sanitized;
 };
 
-
-
 const toCleanString = (value) => (typeof value === 'string' ? value.trim() : value);
 
-
-
 const buildPatientPayload = (data) => ({
-
     fullName: toCleanString(data.fullName),
 
     dateOfBirth: data.dateOfBirth,
@@ -116,22 +103,18 @@ const buildPatientPayload = (data) => ({
 
     emergencyContactPhone: toCleanString(data.emergencyContactPhone),
 
-    bloodGroup: toCleanString(data.bloodGroup)?.toLowerCase() === 'unknown' ? 'unknown' : data.bloodGroup,
+    bloodGroup:
+        toCleanString(data.bloodGroup)?.toLowerCase() === 'unknown' ? 'unknown' : data.bloodGroup,
 
     allergies: toCleanString(data.allergies) || '',
 
     medicalNotes: toCleanString(data.medicalNotes) || '',
 
     status: toCleanString(data.status)?.toLowerCase() || 'active',
-
 });
 
-
-
 const validateRequiredPatientFields = (payload) => {
-
     const requiredFields = [
-
         'fullName',
 
         'dateOfBirth',
@@ -145,35 +128,22 @@ const validateRequiredPatientFields = (payload) => {
         'emergencyContactName',
 
         'emergencyContactPhone',
-
     ];
-
-
 
     const missingField = requiredFields.find((field) => !payload[field]);
 
     if (missingField) {
-
         throw new Error(`${missingField} is required`);
-
     }
-
-
 
     const dateOfBirth = new Date(payload.dateOfBirth);
 
     if (Number.isNaN(dateOfBirth.getTime())) {
-
         throw new Error('dateOfBirth must be a valid date');
-
     }
 
-
-
     if (dateOfBirth > new Date()) {
-
         throw new Error('dateOfBirth cannot be in the future');
-
     }
 
     if (!PATIENT_NAME_REGEX.test(payload.fullName)) {
@@ -189,92 +159,59 @@ const validateRequiredPatientFields = (payload) => {
     }
 
     if (!SRI_LANKAN_PHONE_REGEX.test(payload.emergencyContactPhone)) {
-        throw new Error('Emergency contact phone must be a valid Sri Lankan 10-digit number starting with 0');
+        throw new Error(
+            'Emergency contact phone must be a valid Sri Lankan 10-digit number starting with 0',
+        );
     }
-
 };
 
-
-
 const pickAllowedFields = (data, allowedFields) => {
-
     const updateData = {};
 
-
-
     allowedFields.forEach((field) => {
-
         if (Object.prototype.hasOwnProperty.call(data, field)) {
-
             const value = toCleanString(data[field]);
             updateData[field] = ['gender', 'status'].includes(field)
                 ? value?.toLowerCase()
                 : field === 'bloodGroup' && value?.toLowerCase() === 'unknown'
-                    ? 'unknown'
-                    : value;
-
+                  ? 'unknown'
+                  : value;
         }
-
     });
 
-
-
     return updateData;
-
 };
 
-
-
 const getPatientOrThrow = async (id) => {
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
-
         throw new Error('Invalid patient id');
-
     }
-
-
 
     const patient = await patientDao.getPatientByMongoId(id);
 
     if (!patient) {
-
         throw new Error('Patient not found');
-
     }
 
-
-
     return patient;
-
 };
 
-
-
 const createPatient = async (patientData, createdByUserId, userRole) => {
-
     const payload = buildPatientPayload(patientData);
 
     validateRequiredPatientFields(payload);
 
-
-
     const patientId = await patientDao.getNextPatientId();
 
     const patient = await patientDao.createPatient({
-
         ...payload,
 
         patientId,
 
         createdBy: createdByUserId,
-
     });
 
-
-
     return sanitizePatient(patient, userRole);
-
 };
 
 const createPatientForUser = async (user, patientData) => {
@@ -283,7 +220,9 @@ const createPatientForUser = async (user, patientData) => {
 
     const matchingPatient = await patientDao.getUnlinkedPatientByPhone(user.phone);
     if (matchingPatient) {
-        const linkedPatient = await patientDao.updatePatient(matchingPatient._id, { userAccount: user._id });
+        const linkedPatient = await patientDao.updatePatient(matchingPatient._id, {
+            userAccount: user._id,
+        });
         return sanitizePatient(linkedPatient, 'patient');
     }
 
@@ -302,12 +241,15 @@ const createPatientForUser = async (user, patientData) => {
     });
     validateRequiredPatientFields(payload);
 
-    return sanitizePatient(await patientDao.createPatient({
-        ...payload,
-        patientId: await patientDao.getNextPatientId(),
-        createdBy: user._id,
-        userAccount: user._id,
-    }), 'patient');
+    return sanitizePatient(
+        await patientDao.createPatient({
+            ...payload,
+            patientId: await patientDao.getNextPatientId(),
+            createdBy: user._id,
+            userAccount: user._id,
+        }),
+        'patient',
+    );
 };
 
 const ensurePatientProfilesForPatientUsers = async () => {
@@ -322,7 +264,8 @@ const ensurePatientProfilesForPatientUsers = async () => {
             address: 'Not provided',
             emergencyContactName: user.name || `${user.firstName} ${user.lastName}`,
             emergencyContactPhone: user.phone,
-            medicalNotes: 'Patient profile automatically created from an existing patient login account. Contact details require review.',
+            medicalNotes:
+                'Patient profile automatically created from an existing patient login account. Contact details require review.',
         });
         repairedCount += 1;
     }
@@ -330,100 +273,64 @@ const ensurePatientProfilesForPatientUsers = async () => {
     return repairedCount;
 };
 
-
-
 const getPatients = async ({ search, page, limit }, userRole) => {
-
     const safePage = Math.max(Number(page) || 1, 1);
 
     const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
-
-
     const result = await patientDao.getPatients({
-
         search: toCleanString(search) || '',
 
         page: safePage,
 
         limit: safeLimit,
-
     });
 
-
-
     return {
-
         ...result,
 
         patients: result.patients.map((patient) => sanitizePatient(patient, userRole)),
-
     };
-
 };
 
-
-
 const getPatientById = async (id, userRole) => {
-
     const patient = await getPatientOrThrow(id);
 
     return sanitizePatient(patient, userRole);
-
 };
 
-
-
 const getMyPatientProfile = async (userId) => {
-
     const patient = await patientDao.getPatientByUserAccountId(userId);
 
     if (!patient) {
-
         throw new Error('No patient profile is linked to this account');
-
     }
 
     return sanitizePatient(patient, 'patient');
-
 };
 
-
-
 const updatePatient = async (id, updateData, userRole) => {
-
     await getPatientOrThrow(id);
 
-
-
-    const allowedFields = userRole === 'nurse'
-        ? NURSE_UPDATE_FIELDS
-        : userRole === 'receptionist'
-            ? RECEPTIONIST_UPDATE_FIELDS
-            : ADMIN_UPDATE_FIELDS;
+    const allowedFields =
+        userRole === 'nurse'
+            ? NURSE_UPDATE_FIELDS
+            : userRole === 'receptionist'
+              ? RECEPTIONIST_UPDATE_FIELDS
+              : ADMIN_UPDATE_FIELDS;
 
     const payload = pickAllowedFields(updateData, allowedFields);
 
-
-
     if (Object.keys(payload).length === 0) {
-
         throw new Error('No allowed patient fields provided for update');
-
     }
 
-
-
     if (payload.dateOfBirth) {
-
         const dateOfBirth = new Date(payload.dateOfBirth);
 
         if (Number.isNaN(dateOfBirth.getTime()) || dateOfBirth > new Date()) {
-
             throw new Error('dateOfBirth must be a valid date and cannot be in the future');
-
         }
-
     }
 
     if (payload.fullName && !PATIENT_NAME_REGEX.test(payload.fullName)) {
@@ -438,76 +345,57 @@ const updatePatient = async (id, updateData, userRole) => {
         throw new Error('Phone number must be a valid Sri Lankan 10-digit number starting with 0');
     }
 
-    if (payload.emergencyContactPhone && !SRI_LANKAN_PHONE_REGEX.test(payload.emergencyContactPhone)) {
-        throw new Error('Emergency contact phone must be a valid Sri Lankan 10-digit number starting with 0');
+    if (
+        payload.emergencyContactPhone &&
+        !SRI_LANKAN_PHONE_REGEX.test(payload.emergencyContactPhone)
+    ) {
+        throw new Error(
+            'Emergency contact phone must be a valid Sri Lankan 10-digit number starting with 0',
+        );
     }
-
-
 
     const patient = await patientDao.updatePatient(id, payload);
 
     return sanitizePatient(patient, userRole);
-
 };
 
-
-
 const linkPatientUser = async (id, userId) => {
-
     const patient = await getPatientOrThrow(id);
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-
         throw new Error('Invalid user id');
-
     }
 
     const user = await userDao.getUserById(userId);
 
     if (!user) {
-
         throw new Error('User not found');
-
     }
 
     if (user.role !== 'patient') {
-
         throw new Error('User account must have patient role');
-
     }
 
     const linkedPatient = await patientDao.getPatientByUserAccount(userId);
 
     if (linkedPatient && linkedPatient._id.toString() !== patient._id.toString()) {
-
         throw new Error('Patient user account is already linked to another patient record');
-
     }
 
     const updatedPatient = await patientDao.updatePatient(patient._id, { userAccount: userId });
 
     return sanitizePatient(updatedPatient);
-
 };
 
-
-
 const deletePatient = async (id) => {
-
     const patient = await getPatientOrThrow(id);
 
     await patientDao.deletePatient(patient._id);
 
-
-
     return sanitizePatient(patient);
-
 };
 
-
-
 const patientService = {
-
     createPatient,
     createPatientForUser,
     ensurePatientProfilesForPatientUsers,
@@ -523,9 +411,6 @@ const patientService = {
     linkPatientUser,
 
     deletePatient,
-
 };
-
-
 
 export default patientService;

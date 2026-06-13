@@ -6,7 +6,7 @@ const departmentSchema = new mongoose.Schema(
         description: { type: String, trim: true, maxlength: 500, default: '' },
         status: { type: String, enum: ['active', 'inactive'], default: 'active', index: true },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 const Department = mongoose.models.Department || mongoose.model('Department', departmentSchema);

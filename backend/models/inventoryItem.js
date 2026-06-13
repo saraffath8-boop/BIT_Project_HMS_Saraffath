@@ -61,12 +61,13 @@ const inventoryItemSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 inventoryItemSchema.index({ name: 'text', itemCode: 'text', category: 'text' });
 inventoryItemSchema.index({ stockQuantity: 1, reorderLevel: 1 });
 
-const InventoryItem = mongoose.models.InventoryItem || mongoose.model('InventoryItem', inventoryItemSchema);
+const InventoryItem =
+    mongoose.models.InventoryItem || mongoose.model('InventoryItem', inventoryItemSchema);
 
 export default InventoryItem;

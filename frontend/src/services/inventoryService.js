@@ -15,7 +15,12 @@ export const createInventoryItem = async (inventoryData, token) => {
 };
 
 export const updateInventoryItem = async (id, inventoryData, token) => {
-    return apiPatch(`${INVENTORY_URL}/${id}`, inventoryData, token, 'Unable to update inventory item');
+    return apiPatch(
+        `${INVENTORY_URL}/${id}`,
+        inventoryData,
+        token,
+        'Unable to update inventory item',
+    );
 };
 
 export const deleteInventoryItem = async (id, token) => {

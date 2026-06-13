@@ -10,7 +10,15 @@ import userDao from '../dao/userDao.js';
 import notificationService from './notificationService.js';
 
 const BILL_STATUSES = ['unpaid', 'partially_paid', 'paid', 'cancelled'];
-const BILL_CATEGORIES = ['consultation', 'medicine', 'laboratory', 'radiology', 'ward', 'procedure', 'other'];
+const BILL_CATEGORIES = [
+    'consultation',
+    'medicine',
+    'laboratory',
+    'radiology',
+    'ward',
+    'procedure',
+    'other',
+];
 const PAYMENT_METHODS = ['cash', 'card', 'bank_transfer', 'insurance', 'other'];
 
 const sanitizeBill = (bill) => ({
@@ -168,7 +176,8 @@ const REQUEST_CONFIG = {
         category: 'medicine',
         role: 'pharmacist',
         type: 'pharmacy',
-        description: (request) => `Prescription: ${request.items.map((item) => item.medicineName).join(', ')}`,
+        description: (request) =>
+            `Prescription: ${request.items.map((item) => item.medicineName).join(', ')}`,
     },
     laboratory: {
         get: (id) => labRequestDao.getLabRequestById(id),
@@ -176,7 +185,8 @@ const REQUEST_CONFIG = {
         category: 'laboratory',
         role: 'lab_technician',
         type: 'laboratory',
-        description: (request) => `Laboratory: ${request.tests.map((test) => test.testName).join(', ')}`,
+        description: (request) =>
+            `Laboratory: ${request.tests.map((test) => test.testName).join(', ')}`,
     },
     radiology: {
         get: (id) => radiologyRequestDao.getRadiologyRequestById(id),
@@ -184,7 +194,8 @@ const REQUEST_CONFIG = {
         category: 'radiology',
         role: 'radiologist',
         type: 'radiology',
-        description: (request) => `Radiology: ${request.scanType}${request.bodyPart ? ` - ${request.bodyPart}` : ''}`,
+        description: (request) =>
+            `Radiology: ${request.scanType}${request.bodyPart ? ` - ${request.bodyPart}` : ''}`,
     },
 };
 
@@ -211,42 +222,62 @@ const getPendingPatientDecisions = async (user = {}) => {
     const [prescriptions, laboratory, radiology] = await Promise.all([
         prescriptionDao.getPrescriptions({ patientDecisionStatus: 'pending_patient_decision' }),
         labRequestDao.getLabRequests({ patientDecisionStatus: 'pending_patient_decision' }),
-        radiologyRequestDao.getRadiologyRequests({ patientDecisionStatus: 'pending_patient_decision' }),
+        radiologyRequestDao.getRadiologyRequests({
+            patientDecisionStatus: 'pending_patient_decision',
+        }),
     ]);
     const allowedTypes = getAllowedRequestTypes(user);
     return [
         ...prescriptions.map((request) => sanitizePendingRequest(request, 'prescription')),
         ...laboratory.map((request) => sanitizePendingRequest(request, 'laboratory')),
         ...radiology.map((request) => sanitizePendingRequest(request, 'radiology')),
-    ].filter((request) => allowedTypes.includes(request.type)).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    ]
+        .filter((request) => allowedTypes.includes(request.type))
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 };
 
 const processPatientDecisions = async (data, user) => {
-    if (!Array.isArray(data.decisions) || data.decisions.length === 0) throw new Error('At least one patient decision is required');
-    if (new Set(data.decisions.map((decision) => `${decision.type}:${decision.id}`)).size !== data.decisions.length) {
+    if (!Array.isArray(data.decisions) || data.decisions.length === 0)
+        throw new Error('At least one patient decision is required');
+    if (
+        new Set(data.decisions.map((decision) => `${decision.type}:${decision.id}`)).size !==
+        data.decisions.length
+    ) {
         throw new Error('Duplicate patient decisions are not allowed');
     }
     const allowedTypes = getAllowedRequestTypes(user);
     const loaded = [];
     for (const decision of data.decisions) {
         const config = REQUEST_CONFIG[decision.type];
-        if (!config || !allowedTypes.includes(decision.type)) throw new Error('Invalid request type for this role');
+        if (!config || !allowedTypes.includes(decision.type))
+            throw new Error('Invalid request type for this role');
         requireObjectId(decision.id, 'request id');
         const request = await config.get(decision.id);
         if (!request) throw new Error('Clinical request not found');
-        if (request.patientDecisionStatus !== 'pending_patient_decision') throw new Error('Clinical request is no longer pending patient decision');
+        if (request.patientDecisionStatus !== 'pending_patient_decision')
+            throw new Error('Clinical request is no longer pending patient decision');
         loaded.push({ decision, request, config });
     }
 
     const patientId = loaded[0].request.patient._id.toString();
-    if (loaded.some(({ request }) => request.patient._id.toString() !== patientId)) throw new Error('All decisions must belong to the same patient');
+    if (loaded.some(({ request }) => request.patient._id.toString() !== patientId))
+        throw new Error('All decisions must belong to the same patient');
     const appointmentId = loaded[0].request.medicalRecord?.appointment?.toString() || null;
-    if (!appointmentId || loaded.some(({ request }) => request.medicalRecord?.appointment?.toString() !== appointmentId)) {
+    if (
+        !appointmentId ||
+        loaded.some(
+            ({ request }) => request.medicalRecord?.appointment?.toString() !== appointmentId,
+        )
+    ) {
         throw new Error('All decisions must belong to the same consultation appointment');
     }
     const allPending = await getPendingPatientDecisions(user);
-    const appointmentPendingIds = allPending.filter((request) => request.appointmentId === appointmentId).map((request) => request.id);
-    if (appointmentPendingIds.some((id) => !data.decisions.some((decision) => decision.id === id))) {
+    const appointmentPendingIds = allPending
+        .filter((request) => request.appointmentId === appointmentId)
+        .map((request) => request.id);
+    if (
+        appointmentPendingIds.some((id) => !data.decisions.some((decision) => decision.id === id))
+    ) {
         throw new Error('Process every pending request for this consultation together');
     }
     const selected = loaded.filter(({ decision }) => Boolean(decision.selected));
@@ -263,7 +294,14 @@ const processPatientDecisions = async (data, user) => {
     if (selected.length) {
         const builtItems = buildBillItems(items);
         const totals = calculateBillTotals(builtItems, 0, []);
-        const payment = buildPayment({ amount: totals.totalAmount, method: data.paymentMethod, reference: data.paymentReference }, user);
+        const payment = buildPayment(
+            {
+                amount: totals.totalAmount,
+                method: data.paymentMethod,
+                reference: data.paymentReference,
+            },
+            user,
+        );
         const paidTotals = calculateBillTotals(builtItems, 0, [payment]);
         const selectedBillTypes = [...new Set(selected.map(({ config }) => config.type))];
         bill = await billDao.createBill({
@@ -278,28 +316,43 @@ const processPatientDecisions = async (data, user) => {
         });
     }
 
-    await Promise.all(loaded.map(({ decision, request, config }) => config.update(request._id, {
-        patientDecisionStatus: decision.selected ? 'paid' : 'rejected_by_patient',
-        ...(decision.selected ? { paymentStatus: 'paid', paidBy: user.id, paidAt: new Date() } : { status: 'cancelled' }),
-    })));
+    await Promise.all(
+        loaded.map(({ decision, request, config }) =>
+            config.update(request._id, {
+                patientDecisionStatus: decision.selected ? 'paid' : 'rejected_by_patient',
+                ...(decision.selected
+                    ? { paymentStatus: 'paid', paidBy: user.id, paidAt: new Date() }
+                    : { status: 'cancelled' }),
+            }),
+        ),
+    );
     const remainingPending = await getPendingPatientDecisions({ role: 'admin' });
     if (!remainingPending.some((request) => request.appointmentId === appointmentId)) {
         await appointmentDao.updateAppointment(appointmentId, { status: 'completed' });
     }
 
     const selectedTypes = [...new Set(selected.map(({ decision }) => decision.type))];
-    await Promise.all(selectedTypes.map(async (type) => {
-        const config = REQUEST_CONFIG[type];
-        const recipients = await userDao.getUsers({ role: config.role, isActive: true });
-        await Promise.all(recipients.map((recipient) => notificationService.createNotification({
-            recipient: recipient._id.toString(),
-            title: 'Paid patient request ready',
-            message: `${loaded[0].request.patient.fullName} paid for a ${type} request. It is ready for processing.`,
-            type: config.type,
-            relatedPatient: patientId,
-            sendSms: false,
-        }, {})));
-    }));
+    await Promise.all(
+        selectedTypes.map(async (type) => {
+            const config = REQUEST_CONFIG[type];
+            const recipients = await userDao.getUsers({ role: config.role, isActive: true });
+            await Promise.all(
+                recipients.map((recipient) =>
+                    notificationService.createNotification(
+                        {
+                            recipient: recipient._id.toString(),
+                            title: 'Paid patient request ready',
+                            message: `${loaded[0].request.patient.fullName} paid for a ${type} request. It is ready for processing.`,
+                            type: config.type,
+                            relatedPatient: patientId,
+                            sendSms: false,
+                        },
+                        {},
+                    ),
+                ),
+            );
+        }),
+    );
 
     return {
         bill: bill ? sanitizeBill(await billDao.getBillById(bill._id)) : null,
@@ -381,7 +434,8 @@ const createPaidAppointmentBill = async (appointment, user) => {
 
     const doctor = appointment.doctor;
     const patient = appointment.patient;
-    if (!doctor?._id || !patient?._id) throw new Error('Appointment doctor and patient are required for billing');
+    if (!doctor?._id || !patient?._id)
+        throw new Error('Appointment doctor and patient are required for billing');
 
     const roomNumber = await assignDoctorRoomNumber(doctor);
     const consultationFee = Number(doctor.consultationFee || 0);
@@ -399,14 +453,16 @@ const createPaidAppointmentBill = async (appointment, user) => {
         billType: 'consultation',
         doctor: doctor._id,
         roomNumber,
-        items: [{
-            description: `Consultation fee - ${doctor.name}`,
-            category: 'consultation',
-            quantity: 1,
-            unitPrice: consultationFee,
-            total: consultationFee,
-            sourceType: 'manual',
-        }],
+        items: [
+            {
+                description: `Consultation fee - ${doctor.name}`,
+                category: 'consultation',
+                quantity: 1,
+                unitPrice: consultationFee,
+                total: consultationFee,
+                sourceType: 'manual',
+            },
+        ],
         subtotal: consultationFee,
         discount: 0,
         totalAmount: consultationFee,
@@ -425,11 +481,18 @@ const createPaidPrescriptionBill = async (prescription, pricing, user) => {
     if (existingBill) return sanitizeBill(existingBill);
 
     const totalAmount = toNumber(pricing.totalAmount, 'prescription payment amount', 0.01);
-    const patientId = prescription.patient?._id?.toString() || prescription.patient?.id || prescription.patient?.toString();
-    const doctorId = prescription.doctor?._id?.toString() || prescription.doctor?.id || prescription.doctor?.toString();
-    const appointmentId = prescription.medicalRecord?.appointment?._id?.toString()
-        || prescription.medicalRecord?.appointment?.toString()
-        || null;
+    const patientId =
+        prescription.patient?._id?.toString() ||
+        prescription.patient?.id ||
+        prescription.patient?.toString();
+    const doctorId =
+        prescription.doctor?._id?.toString() ||
+        prescription.doctor?.id ||
+        prescription.doctor?.toString();
+    const appointmentId =
+        prescription.medicalRecord?.appointment?._id?.toString() ||
+        prescription.medicalRecord?.appointment?.toString() ||
+        null;
     const payment = {
         amount: totalAmount,
         method: 'cash',
@@ -463,22 +526,50 @@ const createPaidPrescriptionBill = async (prescription, pricing, user) => {
     return sanitizeBill(await billDao.getBillById(bill._id));
 };
 
-const createPaidClinicalServiceBill = async ({ request, amount, user, billType, sourceType, description }) => {
+const createPaidClinicalServiceBill = async ({
+    request,
+    amount,
+    user,
+    billType,
+    sourceType,
+    description,
+}) => {
     const sourceId = request._id?.toString() || request.id;
     const existingBill = await billDao.getServiceBillBySource(billType, sourceType, sourceId);
     if (existingBill) return sanitizeBill(existingBill);
     const totalAmount = toNumber(amount, `${billType} payment amount`, 0.01);
-    const patientId = request.patient?._id?.toString() || request.patient?.id || request.patient?.toString();
-    const doctorId = request.doctor?._id?.toString() || request.doctor?.id || request.doctor?.toString();
-    const appointmentId = request.medicalRecord?.appointment?._id?.toString() || request.medicalRecord?.appointment?.toString() || null;
-    const payment = { amount: totalAmount, method: 'cash', reference: '', paidAt: new Date(), receivedBy: user.id };
+    const patientId =
+        request.patient?._id?.toString() || request.patient?.id || request.patient?.toString();
+    const doctorId =
+        request.doctor?._id?.toString() || request.doctor?.id || request.doctor?.toString();
+    const appointmentId =
+        request.medicalRecord?.appointment?._id?.toString() ||
+        request.medicalRecord?.appointment?.toString() ||
+        null;
+    const payment = {
+        amount: totalAmount,
+        method: 'cash',
+        reference: '',
+        paidAt: new Date(),
+        receivedBy: user.id,
+    };
     const bill = await billDao.createBill({
         billNumber: await billDao.getNextBillNumber(),
         patient: patientId,
         appointment: appointmentId,
         billType,
         doctor: doctorId,
-        items: [{ description: description.slice(0, 250), category: billType, quantity: 1, unitPrice: totalAmount, total: totalAmount, sourceType, sourceId }],
+        items: [
+            {
+                description: description.slice(0, 250),
+                category: billType,
+                quantity: 1,
+                unitPrice: totalAmount,
+                total: totalAmount,
+                sourceType,
+                sourceId,
+            },
+        ],
         subtotal: totalAmount,
         discount: 0,
         totalAmount,
