@@ -12,6 +12,10 @@ class DoctorScheduleDao {
             { new: true, upsert: true, runValidators: true },
         ).exec();
     }
+
+    async deleteSchedulesByDoctor(doctorId) {
+        return DoctorSchedule.deleteMany({ doctor: doctorId }).exec();
+    }
 }
 
 export default new DoctorScheduleDao();

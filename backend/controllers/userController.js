@@ -122,3 +122,35 @@ export const updateDoctorBookingProfile = async (req, res) => {
         return sendError(res, statusCode, error.message);
     }
 };
+
+export const updateStaffByAdmin = async (req, res) => {
+    try {
+        const user = await userService.updateStaffByAdmin(req.params.id, req.body, req.user);
+        return res
+            .status(200)
+            .json({ success: true, message: 'Staff user updated successfully', user });
+    } catch (error) {
+        const statusCode = error.message.includes('not found')
+            ? 404
+            : error.message.includes('cannot') || error.message.includes('final active')
+              ? 409
+              : getErrorStatusCode(error);
+        return sendError(res, statusCode, error.message);
+    }
+};
+
+export const deleteStaffByAdmin = async (req, res) => {
+    try {
+        const user = await userService.deleteStaffByAdmin(req.params.id, req.user);
+        return res
+            .status(200)
+            .json({ success: true, message: 'Staff user removed permanently', user });
+    } catch (error) {
+        const statusCode = error.message.includes('not found')
+            ? 404
+            : error.message.includes('cannot') || error.message.includes('final active')
+              ? 409
+              : getErrorStatusCode(error);
+        return sendError(res, statusCode, error.message);
+    }
+};

@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import userDao from '../dao/userDao.js';
 import departmentDao from '../dao/departmentDao.js';
+import doctorScheduleDao from '../dao/doctorScheduleDao.js';
 import { ADMIN_CREATABLE_ROLES, ALL_USER_ROLES, USER_ROLES } from '../types/userRoles.js';
 import { normalizeNic, validateUserCreateInput } from '../utils/userValidation.js';
 
@@ -160,6 +161,100 @@ const createUserByAdmin = async (userData) => {
     return sanitizeUser(user);
 };
 
+const validateStaffAccountChange = async (staffId, data, requestingUser) => {
+    if (!mongoose.Types.ObjectId.isValid(staffId)) throw new Error('Invalid staff user id');
+    const staff = await userDao.getUserById(staffId);
+    if (!staff || !ADMIN_CREATABLE_ROLES.includes(staff.role)) throw new Error('Staff user not found');
+
+    if (
+        staff.role === USER_ROLES.ADMIN &&
+        (data.role !== USER_ROLES.ADMIN || data.isActive === false)
+    ) {
+        const adminCount = await userDao.countUsers({ role: USER_ROLES.ADMIN, isActive: true });
+        if (staff.isActive && adminCount <= 1) {
+            throw new Error('The final active admin account cannot be deactivated or changed');
+        }
+    }
+
+    if (staffId === requestingUser.id && data.isActive === false) {
+        throw new Error('You cannot deactivate your own account');
+    }
+    return staff;
+};
+
+// Update a complete staff account.
+const updateStaffByAdmin = async (staffId, data, requestingUser) => {
+    if (typeof data.isActive !== 'boolean') throw new Error('Active account status must be true or false');
+    const staff = await validateStaffAccountChange(staffId, data, requestingUser);
+    const validationError = validateUserCreateInput({
+        ...data,
+        password: data.password || 'unchanged-password',
+    });
+    if (validationError) throw new Error(validationError);
+    if (!ADMIN_CREATABLE_ROLES.includes(data.role)) throw new Error('Invalid staff role');
+
+    const normalizedEmail = normalizeEmail(data.email);
+    const normalizedPhone = data.phone.trim();
+    const normalizedNic = normalizeNic(data.nic);
+    const [emailOwner, phoneOwner, nicOwner] = await Promise.all([
+        userDao.getUserByEmail(normalizedEmail),
+        userDao.getUserByPhone(normalizedPhone),
+        userDao.getUserByNic(normalizedNic),
+    ]);
+    const belongsToAnotherUser = (user) => user && user._id.toString() !== staffId;
+    if (belongsToAnotherUser(emailOwner)) throw new Error('User already exists with this email');
+    if (belongsToAnotherUser(phoneOwner))
+        throw new Error('User already exists with this phone number');
+    if (belongsToAnotherUser(nicOwner)) throw new Error('User already exists with this NIC');
+
+    let department = null;
+    if (data.role === USER_ROLES.DOCTOR) {
+        if (!mongoose.Types.ObjectId.isValid(data.department))
+            throw new Error('Department is required for doctors');
+        department = await departmentDao.getDepartmentById(data.department);
+        if (!department || department.status !== 'active')
+            throw new Error('Invalid doctor department');
+    }
+
+    const updateData = {
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        nic: normalizedNic,
+        dob: data.dob,
+        gender: data.gender,
+        role: data.role,
+        isActive: data.isActive,
+        department: department?._id || null,
+        specialization: data.role === USER_ROLES.DOCTOR ? data.specialization?.trim() || '' : '',
+        consultationFee: data.role === USER_ROLES.DOCTOR ? Number(data.consultationFee) || 0 : 0,
+    };
+    if (data.password) updateData.password = await hashPassword(data.password);
+
+    const updatedStaff = await userDao.updateUser(staff._id, updateData);
+    return sanitizeUser(await userDao.getUserById(updatedStaff._id));
+};
+
+// Permanently remove a staff account.
+const deleteStaffByAdmin = async (staffId, requestingUser) => {
+    if (!mongoose.Types.ObjectId.isValid(staffId)) throw new Error('Invalid staff user id');
+    const staff = await userDao.getUserById(staffId);
+    if (!staff || !ADMIN_CREATABLE_ROLES.includes(staff.role)) throw new Error('Staff user not found');
+    if (staffId === requestingUser.id) throw new Error('You cannot delete your own account');
+    if (staff.role === USER_ROLES.ADMIN) {
+        const adminCount = await userDao.countUsers({ role: USER_ROLES.ADMIN, isActive: true });
+        if (staff.isActive && adminCount <= 1)
+            throw new Error('The final active admin account cannot be deleted');
+    }
+
+    await userDao.deleteUser(staffId);
+    if (staff.role === USER_ROLES.DOCTOR) {
+        await doctorScheduleDao.deleteSchedulesByDoctor(staffId);
+    }
+    return sanitizeUser(staff);
+};
+
 // Update doctor booking profile.
 const updateDoctorBookingProfile = async (doctorId, data) => {
     if (!mongoose.Types.ObjectId.isValid(doctorId)) throw new Error('Invalid doctor id');
@@ -257,6 +352,8 @@ const ensureDefaultAdmin = async () => {
 // Handle user service.
 const userService = {
     createUserByAdmin,
+    updateStaffByAdmin,
+    deleteStaffByAdmin,
     updateDoctorBookingProfile,
     getUsers,
     ensureDefaultAdmin,

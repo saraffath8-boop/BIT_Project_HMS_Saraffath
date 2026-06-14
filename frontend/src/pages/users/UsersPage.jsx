@@ -2,10 +2,15 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { Eye, EyeOff, Pencil, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
-import { createStaffUser, getUsers, updateDoctorBookingProfile } from '../../services/userService';
+import {
+    createStaffUser,
+    deleteStaffUser,
+    getUsers,
+    updateStaffUser,
+} from '../../services/userService';
 import { getDepartments } from '../../services/bookingService';
 import { staffRoles, staffUserSchema, genderOptions } from '../../schemas/userSchema';
 import { Alert } from '../../components/ui/alert';
@@ -53,7 +58,7 @@ const defaults = {
 };
 
 export default function UsersPage() {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [staffUsers, setStaffUsers] = useState([]);
     const [loadError, setLoadError] = useState('');
     const [submitError, setSubmitError] = useState('');
@@ -61,6 +66,8 @@ export default function UsersPage() {
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [departments, setDepartments] = useState([]);
     const [showPassword, setShowPassword] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [actionError, setActionError] = useState('');
     const {
         control,
         register,
@@ -109,6 +116,23 @@ export default function UsersPage() {
         }
     };
 
+    const removeStaff = async (staffUser) => {
+        const confirmed = window.confirm(
+            `Permanently remove ${staffUser.name || staffUser.email}? This cannot be undone.`,
+        );
+        if (!confirmed) return;
+        setActionError('');
+        setSuccess('');
+        try {
+            const response = await deleteStaffUser(staffUser.id, token);
+            setSuccess(response.message);
+            if (editingUser?.id === staffUser.id) setEditingUser(null);
+            await loadStaffUsers();
+        } catch (err) {
+            setActionError(err.message || 'Unable to remove staff user');
+        }
+    };
+
     return (
         <main className="space-y-6">
             <section>
@@ -118,6 +142,20 @@ export default function UsersPage() {
                     Create role-based accounts and review registered hospital staff.
                 </p>
             </section>
+            {actionError && <Alert variant="destructive">{actionError}</Alert>}
+            {editingUser && (
+                <EditStaffPanel
+                    staffUser={editingUser}
+                    departments={departments}
+                    token={token}
+                    onCancel={() => setEditingUser(null)}
+                    onSaved={async (message) => {
+                        setSuccess(message);
+                        setEditingUser(null);
+                        await loadStaffUsers();
+                    }}
+                />
+            )}
             <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
                 <Card>
                     <CardHeader>
@@ -304,19 +342,57 @@ export default function UsersPage() {
                                                     {staffUser.isActive ? 'Active' : 'Inactive'}
                                                 </Badge>
                                             </TableCell>
-                                            {staffUser.role === 'doctor' ? (
-                                                <DoctorBookingSetup
-                                                    doctor={staffUser}
-                                                    departments={departments}
-                                                    token={token}
-                                                    onSaved={loadStaffUsers}
-                                                />
-                                            ) : (
-                                                <>
-                                                    <TableCell>Not applicable</TableCell>
-                                                    <TableCell>Not applicable</TableCell>
-                                                </>
-                                            )}
+                                            <TableCell>
+                                                {staffUser.role === 'doctor' ? (
+                                                    <div className="min-w-48 space-y-1 text-sm">
+                                                        <p>
+                                                            Department:{' '}
+                                                            {staffUser.department?.name ||
+                                                                'Not assigned'}
+                                                        </p>
+                                                        <p>
+                                                            Specialization:{' '}
+                                                            {staffUser.specialization ||
+                                                                'Not recorded'}
+                                                        </p>
+                                                        <p>
+                                                            Fee: LKR{' '}
+                                                            {Number(
+                                                                staffUser.consultationFee || 0,
+                                                            ).toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    'Not applicable'
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            setActionError('');
+                                                            setEditingUser(staffUser);
+                                                        }}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-red-600"
+                                                        disabled={staffUser.id === user?.id}
+                                                        onClick={() => removeStaff(staffUser)}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -348,131 +424,176 @@ const Field = ({ label, error, children }) => (
     </div>
 );
 
-// Show the doctor booking setup interface.
-const DoctorBookingSetup = ({ doctor, departments, token, onSaved }) => {
-    const [department, setDepartment] = useState(
-        doctor.department?._id || doctor.department?.id || '',
-    );
-    const [specialization, setSpecialization] = useState(doctor.specialization || '');
-    const [consultationFee, setConsultationFee] = useState(doctor.consultationFee || 0);
-    const [editing, setEditing] = useState(false);
+const toDateInput = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
+
+const EditStaffPanel = ({ staffUser, departments, token, onCancel, onSaved }) => {
+    const [formData, setFormData] = useState({
+        firstName: staffUser.firstName || '',
+        lastName: staffUser.lastName || '',
+        email: staffUser.email || '',
+        phone: staffUser.phone || '',
+        nic: staffUser.nic || '',
+        dob: toDateInput(staffUser.dob),
+        gender: staffUser.gender || 'Other',
+        role: staffUser.role,
+        isActive: staffUser.isActive,
+        password: '',
+        department: staffUser.department?._id || staffUser.department?.id || '',
+        specialization: staffUser.specialization || '',
+        consultationFee: staffUser.consultationFee || 0,
+    });
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+    const update = (field, value) => setFormData((current) => ({ ...current, [field]: value }));
 
-    // Handle reset values.
-    const resetValues = () => {
-        setDepartment(doctor.department?._id || doctor.department?.id || '');
-        setSpecialization(doctor.specialization || '');
-        setConsultationFee(doctor.consultationFee || 0);
-        setMessage('');
-    };
-
-    // Handle save.
     const save = async () => {
         setSaving(true);
-        setMessage('');
+        setError('');
         try {
-            await updateDoctorBookingProfile(
-                doctor.id,
-                { department, specialization, consultationFee },
-                token,
-            );
-            await onSaved();
-            setEditing(false);
+            const response = await updateStaffUser(staffUser.id, formData, token);
+            await onSaved(response.message);
         } catch (err) {
-            setMessage(err.message);
+            setError(err.message);
         } finally {
             setSaving(false);
         }
     };
 
-    if (!editing) {
-        return (
-            <>
-                <TableCell>
-                    <div className="min-w-52 space-y-1 text-sm">
-                        <p>
-                            <span className="font-medium text-slate-900">Department:</span>{' '}
-                            {doctor.department?.name || 'Not assigned'}
-                        </p>
-                        <p>
-                            <span className="font-medium text-slate-900">Specialization:</span>{' '}
-                            {doctor.specialization || 'Not recorded'}
-                        </p>
-                        <p>
-                            <span className="font-medium text-slate-900">Consultation fee:</span>{' '}
-                            LKR {Number(doctor.consultationFee || 0).toLocaleString()}
-                        </p>
-                    </div>
-                </TableCell>
-                <TableCell>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                            resetValues();
-                            setEditing(true);
-                        }}
-                    >
-                        <Pencil className="size-4" />
-                        Edit
-                    </Button>
-                </TableCell>
-            </>
-        );
-    }
-
     return (
-        <>
-            <TableCell>
-                <div className="min-w-64 space-y-2">
-                    <Select
-                        value={department}
-                        onChange={(event) => setDepartment(event.target.value)}
-                    >
-                        <option value="">Select department</option>
-                        {departments.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.name}
-                            </option>
-                        ))}
-                    </Select>
-                    <Input
-                        value={specialization}
-                        onChange={(event) => setSpecialization(event.target.value)}
-                        placeholder="Specialization"
-                    />
-                    <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={consultationFee}
-                        onChange={(event) => setConsultationFee(event.target.value)}
-                        placeholder="Consultation fee"
-                    />
-                    {message && <p className="text-xs font-medium text-red-600">{message}</p>}
+        <Card>
+            <CardHeader>
+                <CardTitle>Edit Staff User</CardTitle>
+                <CardDescription>
+                    Update identity, account access, role, and doctor booking details.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+                {error && <Alert variant="destructive">{error}</Alert>}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Field label="First Name">
+                        <Input
+                            value={formData.firstName}
+                            onChange={(event) => update('firstName', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="Last Name">
+                        <Input
+                            value={formData.lastName}
+                            onChange={(event) => update('lastName', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="Email">
+                        <Input
+                            type="email"
+                            value={formData.email}
+                            onChange={(event) => update('email', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="Phone">
+                        <Input
+                            value={formData.phone}
+                            maxLength={10}
+                            onChange={(event) => update('phone', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="NIC">
+                        <Input
+                            value={formData.nic}
+                            maxLength={12}
+                            onChange={(event) => update('nic', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="Date of Birth">
+                        <Input
+                            type="date"
+                            value={formData.dob}
+                            onChange={(event) => update('dob', event.target.value)}
+                        />
+                    </Field>
+                    <Field label="Gender">
+                        <Select
+                            value={formData.gender}
+                            onChange={(event) => update('gender', event.target.value)}
+                        >
+                            {genderOptions.map((gender) => (
+                                <option key={gender}>{gender}</option>
+                            ))}
+                        </Select>
+                    </Field>
+                    <Field label="Role">
+                        <Select
+                            value={formData.role}
+                            onChange={(event) => update('role', event.target.value)}
+                        >
+                            {staffRoles.map((role) => (
+                                <option key={role} value={role}>
+                                    {formatRole(role)}
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+                    <Field label="New Password (optional)">
+                        <Input
+                            type="password"
+                            value={formData.password}
+                            placeholder="Leave blank to keep current"
+                            onChange={(event) => update('password', event.target.value)}
+                        />
+                    </Field>
+                    {formData.role === 'doctor' && (
+                        <>
+                            <Field label="Department">
+                                <Select
+                                    value={formData.department}
+                                    onChange={(event) => update('department', event.target.value)}
+                                >
+                                    <option value="">Select department</option>
+                                    {departments.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Field>
+                            <Field label="Specialization">
+                                <Input
+                                    value={formData.specialization}
+                                    onChange={(event) =>
+                                        update('specialization', event.target.value)
+                                    }
+                                />
+                            </Field>
+                            <Field label="Consultation Fee">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    value={formData.consultationFee}
+                                    onChange={(event) =>
+                                        update('consultationFee', event.target.value)
+                                    }
+                                />
+                            </Field>
+                        </>
+                    )}
+                    <label className="flex items-center gap-3 self-end rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium">
+                        <input
+                            type="checkbox"
+                            checked={formData.isActive}
+                            onChange={(event) => update('isActive', event.target.checked)}
+                            className="size-4 accent-cyan-700"
+                        />
+                        Active Account
+                    </label>
                 </div>
-            </TableCell>
-            <TableCell>
-                <div className="flex items-center gap-2">
-                    <Button type="button" size="sm" onClick={save} disabled={!department || saving}>
-                        {saving ? 'Saving...' : 'Save'}
+                <div className="flex gap-2">
+                    <Button type="button" onClick={save} disabled={saving}>
+                        {saving ? 'Saving...' : 'Save All Changes'}
                     </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                            resetValues();
-                            setEditing(false);
-                        }}
-                        disabled={saving}
-                    >
+                    <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
                         Cancel
                     </Button>
                 </div>
-            </TableCell>
-        </>
+            </CardContent>
+        </Card>
     );
 };

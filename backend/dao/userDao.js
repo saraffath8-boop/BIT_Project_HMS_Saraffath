@@ -51,6 +51,10 @@ class UserDao {
         return User.countDocuments({ role }).exec();
     }
 
+    async countUsers(query = {}) {
+        return User.countDocuments(query).exec();
+    }
+
     // Load user by phone.
     async getUserByPhone(phone) {
         return User.findOne({ phone }).exec();

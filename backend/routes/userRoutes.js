@@ -3,7 +3,9 @@
 import express from 'express';
 import {
     createUserByAdmin,
+    deleteStaffByAdmin,
     getUsers,
+    updateStaffByAdmin,
     updateDoctorBookingProfile,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -30,6 +32,10 @@ router.get(
 );
 // Connect this API URL to its request handler.
 router.post('/admin/create-user', protect, authorizeRoles(USER_ROLES.ADMIN), createUserByAdmin);
+router
+    .route('/admin/staff/:id')
+    .patch(protect, authorizeRoles(USER_ROLES.ADMIN), updateStaffByAdmin)
+    .delete(protect, authorizeRoles(USER_ROLES.ADMIN), deleteStaffByAdmin);
 // Connect this API URL to its request handler.
 router.patch(
     '/admin/doctors/:id/booking-profile',

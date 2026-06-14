@@ -1,6 +1,6 @@
 // This file contains the user service business workflow.
 
-import { API_BASE_URL, apiGet, apiPatch, apiPost } from './apiClient.js';
+import { API_BASE_URL, apiDelete, apiGet, apiPatch, apiPost } from './apiClient.js';
 
 // Store the users url setting used by this file.
 const USERS_URL = `${API_BASE_URL}/users`;
@@ -29,3 +29,9 @@ export const updateDoctorBookingProfile = async (doctorId, profileData, token) =
         'Unable to update doctor booking profile',
     );
 };
+
+export const updateStaffUser = async (staffId, userData, token) =>
+    apiPatch(`${USERS_URL}/admin/staff/${staffId}`, userData, token, 'Unable to update staff user');
+
+export const deleteStaffUser = async (staffId, token) =>
+    apiDelete(`${USERS_URL}/admin/staff/${staffId}`, token, 'Unable to remove staff user');
