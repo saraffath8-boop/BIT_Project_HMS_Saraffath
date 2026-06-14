@@ -59,6 +59,9 @@ export default function LandingPage() {
                         <Button asChild size="lg" variant="outline">
                             <Link to="/signup">Patient registration</Link>
                         </Button>
+                        <Button asChild size="lg" variant="outline">
+                            <Link to="/book-appointment">Book without an account</Link>
+                        </Button>
                     </div>
                 </div>
                 <div className="mt-16 grid gap-4 md:grid-cols-3">

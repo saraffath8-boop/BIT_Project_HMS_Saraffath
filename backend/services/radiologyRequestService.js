@@ -25,7 +25,6 @@ const sanitizeRadiologyRequest = (request) => ({
     imageUrl: request.imageUrl,
     report: request.report,
     status: request.status,
-    patientDecisionStatus: request.patientDecisionStatus,
     paymentStatus: request.paymentStatus,
     paidBy: request.paidBy,
     paidAt: request.paidAt,
@@ -179,7 +178,6 @@ const createRadiologyRequest = async (data, user) => {
         imageUrl: '',
         report: '',
         status: data.scheduledAt ? 'scheduled' : 'requested',
-        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
         paymentStatus: 'unpaid',
         radiologist: null,
     });
@@ -253,8 +251,6 @@ const markRadiologyRequestPaid = async (id, data, user) => {
     const request = await radiologyRequestDao.getRadiologyRequestById(id);
     if (!request) throw new Error('Radiology request not found');
     if (request.paymentStatus === 'paid') throw new Error('Radiology request is already paid');
-    if (request.patientDecisionStatus === 'pending_patient_decision')
-        throw new Error('Pending patient decision request cannot be paid directly');
     if (['completed', 'cancelled'].includes(request.status))
         throw new Error(
             `${request.status === 'completed' ? 'Completed' : 'Cancelled'} radiology request cannot be paid`,
@@ -269,7 +265,6 @@ const markRadiologyRequestPaid = async (id, data, user) => {
     });
     const radiologyRequest = await radiologyRequestDao.updateRadiologyRequest(id, {
         paymentStatus: 'paid',
-        patientDecisionStatus: 'paid',
         paidBy: user.id,
         paidAt: new Date(),
     });

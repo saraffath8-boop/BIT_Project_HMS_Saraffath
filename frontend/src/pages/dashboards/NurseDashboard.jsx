@@ -21,6 +21,11 @@ const cards = [
         to: '/appointments',
     },
     {
+        title: 'Doctor Availability',
+        description: 'Create and update doctor time slots for today and tomorrow.',
+        to: '/doctor-availability',
+    },
+    {
         title: 'Medical Records',
         description: 'Review patient records for care support.',
         to: '/medical-records',
@@ -49,7 +54,9 @@ const cards = [
 
 // Handle receptionist cards.
 const receptionistCards = cards.filter((card) =>
-    ['Patients', 'Queue', 'Appointments', 'Notifications', 'Billing'].includes(card.title),
+    ['Patients', 'Queue', 'Appointments', 'Doctor Availability', 'Notifications', 'Billing'].includes(
+        card.title,
+    ),
 );
 
 // Show the nurse dashboard interface.

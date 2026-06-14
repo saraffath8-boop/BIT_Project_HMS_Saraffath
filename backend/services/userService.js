@@ -45,8 +45,6 @@ const sanitizeUser = (user) => ({
     department: user.department,
     specialization: user.specialization,
     consultationFee: user.consultationFee,
-    availableDays: user.availableDays,
-    availableTimeSlots: user.availableTimeSlots,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
 });
@@ -68,8 +66,6 @@ const sanitizeListedUser = (user) => ({
     department: user.department,
     specialization: user.specialization,
     consultationFee: user.consultationFee,
-    availableDays: user.availableDays,
-    availableTimeSlots: user.availableTimeSlots,
 });
 
 // Create user with role.
@@ -88,8 +84,6 @@ const createUserWithRole = async ({
     department,
     specialization,
     consultationFee,
-    availableDays,
-    availableTimeSlots,
 }) => {
     const validationError = validateUserCreateInput({
         firstName,
@@ -145,14 +139,6 @@ const createUserWithRole = async ({
                   department,
                   specialization: specialization?.trim() || '',
                   consultationFee: Number(consultationFee) || 0,
-                  availableDays:
-                      Array.isArray(availableDays) && availableDays.length
-                          ? availableDays.map(Number)
-                          : [1, 2, 3, 4, 5],
-                  availableTimeSlots:
-                      Array.isArray(availableTimeSlots) && availableTimeSlots.length
-                          ? availableTimeSlots
-                          : ['09:00', '10:00', '11:00', '14:00', '15:00'],
               }
             : {}),
     });

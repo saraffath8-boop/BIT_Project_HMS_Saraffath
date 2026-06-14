@@ -23,7 +23,6 @@ const sanitizeLabRequest = (labRequest) => ({
     tests: labRequest.tests,
     priority: labRequest.priority,
     status: labRequest.status,
-    patientDecisionStatus: labRequest.patientDecisionStatus,
     paymentStatus: labRequest.paymentStatus,
     paidBy: labRequest.paidBy,
     paidAt: labRequest.paidAt,
@@ -188,7 +187,6 @@ const createLabRequest = async (data, user) => {
         tests: buildTests(data.tests),
         priority,
         status: 'requested',
-        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
         paymentStatus: 'unpaid',
         technician: null,
     });
@@ -262,8 +260,6 @@ const markLabRequestPaid = async (id, data, user) => {
     const request = await labRequestDao.getLabRequestById(id);
     if (!request) throw new Error('Lab request not found');
     if (request.paymentStatus === 'paid') throw new Error('Lab request is already paid');
-    if (request.patientDecisionStatus === 'pending_patient_decision')
-        throw new Error('Pending patient decision request cannot be paid directly');
     if (['completed', 'cancelled'].includes(request.status))
         throw new Error(
             `${request.status === 'completed' ? 'Completed' : 'Cancelled'} lab request cannot be paid`,
@@ -278,7 +274,6 @@ const markLabRequestPaid = async (id, data, user) => {
     });
     const labRequest = await labRequestDao.updateLabRequest(id, {
         paymentStatus: 'paid',
-        patientDecisionStatus: 'paid',
         paidBy: user.id,
         paidAt: new Date(),
     });

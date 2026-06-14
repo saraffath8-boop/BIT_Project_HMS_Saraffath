@@ -5,6 +5,7 @@ import {
     Bell,
     CalendarDays,
     ClipboardList,
+    Clock,
     CreditCard,
     FileChartColumn,
     FlaskConical,
@@ -51,6 +52,12 @@ const navItems = [
         to: '/appointments',
         icon: CalendarDays,
         roles: ['admin', 'doctor', 'nurse', 'receptionist'],
+    },
+    {
+        label: 'Doctor Availability',
+        to: '/doctor-availability',
+        icon: Clock,
+        roles: ['receptionist'],
     },
     {
         label: 'Queue',
@@ -111,6 +118,7 @@ const navItems = [
             'radiologist',
         ],
     },
+    { label: 'Book Appointment', to: '/book-appointment', icon: CalendarDays, roles: ['patient'] },
     { label: 'My Appointments', to: '/my/appointments', icon: CalendarDays, roles: ['patient'] },
     { label: 'My Prescriptions', to: '/my/prescriptions', icon: Pill, roles: ['patient'] },
     { label: 'My Reports', to: '/my/reports', icon: FileChartColumn, roles: ['patient'] },

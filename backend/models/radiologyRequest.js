@@ -55,18 +55,6 @@ const radiologyRequestSchema = new mongoose.Schema(
             enum: ['requested', 'scheduled', 'in_progress', 'completed', 'cancelled'],
             default: 'requested',
         },
-        patientDecisionStatus: {
-            type: String,
-            enum: [
-                'not_required',
-                'pending_patient_decision',
-                'accepted',
-                'declined',
-                'paid',
-                'rejected_by_patient',
-            ],
-            default: 'not_required',
-        },
         paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
         paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         paidAt: Date,

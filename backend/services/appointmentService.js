@@ -6,12 +6,17 @@ import departmentDao from '../dao/departmentDao.js';
 import medicalRecordDao from '../dao/medicalRecordDao.js';
 import patientDao from '../dao/patientDao.js';
 import userDao from '../dao/userDao.js';
-import { buildAppointmentDate, getDoctorOrThrow } from './doctorService.js';
+import {
+    buildAppointmentDate,
+    formatHospitalDate,
+    getAppointmentDate,
+    getDoctorAvailability,
+    getDoctorOrThrow,
+} from './doctorService.js';
 import medicalRecordService from './medicalRecordService.js';
 import prescriptionService from './prescriptionService.js';
 import labRequestService from './labRequestService.js';
 import radiologyRequestService from './radiologyRequestService.js';
-import notificationService from './notificationService.js';
 import billService from './billService.js';
 import { PATIENT_NAME_REGEX, SRI_LANKAN_PHONE_REGEX } from '../utils/userValidation.js';
 
@@ -24,7 +29,6 @@ const APPOINTMENT_STATUSES = [
     'paid',
     'checked_in',
     'in_consultation',
-    'pending_patient_decision',
     'completed',
     'cancelled',
     'no_show',
@@ -63,6 +67,7 @@ const validateAppointmentDate = (appointmentDate) => {
     if (Number.isNaN(date.getTime())) {
         throw new Error('appointmentDate must be a valid date');
     }
+    getAppointmentDate(formatHospitalDate(date));
     return date;
 };
 
@@ -185,20 +190,12 @@ const createRequestedAppointment = async ({
         throw serviceError('Selected doctor does not belong to the selected department');
     }
 
-    const availableDays = doctor.availableDays?.length ? doctor.availableDays : [1, 2, 3, 4, 5];
-    const availableTimeSlots = doctor.availableTimeSlots?.length
-        ? doctor.availableTimeSlots
-        : ['09:00', '10:00', '11:00', '14:00', '15:00'];
     const selectedDateTime = buildAppointmentDate(appointmentDate, timeSlot);
-    if (
-        !availableDays.includes(new Date(`${appointmentDate}T00:00:00`).getDay()) ||
-        !availableTimeSlots.includes(timeSlot)
-    ) {
+    const availability = await getDoctorAvailability(doctor._id.toString(), appointmentDate);
+    const selectedSlot = availability.slots.find((slot) => slot.timeSlot === timeSlot);
+    if (!selectedSlot?.available) {
         throw serviceError('Doctor is not available for this time slot', 409);
     }
-
-    const conflict = await appointmentDao.findDoctorSlotConflict(doctor._id, selectedDateTime);
-    if (conflict) throw serviceError('Doctor is not available for this time slot', 409);
 
     try {
         const appointment = await appointmentDao.createAppointment({
@@ -216,8 +213,6 @@ const createRequestedAppointment = async ({
         });
         return sanitizeAppointment(await appointmentDao.getAppointmentById(appointment._id));
     } catch (error) {
-        if (error.code === 11000)
-            throw serviceError('Doctor is not available for this time slot', 409);
         throw error;
     }
 };
@@ -418,7 +413,6 @@ const createConsultation = async (appointmentId, data, user) => {
                 ...data.prescription,
                 patient: patientId,
                 medicalRecord: medicalRecord.id,
-                patientDecisionStatus: 'not_required',
             },
             user,
         );
@@ -429,7 +423,6 @@ const createConsultation = async (appointmentId, data, user) => {
                 ...data.labRequest,
                 patient: patientId,
                 medicalRecord: medicalRecord.id,
-                patientDecisionStatus: 'not_required',
             },
             user,
         );
@@ -440,7 +433,6 @@ const createConsultation = async (appointmentId, data, user) => {
                 ...data.radiologyRequest,
                 patient: patientId,
                 medicalRecord: medicalRecord.id,
-                patientDecisionStatus: 'not_required',
             },
             user,
         );
@@ -449,29 +441,6 @@ const createConsultation = async (appointmentId, data, user) => {
     const updatedAppointment = sanitizeAppointment(
         await appointmentDao.updateAppointment(appointmentId, { status: 'completed' }),
     );
-    const cashierRequests = [
-        requests.labRequest && 'laboratory request',
-        requests.radiologyRequest && 'scan request',
-    ].filter(Boolean);
-    if (cashierRequests.length) {
-        const recipients = await userDao.getUsers({ role: 'receptionist', isActive: true });
-        await Promise.all(
-            recipients.map((recipient) =>
-                notificationService.createNotification(
-                    {
-                        recipient: recipient._id.toString(),
-                        title: 'Clinical request awaiting payment',
-                        message: `${appointment.patient.fullName} has ${cashierRequests.join(' and ')} awaiting payment.`,
-                        type: 'billing',
-                        relatedPatient: patientId,
-                        sendSms: false,
-                    },
-                    {},
-                ),
-            ),
-        );
-    }
-
     return { appointment: updatedAppointment, medicalRecord, requests };
 };
 

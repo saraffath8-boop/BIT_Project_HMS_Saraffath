@@ -1,6 +1,6 @@
 // This file contains the booking service business workflow.
 
-import { API_BASE_URL, apiGet, apiPost } from './apiClient.js';
+import { API_BASE_URL, apiGet, apiPost, apiPut } from './apiClient.js';
 
 // Load departments.
 export const getDepartments = async () =>
@@ -17,6 +17,15 @@ export const getDoctorAvailability = async (doctorId, date) =>
         undefined,
         { date },
         'Unable to load available time slots',
+    );
+
+// Replace date-specific doctor time slots.
+export const replaceDoctorAvailability = async (doctorId, date, timeSlots, token) =>
+    apiPut(
+        `${API_BASE_URL}/doctors/${doctorId}/availability`,
+        { date, timeSlots },
+        token,
+        'Unable to update doctor time slots',
     );
 
 // Handle request appointment.

@@ -26,13 +26,7 @@ import { getPatients } from '../../services/patientService';
 import { getUsers } from '../../services/userService';
 import { getOptionalValue, getPatientId, getPatientLabel } from '../shared/formHelpers';
 import { createPageStyles as styles } from '../shared/createPageStyles';
-
-// Handle tomorrow.
-const tomorrow = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
+import { getAppointmentDateOptions } from './appointmentBookingDates';
 
 // Prepare fee.
 const formatFee = (fee) => `LKR ${Number(fee || 0).toLocaleString()}`;
@@ -75,6 +69,7 @@ const ReceptionistAppointmentRequestPage = () => {
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const appointmentDates = getAppointmentDateOptions();
 
     // Run this work when the listed values change.
     useEffect(() => {
@@ -304,20 +299,25 @@ const ReceptionistAppointmentRequestPage = () => {
                             <CardHeader>
                                 <CardTitle>4. Select Date and Available Time</CardTitle>
                                 <CardDescription>
-                                    Only available future slots can be selected.
+                                    Select a receptionist-created slot for today or tomorrow.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-5">
                                 <div>
                                     <Label htmlFor="date">Appointment Date</Label>
-                                    <input
+                                    <select
                                         id="date"
-                                        type="date"
-                                        min={tomorrow()}
                                         value={date}
                                         onChange={selectDate}
                                         className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm sm:max-w-xs"
-                                    />
+                                    >
+                                        <option value="">Select today or tomorrow</option>
+                                        {appointmentDates.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 {loadingSlots && (
                                     <p className="text-sm text-slate-500">
@@ -329,10 +329,7 @@ const ReceptionistAppointmentRequestPage = () => {
                                         <Button
                                             key={slot.timeSlot}
                                             type="button"
-                                            variant={
-                                                timeSlot === slot.timeSlot ? 'default' : 'outline'
-                                            }
-                                            disabled={!slot.available}
+                                            variant={timeSlot === slot.timeSlot ? 'default' : 'outline'}
                                             onClick={() => setTimeSlot(slot.timeSlot)}
                                         >
                                             <Clock className="size-4" />

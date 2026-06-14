@@ -46,7 +46,6 @@ const appointmentSchema = new mongoose.Schema(
                 'paid',
                 'checked_in',
                 'in_consultation',
-                'pending_patient_decision',
                 'completed',
                 'cancelled',
                 'no_show',

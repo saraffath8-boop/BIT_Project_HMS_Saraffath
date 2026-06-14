@@ -9,6 +9,7 @@ import { Button } from '../ui/button';
 const titles = {
     patients: 'Patient Management',
     appointments: 'Appointments',
+    'doctor-availability': 'Doctor Availability',
     queue: 'Patient Queue',
     'medical-records': 'Medical Records',
     prescriptions: 'Prescriptions',

@@ -121,9 +121,6 @@ const AppointmentEditPage = () => {
                             <option value="paid">Paid</option>
                             <option value="checked_in">Checked In</option>
                             <option value="in_consultation">In Consultation</option>
-                            <option value="pending_patient_decision">
-                                Pending Patient Decision
-                            </option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                             <option value="no_show">No Show</option>

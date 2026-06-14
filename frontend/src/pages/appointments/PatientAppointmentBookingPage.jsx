@@ -22,23 +22,11 @@ import {
     getDoctorsByDepartment,
     requestAppointment,
 } from '../../services/bookingService';
-
-// Handle tomorrow.
-const tomorrow = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+import { getAppointmentDateOptions } from './appointmentBookingDates';
 
 // Prepare fee.
 const formatFee = (fee) =>
     fee ? `LKR ${Number(fee).toLocaleString()}` : 'Fee confirmed by receptionist';
-// Handle day names.
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 export default function PatientAppointmentBookingPage() {
     const { token, user } = useAuth();
     const [departments, setDepartments] = useState([]);
@@ -67,6 +55,7 @@ export default function PatientAppointmentBookingPage() {
     const dateSectionRef = useRef(null);
     const isPatient =
         typeof user?.role === 'string' && user.role.trim().toLowerCase() === 'patient';
+    const appointmentDates = getAppointmentDateOptions();
 
     // Run this work when the listed values change.
     useEffect(() => {
@@ -195,8 +184,8 @@ export default function PatientAppointmentBookingPage() {
                     <p className="page-kicker">Patient Services</p>
                     <h1 className="page-title">Book an Appointment</h1>
                     <p className="page-description">
-                        Choose a department, doctor, and available future time slot. A receptionist
-                        will confirm your request and payment.
+                        Choose a department, doctor, and an available slot for today or tomorrow. A
+                        receptionist will confirm your request and payment.
                     </p>
                 </section>
                 {!isPatient && (
@@ -284,12 +273,6 @@ export default function PatientAppointmentBookingPage() {
                                                 <p className="mt-3 text-xs font-semibold text-slate-600">
                                                     {formatFee(item.consultationFee)}
                                                 </p>
-                                                <p className="mt-1 text-xs text-slate-500">
-                                                    Available:{' '}
-                                                    {(item.availableDays || [])
-                                                        .map((day) => dayNames[day])
-                                                        .join(', ') || 'Schedule not recorded'}
-                                                </p>
                                             </button>
                                         ))}
                                     </div>
@@ -303,7 +286,7 @@ export default function PatientAppointmentBookingPage() {
                                     <CardHeader>
                                         <CardTitle>3. Select Date and Time</CardTitle>
                                         <CardDescription>
-                                            Now choose a future date to load this doctor's available
+                                            Choose today or tomorrow to load the receptionist-managed
                                             time slots.
                                         </CardDescription>
                                     </CardHeader>
@@ -312,14 +295,19 @@ export default function PatientAppointmentBookingPage() {
                                             <Label htmlFor="appointmentDate">
                                                 Appointment Date
                                             </Label>
-                                            <input
+                                            <select
                                                 id="appointmentDate"
-                                                type="date"
-                                                min={tomorrow()}
                                                 value={date}
                                                 onChange={selectDate}
                                                 className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm sm:max-w-xs"
-                                            />
+                                            >
+                                                <option value="">Select today or tomorrow</option>
+                                                {appointmentDates.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                         {loadingSlots && (
                                             <p className="text-sm text-slate-500">
@@ -342,7 +330,6 @@ export default function PatientAppointmentBookingPage() {
                                                             ? 'default'
                                                             : 'outline'
                                                     }
-                                                    disabled={!slot.available}
                                                     onClick={() => setTimeSlot(slot.timeSlot)}
                                                 >
                                                     <Clock className="size-4" />

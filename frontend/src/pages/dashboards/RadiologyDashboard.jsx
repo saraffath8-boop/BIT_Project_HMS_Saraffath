@@ -15,11 +15,6 @@ const cards = [
         to: '/billing',
     },
     {
-        title: 'Patient Decisions',
-        description: 'Process patient decisions for radiology requests.',
-        to: '/billing/patient-decisions',
-    },
-    {
         title: 'Notifications',
         description: 'View radiology and system notifications.',
         to: '/notifications',

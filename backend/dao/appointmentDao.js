@@ -44,15 +44,6 @@ class AppointmentDao {
             .exec();
     }
 
-    // Load doctor slot conflict.
-    async findDoctorSlotConflict(doctorId, appointmentDate) {
-        return Appointment.findOne({
-            doctor: doctorId,
-            appointmentDate,
-            status: { $ne: 'cancelled' },
-        }).exec();
-    }
-
     // Remove appointment.
     async deleteAppointment(id) {
         return Appointment.findByIdAndDelete(id).exec();

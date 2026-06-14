@@ -14,7 +14,7 @@ class UserDao {
     async getUsers(query = {}) {
         return User.find(query)
             .select(
-                'name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee roomNumber availableDays availableTimeSlots',
+                'name firstName lastName email phone nic dob gender role isActive avatar lastLogin department specialization consultationFee roomNumber',
             )
             .populate('department', 'name description status')
             .sort({ name: 1 })
@@ -39,7 +39,7 @@ class UserDao {
     async getActiveDoctorsByDepartment(departmentId) {
         return User.find({ role: 'doctor', isActive: true, department: departmentId })
             .select(
-                'name firstName lastName department specialization consultationFee availableDays availableTimeSlots',
+                'name firstName lastName department specialization consultationFee',
             )
             .populate('department', 'name description status')
             .sort({ name: 1 })

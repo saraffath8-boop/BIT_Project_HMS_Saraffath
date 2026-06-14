@@ -1,16 +1,15 @@
 // This file contains the doctor service business workflow.
 
 import mongoose from 'mongoose';
-import appointmentDao from '../dao/appointmentDao.js';
 import departmentDao from '../dao/departmentDao.js';
+import doctorScheduleDao from '../dao/doctorScheduleDao.js';
 import userDao from '../dao/userDao.js';
 
-// Store the default days setting used by this file.
-const DEFAULT_DAYS = [1, 2, 3, 4, 5];
-// Store the default slots setting used by this file.
-const DEFAULT_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00'];
 // Store the date pattern setting used by this file.
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+const HOSPITAL_TIME_ZONE = 'Asia/Colombo';
+const HOSPITAL_UTC_OFFSET = '+05:30';
 
 // Create the service error.
 const serviceError = (message, statusCode = 400) =>
@@ -21,30 +20,33 @@ const requireObjectId = (id, label) => {
     if (!mongoose.Types.ObjectId.isValid(id)) throw serviceError(`Invalid ${label}`);
 };
 
-// Load future date.
-export const getFutureDate = (dateValue) => {
+export const formatHospitalDate = (date) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: HOSPITAL_TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+};
+
+// Validate an appointment date value.
+export const getAppointmentDate = (dateValue) => {
     if (!DATE_PATTERN.test(dateValue || '')) throw serviceError('date must use YYYY-MM-DD format');
-    const selectedDate = new Date(`${dateValue}T00:00:00`);
+    const selectedDate = new Date(`${dateValue}T00:00:00${HOSPITAL_UTC_OFFSET}`);
     if (Number.isNaN(selectedDate.getTime())) throw serviceError('date must be a valid date');
-    const [year, month, day] = dateValue.split('-').map(Number);
-    if (
-        selectedDate.getFullYear() !== year ||
-        selectedDate.getMonth() + 1 !== month ||
-        selectedDate.getDate() !== day
-    ) {
+    if (formatHospitalDate(selectedDate) !== dateValue) {
         throw serviceError('date must be a valid date');
     }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (selectedDate <= today) throw serviceError('Appointment date must be in the future');
     return selectedDate;
 };
 
 // Prepare appointment date.
 export const buildAppointmentDate = (dateValue, timeSlot) => {
-    getFutureDate(dateValue);
-    if (!/^\d{2}:\d{2}$/.test(timeSlot || '')) throw serviceError('A valid time slot is required');
-    const appointmentDate = new Date(`${dateValue}T${timeSlot}:00`);
+    getAppointmentDate(dateValue);
+    if (!TIME_PATTERN.test(timeSlot || '')) throw serviceError('A valid time slot is required');
+    const appointmentDate = new Date(`${dateValue}T${timeSlot}:00${HOSPITAL_UTC_OFFSET}`);
     if (Number.isNaN(appointmentDate.getTime()))
         throw serviceError('Selected time slot is invalid');
     return appointmentDate;
@@ -68,10 +70,6 @@ const sanitizeDoctor = (doctor) => ({
         : null,
     specialization: doctor.specialization || '',
     consultationFee: doctor.consultationFee || 0,
-    availableDays: doctor.availableDays?.length ? doctor.availableDays : DEFAULT_DAYS,
-    availableTimeSlots: doctor.availableTimeSlots?.length
-        ? doctor.availableTimeSlots
-        : DEFAULT_SLOTS,
 });
 
 // Load doctors.
@@ -85,27 +83,29 @@ const getDoctors = async (departmentId) => {
 };
 
 // Load doctor availability.
-const getDoctorAvailability = async (doctorId, dateValue) => {
-    const selectedDate = getFutureDate(dateValue);
+export const getDoctorAvailability = async (doctorId, dateValue) => {
+    getAppointmentDate(dateValue);
     const doctor = await getDoctorOrThrow(doctorId);
-    const availableDays = doctor.availableDays?.length ? doctor.availableDays : DEFAULT_DAYS;
-    const scheduledSlots = doctor.availableTimeSlots?.length
-        ? doctor.availableTimeSlots
-        : DEFAULT_SLOTS;
+    const schedule = await doctorScheduleDao.getSchedule(doctorId, dateValue);
+    const scheduledSlots = schedule?.timeSlots || [];
 
-    if (!availableDays.includes(selectedDate.getDay())) {
-        return { doctor: sanitizeDoctor(doctor), date: dateValue, slots: [] };
-    }
-
-    const slotChecks = await Promise.all(
-        scheduledSlots.map(async (timeSlot) => {
-            const appointmentDate = buildAppointmentDate(dateValue, timeSlot);
-            const conflict = await appointmentDao.findDoctorSlotConflict(doctorId, appointmentDate);
-            return { timeSlot, available: !conflict };
-        }),
-    );
+    const slotChecks = scheduledSlots.map((timeSlot) => ({ timeSlot, available: true }));
 
     return { doctor: sanitizeDoctor(doctor), date: dateValue, slots: slotChecks };
 };
 
-export default { getDoctors, getDoctorAvailability };
+const replaceDoctorAvailability = async (doctorId, dateValue, timeSlots, user) => {
+    getAppointmentDate(dateValue);
+    await getDoctorOrThrow(doctorId);
+    if (!Array.isArray(timeSlots)) throw serviceError('timeSlots must be an array');
+
+    const normalizedSlots = [...new Set(timeSlots.map((slot) => String(slot).trim()))].sort();
+    if (normalizedSlots.some((slot) => !TIME_PATTERN.test(slot))) {
+        throw serviceError('Every time slot must use HH:MM 24-hour format');
+    }
+
+    await doctorScheduleDao.replaceSchedule(doctorId, dateValue, normalizedSlots, user.id);
+    return getDoctorAvailability(doctorId, dateValue);
+};
+
+export default { getDoctors, getDoctorAvailability, replaceDoctorAvailability };

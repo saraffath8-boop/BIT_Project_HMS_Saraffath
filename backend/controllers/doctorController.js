@@ -28,3 +28,22 @@ export const getDoctorAvailability = async (req, res) => {
         return sendError(res, error);
     }
 };
+
+// Replace a doctor's date-specific availability.
+export const replaceDoctorAvailability = async (req, res) => {
+    try {
+        const availability = await doctorService.replaceDoctorAvailability(
+            req.params.doctorId,
+            req.body.date,
+            req.body.timeSlots,
+            req.user,
+        );
+        return res.status(200).json({
+            success: true,
+            message: 'Doctor time slots updated successfully',
+            ...availability,
+        });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};

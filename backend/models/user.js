@@ -101,11 +101,6 @@ const userSchema = new mongoose.Schema(
             trim: true,
             match: [/^[1-9][0-9]$/, 'Room number must be a two-digit number'],
         },
-        availableDays: { type: [Number], default: [1, 2, 3, 4, 5] },
-        availableTimeSlots: {
-            type: [String],
-            default: ['09:00', '10:00', '11:00', '14:00', '15:00'],
-        },
         avatar: {
             public_id: { type: String, default: null },
             url: {

@@ -23,7 +23,6 @@ const sanitizePrescription = (prescription) => ({
     items: prescription.items,
     notes: prescription.notes,
     status: prescription.status,
-    patientDecisionStatus: prescription.patientDecisionStatus,
     paymentStatus: prescription.paymentStatus,
     paidBy: prescription.paidBy,
     paidAt: prescription.paidAt,
@@ -261,7 +260,6 @@ const createPrescription = async (data, user) => {
         items: await buildPrescriptionItems(data.items),
         notes: toCleanString(data.notes) || '',
         status: 'pending',
-        patientDecisionStatus: data.patientDecisionStatus || 'not_required',
         paymentStatus: 'unpaid',
     });
 
@@ -422,7 +420,6 @@ const markPrescriptionPaid = async (id, data, user) => {
     const bill = await billService.createPaidPrescriptionBill(prescription, pricing, user);
     const updatedPrescription = await prescriptionDao.updatePrescription(id, {
         paymentStatus: 'paid',
-        patientDecisionStatus: 'paid',
         paidBy: user.id,
         paidAt: new Date(),
     });

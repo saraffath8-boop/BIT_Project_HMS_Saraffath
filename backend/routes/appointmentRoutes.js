@@ -13,6 +13,8 @@ import {
     getMyAppointments,
     markAppointmentPaid,
     markAppointmentChecked,
+    requestAppointment,
+    requestPublicAppointment,
     updateAppointment,
 } from '../controllers/appointmentController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -20,6 +22,9 @@ import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
 // Create the router used by this API module.
 const router = express.Router();
+
+router.post('/request/public', requestPublicAppointment);
+router.post('/request', protect, authorizeRoles('patient'), requestAppointment);
 
 // Connect this API URL to its request handler.
 router.use(protect);

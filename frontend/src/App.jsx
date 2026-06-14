@@ -16,9 +16,10 @@ import AppointmentsPage from './pages/appointments/AppointmentsPage';
 import AppointmentCreatePage from './pages/appointments/AppointmentCreatePage';
 import AppointmentEditPage from './pages/appointments/AppointmentEditPage';
 import DoctorConsultationPage from './pages/appointments/DoctorConsultationPage';
+import DoctorAvailabilityPage from './pages/appointments/DoctorAvailabilityPage';
+import PatientAppointmentBookingPage from './pages/appointments/PatientAppointmentBookingPage';
 import BillingPage from './pages/billing/BillingPage';
 import BillCreatePage from './pages/billing/BillCreatePage';
-import PatientDecisionBillingPage from './pages/billing/PatientDecisionBillingPage';
 import AdminDashboard from './pages/dashboards/AdminDashboard';
 import DoctorDashboard from './pages/dashboards/DoctorDashboard';
 import LabDashboard from './pages/dashboards/LabDashboard';
@@ -83,7 +84,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/Login" element={<Navigate to="/login" replace />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/book-appointment" element={<Navigate to="/login" replace />} />
+                <Route path="/book-appointment" element={<PatientAppointmentBookingPage />} />
                 <Route path="/Signup" element={<Navigate to="/signup" replace />} />
                 <Route path="/dashboard" element={protectedRoute(<DashboardRedirect />)} />
                 <Route path="/dashboard/admin" element={roleRoute(['admin'], <AdminDashboard />)} />
@@ -145,6 +146,10 @@ function App() {
                 <Route
                     path="/appointments/new"
                     element={roleRoute(['receptionist'], <AppointmentCreatePage />)}
+                />
+                <Route
+                    path="/doctor-availability"
+                    element={roleRoute(['receptionist'], <DoctorAvailabilityPage />)}
                 />
                 <Route
                     path="/appointments/:id/edit"
@@ -244,13 +249,6 @@ function App() {
                     )}
                 />
                 <Route path="/billing/new" element={roleRoute(['admin'], <BillCreatePage />)} />
-                <Route
-                    path="/billing/patient-decisions"
-                    element={roleRoute(
-                        ['admin', 'pharmacist', 'lab_technician', 'radiologist'],
-                        <PatientDecisionBillingPage />,
-                    )}
-                />
                 <Route path="/inventory" element={roleRoute(['admin'], <InventoryPage />)} />
                 <Route
                     path="/inventory/new"

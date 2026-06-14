@@ -15,11 +15,6 @@ const cards = [
         to: '/billing',
     },
     {
-        title: 'Patient Decisions',
-        description: 'Process patient decisions for laboratory requests.',
-        to: '/billing/patient-decisions',
-    },
-    {
         title: 'Notifications',
         description: 'View laboratory and system notifications.',
         to: '/notifications',

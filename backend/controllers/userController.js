@@ -39,8 +39,6 @@ export const createUserByAdmin = async (req, res) => {
             department,
             specialization,
             consultationFee,
-            availableDays,
-            availableTimeSlots,
         } = req.body;
         const validationError = validateUserCreateInput({
             firstName,
@@ -85,8 +83,6 @@ export const createUserByAdmin = async (req, res) => {
             department,
             specialization,
             consultationFee,
-            availableDays,
-            availableTimeSlots,
         });
 
         return res.status(201).json({

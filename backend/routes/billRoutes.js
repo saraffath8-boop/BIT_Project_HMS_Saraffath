@@ -7,8 +7,6 @@ import {
     getBillById,
     getBills,
     getMyBills,
-    getPendingPatientDecisions,
-    processPatientDecisions,
     updateBill,
 } from '../controllers/billController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -31,19 +29,6 @@ router
 
 // Connect this API URL to its request handler.
 router.get('/my', authorizeRoles('patient'), getMyBills);
-
-// Connect this API URL to its request handler.
-router.get(
-    '/pending-decisions',
-    authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'),
-    getPendingPatientDecisions,
-);
-// Connect this API URL to its request handler.
-router.post(
-    '/patient-decisions',
-    authorizeRoles('admin', 'pharmacist', 'lab_technician', 'radiologist'),
-    processPatientDecisions,
-);
 
 // Connect this API URL to its request handler.
 router

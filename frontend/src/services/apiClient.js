@@ -50,6 +50,16 @@ export const apiPatch = async (url, data, token, fallbackMessage = 'Unable to up
     }
 };
 
+// Handle api put.
+export const apiPut = async (url, data, token, fallbackMessage = 'Unable to update record') => {
+    try {
+        const response = await axios.put(url, data, authHeaders(token));
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error, fallbackMessage), { cause: error });
+    }
+};
+
 // Handle api delete.
 export const apiDelete = async (url, token, fallbackMessage = 'Unable to delete record') => {
     try {

@@ -15,11 +15,6 @@ const cards = [
         to: '/billing',
     },
     {
-        title: 'Patient Decisions',
-        description: 'Process patient decisions for prescriptions.',
-        to: '/billing/patient-decisions',
-    },
-    {
         title: 'Medicine Inventory',
         description: 'Manage medicine stock, reorder levels, and availability.',
         to: '/pharmacy',

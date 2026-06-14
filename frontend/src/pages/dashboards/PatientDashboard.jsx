@@ -8,6 +8,11 @@ import { getMyPatientProfile } from '../../services/patientService';
 // Handle linked cards.
 const linkedCards = [
     {
+        title: 'Book Appointment',
+        description: 'Request an available appointment for today or tomorrow.',
+        to: '/book-appointment',
+    },
+    {
         title: 'Feedback',
         description: 'Submit feedback, complaints, and service requests.',
         to: '/feedback',

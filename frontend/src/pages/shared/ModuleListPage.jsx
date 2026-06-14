@@ -34,8 +34,6 @@ const statusWords = [
     'approved',
     'waiting',
     'pending',
-    'pending_patient_decision',
-    'rejected_by_patient',
     'cancelled',
     'inactive',
     'unpaid',

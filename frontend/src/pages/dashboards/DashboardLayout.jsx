@@ -30,7 +30,6 @@ const icons = {
     'Medical Records': FolderHeart,
     Prescriptions: Pill,
     Billing: CreditCard,
-    'Patient Decisions': CreditCard,
     Laboratory: FlaskConical,
     'Laboratory Requests': FlaskConical,
     Radiology: ScanLine,
