@@ -50,6 +50,11 @@ const radiologyRequestSchema = new mongoose.Schema(
             maxlength: 5000,
             default: '',
         },
+        reportFileUrl: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         status: {
             type: String,
             enum: ['requested', 'scheduled', 'in_progress', 'completed', 'cancelled'],

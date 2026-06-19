@@ -24,6 +24,7 @@ const sanitizeRadiologyRequest = (request) => ({
     scheduledAt: request.scheduledAt,
     imageUrl: request.imageUrl,
     report: request.report,
+    reportFileUrl: request.reportFileUrl,
     status: request.status,
     paymentStatus: request.paymentStatus,
     paidBy: request.paidBy,
@@ -314,8 +315,8 @@ const updateRadiologyRequest = async (id, data, user) => {
 
     const editableTextFields =
         user.role === 'radiologist'
-            ? ['imageUrl', 'report']
-            : ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report'];
+            ? ['imageUrl', 'report', 'reportFileUrl']
+            : ['scanType', 'bodyPart', 'clinicalReason', 'imageUrl', 'report', 'reportFileUrl'];
     editableTextFields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(data, field)) {
             updateData[field] = toCleanString(data[field]) || '';
@@ -341,8 +342,12 @@ const updateRadiologyRequest = async (id, data, user) => {
         updateData.status = status;
 
         if (status === 'completed') {
-            if (!toCleanString(updateData.report ?? data.report ?? existingRequest.report)) {
-                throw new Error('Radiology report is required before completion');
+            const reportText = toCleanString(updateData.report ?? data.report ?? existingRequest.report);
+            const reportFileUrl = toCleanString(
+                updateData.reportFileUrl ?? data.reportFileUrl ?? existingRequest.reportFileUrl,
+            );
+            if (!reportText && !reportFileUrl) {
+                throw new Error('Radiology report text or uploaded report PDF is required before completion');
             }
             updateData.completedAt = new Date();
             if (!updateData.radiologist && user.role === 'radiologist') {

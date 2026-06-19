@@ -27,7 +27,7 @@ export default function Dashboard() {
             <aside style={styles.sidebar}>
                 <div style={styles.sidebarLogo}>
                     <span style={styles.logoIcon}>✚</span>
-                    <span style={styles.logoText}>MediCore</span>
+                    <span style={styles.logoText}>Digital Hospital</span>
                 </div>
                 <nav style={styles.nav}>
                     {[

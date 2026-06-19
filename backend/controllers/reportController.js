@@ -42,3 +42,17 @@ export const getRevenueReport = async (req, res) => {
         return sendError(res, getStatusCode(error), error.message);
     }
 };
+
+// Load comprehensive reports.
+export const getComprehensiveReports = async (req, res) => {
+    try {
+        const report = await reportService.getComprehensiveReports(req.query);
+
+        return res.status(200).json({
+            success: true,
+            report,
+        });
+    } catch (error) {
+        return sendError(res, getStatusCode(error), error.message);
+    }
+};

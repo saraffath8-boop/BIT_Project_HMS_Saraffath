@@ -73,7 +73,7 @@ const buildPdf = (bill) => {
         ),
         textCommand('Authorized Signature', 400, 345, 10),
         '390 335 m 540 335 l S',
-        textCommand('Thank you for choosing MediCore Hospital.', 190, 275, 10),
+        textCommand('Thank you for choosing Digital Hospital.', 190, 275, 10),
         textCommand('This computer-generated receipt is NOT valid without a stamp.', 160, 255, 9),
     ];
     const stream = lines.join('\n');

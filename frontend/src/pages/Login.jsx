@@ -57,15 +57,15 @@ export default function Login() {
                         Connected care
                     </p>
                     <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight">
-                        A calmer workspace for better patient care.
+                        A fastened workspace for better Appointment booking and Hospital care.
                     </h1>
                     <p className="mt-5 leading-7 text-cyan-100/80">
-                        Secure access to clinical workflows, hospital operations, and patient
+                        Fast clinical workflows, hospital operations, and patient
                         services.
                     </p>
                 </div>
                 <p className="text-xs text-cyan-200/70">
-                    Authorized hospital personnel and patients only
+                    @copyrights UCSC 2317168
                 </p>
             </section>
             <section className="grid place-items-center p-5 sm:p-10">
@@ -158,7 +158,7 @@ const Brand = ({ dark = false }) => (
             <HeartPulse />
         </span>
         <div>
-            <p className={dark ? 'font-bold text-slate-950' : 'font-bold'}>MediCore</p>
+            <p className={dark ? 'font-bold text-slate-950' : 'font-bold'}>Digital Hospital</p>
             <p className={dark ? 'text-xs text-slate-500' : 'text-xs text-cyan-200'}>
                 Hospital Management
             </p>

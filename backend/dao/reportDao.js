@@ -80,6 +80,74 @@ class ReportDao {
 
         return result[0] || { totalAmount: 0, paidAmount: 0 };
     }
+
+    // Load bills for detailed reports.
+    async getBillsForReport(match = {}) {
+        return Bill.find(match)
+            .populate('patient', 'patientId fullName phone')
+            .populate('doctor', 'name email role')
+            .populate('createdBy', 'name email role')
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
+    // Load appointments for detailed reports.
+    async getAppointmentsForReport(match = {}) {
+        return Appointment.find(match)
+            .populate('patient', 'patientId fullName phone')
+            .populate('doctor', 'name email role specialization')
+            .populate('departmentRef', 'name')
+            .sort({ appointmentDate: -1 })
+            .lean()
+            .exec();
+    }
+
+    // Load prescriptions for detailed reports.
+    async getPrescriptionsForReport(match = {}) {
+        return Prescription.find(match)
+            .populate('patient', 'patientId fullName phone')
+            .populate('doctor', 'name email role')
+            .populate('paidBy', 'name email role')
+            .populate('issuedBy', 'name email role')
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
+    // Load medicines for inventory summary.
+    async getMedicinesForReport(match = {}) {
+        return Medicine.find(match).sort({ name: 1 }).lean().exec();
+    }
+
+    // Load lab requests for detailed reports.
+    async getLabRequestsForReport(match = {}) {
+        return LabRequest.find(match)
+            .populate('patient', 'patientId fullName phone')
+            .populate('doctor', 'name email role')
+            .populate('technician', 'name email role')
+            .populate('paidBy', 'name email role')
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
+    // Load radiology requests for detailed reports.
+    async getRadiologyRequestsForReport(match = {}) {
+        return RadiologyRequest.find(match)
+            .populate('patient', 'patientId fullName phone')
+            .populate('doctor', 'name email role')
+            .populate('radiologist', 'name email role')
+            .populate('paidBy', 'name email role')
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
+    // Load patients for registration trend reports.
+    async getPatientsForReport(match = {}) {
+        return Patient.find(match).sort({ createdAt: -1 }).lean().exec();
+    }
 }
 
 export default new ReportDao();

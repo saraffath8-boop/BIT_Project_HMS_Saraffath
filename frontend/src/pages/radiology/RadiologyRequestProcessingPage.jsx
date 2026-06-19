@@ -29,6 +29,7 @@ export default function RadiologyRequestProcessingPage() {
         scheduledAt: '',
         imageUrl: '',
         report: '',
+        reportFileUrl: '',
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -48,6 +49,7 @@ export default function RadiologyRequestProcessingPage() {
                         : '',
                     imageUrl: radiologyRequest.imageUrl || '',
                     report: radiologyRequest.report || '',
+                    reportFileUrl: radiologyRequest.reportFileUrl || '',
                 });
             })
             .catch((err) => setError(err.message))
@@ -56,6 +58,20 @@ export default function RadiologyRequestProcessingPage() {
 
     // Update change.
     const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+    const uploadReportPdf = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (file.type !== 'application/pdf') {
+            setError('Please upload a PDF file.');
+            event.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () =>
+            setForm((current) => ({ ...current, reportFileUrl: String(reader.result || '') }));
+        reader.onerror = () => setError('Unable to read the selected PDF file.');
+        reader.readAsDataURL(file);
+    };
     // Handle save.
     const save = async (event) => {
         event.preventDefault();
@@ -65,6 +81,10 @@ export default function RadiologyRequestProcessingPage() {
         try {
             const response = await updateRadiologyRequest(id, form, token);
             setRequest(response.radiologyRequest);
+            setForm((current) => ({
+                ...current,
+                reportFileUrl: response.radiologyRequest.reportFileUrl || '',
+            }));
             setSuccess(
                 form.status === 'completed'
                     ? 'Radiology report completed. Patient and doctor were notified.'
@@ -160,6 +180,27 @@ export default function RadiologyRequestProcessingPage() {
                                     rows={8}
                                     className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm disabled:bg-slate-100"
                                 />
+                            </Field>
+                            <Field label="Report PDF">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Input
+                                        disabled={!canProcess}
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={uploadReportPdf}
+                                    />
+                                    {form.reportFileUrl && (
+                                        <Button asChild type="button" variant="outline">
+                                            <a
+                                                href={form.reportFileUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                View Uploaded PDF
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
                             </Field>
                         </CardContent>
                     </Card>

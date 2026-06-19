@@ -212,7 +212,7 @@ const requestPatientPasswordReset = async ({ phone }) => {
 
     const smsResult = await smsService.sendSms({
         to: user.phone,
-        message: `Your MediCore patient password reset OTP is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes. Do not share this code.`,
+        message: `Your Digital Hospital patient password reset OTP is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes. Do not share this code.`,
     });
 
     if (!smsResult.success) {

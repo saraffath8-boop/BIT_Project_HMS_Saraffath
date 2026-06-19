@@ -32,7 +32,7 @@ export default function LandingPage() {
                         <HeartPulse />
                     </span>
                     <div>
-                        <p className="font-bold text-slate-950">MediCore</p>
+                        <p className="font-bold text-slate-950">Digital Hospital</p>
                         <p className="text-xs text-slate-500">Hospital Management</p>
                     </div>
                 </div>

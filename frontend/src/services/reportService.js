@@ -14,3 +14,13 @@ export const getDashboardReport = async (token) => {
 export const getRevenueReport = async ({ token, filters = {} }) => {
     return apiGet(`${REPORTS_URL}/revenue`, token, filters, 'Unable to load revenue report');
 };
+
+// Load comprehensive reports.
+export const getComprehensiveReports = async ({ token, filters = {} }) => {
+    return apiGet(
+        `${REPORTS_URL}/comprehensive`,
+        token,
+        filters,
+        'Unable to load comprehensive reports',
+    );
+};

@@ -11,6 +11,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { getPrescriptions, markPrescriptionPaid } from '../../services/prescriptionService';
 import { Input } from '../../components/ui/input';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
+import { Link } from 'react-router-dom';
+import { getLabRequests, markLabRequestPaid } from '../../services/labRequestService';
+import {
+    getRadiologyRequests,
+    markRadiologyRequestPaid,
+} from '../../services/radiologyRequestService';
 
 const getNumericMultiplier = (value) =>
     Number(String(value || '').match(/\d+(?:\.\d+)?/)?.[0] || 0);
@@ -43,6 +49,8 @@ const BillingPage = () => {
     const { user } = useAuth();
     if (user?.role === 'receptionist') return <ReceptionistBillingPage />;
     if (user?.role === 'pharmacist') return <PharmacistBillingPage />;
+    if (user?.role === 'lab_technician') return <LabBillingPage />;
+    if (user?.role === 'radiologist') return <RadiologyBillingPage />;
     return <ModuleListPage
         title="Billing Records"
         kicker="Billing Management"
@@ -59,6 +67,295 @@ const BillingPage = () => {
         ]}
     />;
 };
+
+const LabBillingPage = () => (
+    <ClinicalServiceBillingPage
+        serviceName="Laboratory"
+        staffTitle="Lab Staff Billing"
+        requestTitle="Unpaid Lab Test Requests"
+        paidTitle="Paid Laboratory Bills"
+        requestEmptyMessage="No unpaid lab test requests are waiting."
+        paidEmptyMessage="No paid laboratory bills are available."
+        amountLabel="Lab Test Amount (LKR)"
+        billType="laboratory"
+        requestsKey="labRequests"
+        loadRequests={(token) => getLabRequests({ token, filters: { paymentStatus: 'unpaid' } })}
+        markPaid={(id, amount, token) => markLabRequestPaid(id, amount, token)}
+        getRequestDetails={(request) => ({
+            title: request.tests?.map((test) => test.testName).join(', ') || 'Laboratory tests',
+            subtitle: `Priority: ${request.priority || 'routine'}`,
+            processPath: `/laboratory/${request.id}/process`,
+            processLabel: 'Upload Lab PDF',
+        })}
+    />
+);
+
+const RadiologyBillingPage = () => (
+    <ClinicalServiceBillingPage
+        serviceName="Radiology"
+        staffTitle="Radiology Staff Billing"
+        requestTitle="Unpaid Radiology Requests"
+        paidTitle="Paid Radiology Bills"
+        requestEmptyMessage="No unpaid radiology requests are waiting."
+        paidEmptyMessage="No paid radiology bills are available."
+        amountLabel="Radiology Amount (LKR)"
+        billType="radiology"
+        requestsKey="radiologyRequests"
+        loadRequests={(token) =>
+            getRadiologyRequests({ token, filters: { paymentStatus: 'unpaid' } })
+        }
+        markPaid={(id, amount, token) => markRadiologyRequestPaid(id, amount, token)}
+        getRequestDetails={(request) => ({
+            title: request.scanType || 'Radiology scan',
+            subtitle: request.bodyPart || 'Body part not recorded',
+            processPath: `/radiology/${request.id}/process`,
+            processLabel: 'Upload Radiology PDF',
+        })}
+    />
+);
+
+const ClinicalServiceBillingPage = ({
+    serviceName,
+    staffTitle,
+    requestTitle,
+    paidTitle,
+    requestEmptyMessage,
+    paidEmptyMessage,
+    amountLabel,
+    billType,
+    requestsKey,
+    loadRequests,
+    markPaid,
+    getRequestDetails,
+}) => {
+    const { token } = useAuth();
+    const [requests, setRequests] = useState([]);
+    const [paidBills, setPaidBills] = useState([]);
+    const [amounts, setAmounts] = useState({});
+    const [payingId, setPayingId] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const loadBilling = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const [requestResponse, billResponse] = await Promise.all([
+                loadRequests(token),
+                getBills({ token }),
+            ]);
+            setRequests(requestResponse[requestsKey] || []);
+            setPaidBills((billResponse.bills || []).filter((bill) => bill.billType === billType));
+        } catch (err) {
+            setError(err.message || `Unable to load ${serviceName.toLowerCase()} billing`);
+        } finally {
+            setLoading(false);
+        }
+    }, [billType, loadRequests, requestsKey, serviceName, token]);
+
+    useEffect(() => {
+        const id = setTimeout(loadBilling, 0);
+        return () => clearTimeout(id);
+    }, [loadBilling]);
+
+    const handleMarkPaid = async (request) => {
+        const amount = Number(amounts[request.id]);
+        if (!(amount > 0)) {
+            setError(`Enter a valid ${serviceName.toLowerCase()} payment amount`);
+            return;
+        }
+
+        setPayingId(request.id);
+        setError('');
+        setSuccess('');
+        try {
+            const response = await markPaid(request.id, amount, token);
+            setRequests((items) => items.filter((item) => item.id !== request.id));
+            setPaidBills((items) => [response.bill, ...items]);
+            setAmounts((current) => {
+                const next = { ...current };
+                delete next[request.id];
+                return next;
+            });
+            setSuccess(
+                `${serviceName} payment confirmed. The request is now available for report PDF upload.`,
+            );
+        } catch (err) {
+            setError(err.message || `Unable to mark ${serviceName.toLowerCase()} request as paid`);
+        } finally {
+            setPayingId('');
+        }
+    };
+
+    return (
+        <main className="space-y-6">
+            <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                    <p className="page-kicker">{staffTitle}</p>
+                    <h1 className="page-title">{serviceName} Payments and Bills</h1>
+                    <p className="page-description">
+                        Confirm payment first. Paid requests are then unlocked for report PDF upload.
+                    </p>
+                </div>
+                <Button variant="outline" onClick={loadBilling} disabled={loading}>
+                    Refresh
+                </Button>
+            </section>
+            {error && <Alert variant="destructive">{error}</Alert>}
+            {success && <Alert>{success}</Alert>}
+            {loading && (
+                <Card className="p-6 text-sm text-slate-500">
+                    Loading {serviceName.toLowerCase()} billing...
+                </Card>
+            )}
+            {!loading && (
+                <ClinicalCashierQueue
+                    title={requestTitle}
+                    emptyMessage={requestEmptyMessage}
+                    amountLabel={amountLabel}
+                    requests={requests}
+                    amounts={amounts}
+                    setAmounts={setAmounts}
+                    payingId={payingId}
+                    onPay={handleMarkPaid}
+                    getRequestDetails={getRequestDetails}
+                />
+            )}
+            {!loading && (
+                <PaidClinicalBills
+                    title={paidTitle}
+                    emptyMessage={paidEmptyMessage}
+                    bills={paidBills}
+                />
+            )}
+        </main>
+    );
+};
+
+const ClinicalCashierQueue = ({
+    title,
+    emptyMessage,
+    amountLabel,
+    requests,
+    amounts,
+    setAmounts,
+    payingId,
+    onPay,
+    getRequestDetails,
+}) => (
+    <CollapsibleSection title={title} count={requests.length}>
+        {requests.length === 0 ? (
+            <Card className="p-8 text-center text-sm text-slate-500">{emptyMessage}</Card>
+        ) : (
+            <div className="grid gap-4">
+                {requests.map((request) => {
+                    const details = getRequestDetails(request);
+                    const amount = amounts[request.id] || '';
+                    return (
+                        <Card key={request.id} className="overflow-hidden">
+                            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                                <PersonSummary person={request.patient} />
+                                <DetailSummary
+                                    title={getPersonName(request.doctor)}
+                                    subtitle={formatDateTime(request.createdAt)}
+                                />
+                            </div>
+                            <div className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+                                <DetailSummary title={details.title} subtitle={details.subtitle} />
+                                <div className="grid gap-3 sm:grid-cols-[1fr_auto] lg:grid-cols-1">
+                                    <label className="text-xs font-semibold text-slate-800">
+                                        {amountLabel}
+                                        <Input
+                                            className="mt-1"
+                                            type="number"
+                                            min="0.01"
+                                            step="0.01"
+                                            value={amount}
+                                            onChange={(event) =>
+                                                setAmounts((current) => ({
+                                                    ...current,
+                                                    [request.id]: event.target.value,
+                                                }))
+                                            }
+                                            placeholder="Enter amount"
+                                        />
+                                    </label>
+                                    <Button
+                                        type="button"
+                                        disabled={payingId === request.id || !(Number(amount) > 0)}
+                                        onClick={() => onPay(request)}
+                                    >
+                                        {payingId === request.id ? 'Confirming...' : 'Mark Paid'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
+            </div>
+        )}
+    </CollapsibleSection>
+);
+
+const PaidClinicalBills = ({ title, emptyMessage, bills }) => (
+    <CollapsibleSection title={title} count={bills.length}>
+        {bills.length === 0 ? (
+            <Card className="p-10 text-center text-sm text-slate-500">{emptyMessage}</Card>
+        ) : (
+            <Card className="overflow-hidden">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Paid Amount</TableHead>
+                            <TableHead>Report</TableHead>
+                            <TableHead>Bill</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {bills.map((bill) => {
+                            const billItem = bill.items?.[0];
+                            const processPath =
+                                billItem?.sourceType === 'laboratory'
+                                    ? `/laboratory/${billItem.sourceId}/process`
+                                    : `/radiology/${billItem?.sourceId}/process`;
+                            return (
+                                <TableRow key={bill.id}>
+                                    <TableCell>
+                                        <PersonSummary person={bill.patient} />
+                                    </TableCell>
+                                    <TableCell className="max-w-72 whitespace-normal">
+                                        {bill.items?.map((item) => item.description).join(', ') ||
+                                            'Clinical service'}
+                                    </TableCell>
+                                    <TableCell>
+                                        LKR {Number(bill.paidAmount || 0).toLocaleString()}
+                                    </TableCell>
+                                    <TableCell>
+                                        {billItem?.sourceId ? (
+                                            <Button asChild size="sm" variant="outline">
+                                                <Link to={processPath}>Upload PDF</Link>
+                                            </Button>
+                                        ) : (
+                                            'N/A'
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button size="sm" onClick={() => downloadHospitalBillPdf(bill)}>
+                                            Download PDF
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </Card>
+        )}
+    </CollapsibleSection>
+);
 
 const ReceptionistBillingPage = () => {
     const { token } = useAuth();

@@ -26,6 +26,7 @@ const sanitizeLabRequest = (labRequest) => ({
     paymentStatus: labRequest.paymentStatus,
     paidBy: labRequest.paidBy,
     paidAt: labRequest.paidAt,
+    reportFileUrl: labRequest.reportFileUrl,
     technician: labRequest.technician,
     completedAt: labRequest.completedAt,
     createdAt: labRequest.createdAt,
@@ -354,6 +355,10 @@ const updateLabRequest = async (id, data, user) => {
         updateData.technician = technician;
     }
 
+    if (Object.prototype.hasOwnProperty.call(data, 'reportFileUrl')) {
+        updateData.reportFileUrl = toCleanString(data.reportFileUrl) || '';
+    }
+
     if (Object.prototype.hasOwnProperty.call(data, 'status')) {
         const status = toCleanString(data.status);
         if (!LAB_STATUSES.includes(status)) {
@@ -363,13 +368,13 @@ const updateLabRequest = async (id, data, user) => {
 
         if (status === 'completed') {
             const completedTests = updateData.tests || existingRequest.tests;
+            const reportFileUrl = updateData.reportFileUrl ?? existingRequest.reportFileUrl;
             if (
-                !completedTests.every(
-                    (test) => toCleanString(test.result) || toCleanString(test.remarks),
-                )
+                !reportFileUrl &&
+                !completedTests.every((test) => toCleanString(test.result) || toCleanString(test.remarks))
             ) {
                 throw new Error(
-                    'A result or remarks is required for every lab test before completion',
+                    'A result, remarks, or uploaded report PDF is required before completion',
                 );
             }
             updateData.completedAt = new Date();

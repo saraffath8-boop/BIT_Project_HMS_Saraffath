@@ -68,6 +68,11 @@ const labRequestSchema = new mongoose.Schema(
         paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
         paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         paidAt: Date,
+        reportFileUrl: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         technician: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

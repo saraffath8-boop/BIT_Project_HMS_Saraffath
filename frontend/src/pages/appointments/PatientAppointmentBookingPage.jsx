@@ -166,7 +166,7 @@ export default function PatientAppointmentBookingPage() {
                             <HeartPulse className="size-6" />
                         </span>
                         <div>
-                            <p className="font-bold text-slate-950">MediCore</p>
+                            <p className="font-bold text-slate-950">Digital Hospital</p>
                             <p className="text-xs text-slate-500">Patient appointment booking</p>
                         </div>
                     </Link>

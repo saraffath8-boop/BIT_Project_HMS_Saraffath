@@ -1,7 +1,11 @@
 // This file contains the report routes API routes.
 
 import express from 'express';
-import { getDashboardReport, getRevenueReport } from '../controllers/reportController.js';
+import {
+    getComprehensiveReports,
+    getDashboardReport,
+    getRevenueReport,
+} from '../controllers/reportController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
@@ -17,5 +21,7 @@ router.use(authorizeRoles('admin'));
 router.get('/dashboard', getDashboardReport);
 // Connect this API URL to its request handler.
 router.get('/revenue', getRevenueReport);
+// Connect this API URL to its request handler.
+router.get('/comprehensive', getComprehensiveReports);
 
 export default router;

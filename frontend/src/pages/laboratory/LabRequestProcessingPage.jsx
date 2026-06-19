@@ -23,6 +23,7 @@ export default function LabRequestProcessingPage() {
     const [request, setRequest] = useState(null);
     const [status, setStatus] = useState('requested');
     const [tests, setTests] = useState([]);
+    const [reportFileUrl, setReportFileUrl] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -36,6 +37,7 @@ export default function LabRequestProcessingPage() {
                 setRequest(labRequest);
                 setStatus(labRequest.status);
                 setTests(labRequest.tests || []);
+                setReportFileUrl(labRequest.reportFileUrl || '');
             })
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
@@ -48,6 +50,19 @@ export default function LabRequestProcessingPage() {
                 testIndex === index ? { ...test, [field]: value } : test,
             ),
         );
+    const uploadReportPdf = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (file.type !== 'application/pdf') {
+            setError('Please upload a PDF file.');
+            event.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => setReportFileUrl(String(reader.result || ''));
+        reader.onerror = () => setError('Unable to read the selected PDF file.');
+        reader.readAsDataURL(file);
+    };
     // Handle save.
     const save = async (event) => {
         event.preventDefault();
@@ -55,8 +70,9 @@ export default function LabRequestProcessingPage() {
         setError('');
         setSuccess('');
         try {
-            const response = await updateLabRequest(id, { status, tests }, token);
+            const response = await updateLabRequest(id, { status, tests, reportFileUrl }, token);
             setRequest(response.labRequest);
+            setReportFileUrl(response.labRequest.reportFileUrl || '');
             setSuccess(
                 status === 'completed'
                     ? 'Laboratory report completed. Patient and doctor were notified.'
@@ -130,10 +146,31 @@ export default function LabRequestProcessingPage() {
                         <CardHeader>
                             <CardTitle>Test Results</CardTitle>
                             <CardDescription>
-                                Add result values, reference ranges, and remarks before completion.
+                                Add result values, reference ranges, remarks, or upload the final PDF report.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            <Field label="Report PDF">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Input
+                                        disabled={!canProcess}
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={uploadReportPdf}
+                                    />
+                                    {reportFileUrl && (
+                                        <Button asChild type="button" variant="outline">
+                                            <a
+                                                href={reportFileUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                View Uploaded PDF
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
+                            </Field>
                             {tests.map((test, index) => (
                                 <div
                                     key={test._id || index}

@@ -176,6 +176,7 @@ const MyReportsPage = () => {
                                             <th style={styles.th}>Payment</th>
                                             <th style={styles.th}>Status</th>
                                             <th style={styles.th}>Result Summary</th>
+                                            <th style={styles.th}>PDF</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -204,6 +205,9 @@ const MyReportsPage = () => {
                                                 <td style={styles.td}>
                                                     {summarizeLabResults(request.tests)}
                                                 </td>
+                                                <td style={styles.td}>
+                                                    <ReportPdfLink url={request.reportFileUrl} />
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -228,6 +232,7 @@ const MyReportsPage = () => {
                                             <th style={styles.th}>Payment</th>
                                             <th style={styles.th}>Status</th>
                                             <th style={styles.th}>Report Summary</th>
+                                            <th style={styles.th}>PDF</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -254,6 +259,9 @@ const MyReportsPage = () => {
                                                     {formatStatus(request.status)}
                                                 </td>
                                                 <td style={styles.td}>{request.report || 'N/A'}</td>
+                                                <td style={styles.td}>
+                                                    <ReportPdfLink url={request.reportFileUrl} />
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -266,6 +274,15 @@ const MyReportsPage = () => {
         </main>
     );
 };
+
+const ReportPdfLink = ({ url }) =>
+    url ? (
+        <a style={styles.downloadLink} href={url} target="_blank" rel="noreferrer">
+            View PDF
+        </a>
+    ) : (
+        'N/A'
+    );
 
 // Handle styles.
 const styles = {
@@ -349,6 +366,15 @@ const styles = {
         padding: '8px 12px',
         fontWeight: 700,
         cursor: 'pointer',
+    },
+    downloadLink: {
+        display: 'inline-block',
+        borderRadius: '10px',
+        background: '#0e7490',
+        color: '#ffffff',
+        padding: '8px 12px',
+        fontWeight: 700,
+        textDecoration: 'none',
     },
 };
 

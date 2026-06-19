@@ -101,7 +101,7 @@ export default function ForgotPassword() {
                         <span className="grid size-11 place-items-center rounded-xl bg-cyan-700 text-white">
                             <HeartPulse />
                         </span>
-                        <span className="font-bold text-slate-900">MediCore</span>
+                        <span className="font-bold text-slate-900">Digital Hospital</span>
                     </div>
                     <CardTitle className="text-2xl">Patient password recovery</CardTitle>
                     <CardDescription>
