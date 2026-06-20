@@ -84,6 +84,63 @@ const reportConfig = [
             ['activePatients', 'Active Patients'],
         ],
     },
+    {
+        key: 'revenueSummary',
+        title: 'Revenue Summary',
+        description: 'Revenue totals grouped by bill type, status, and payment method.',
+        preview: 'byType',
+        columns: [
+            ['billType', 'Bill Type'],
+            ['bills', 'Bills'],
+            ['totalAmount', 'Total'],
+            ['paidAmount', 'Paid'],
+            ['outstandingAmount', 'Outstanding'],
+        ],
+    },
+    {
+        key: 'appointmentPerformance',
+        title: 'Appointment Performance',
+        description: 'Appointment totals grouped by status, payment status, and department.',
+        preview: 'byStatus',
+        columns: [
+            ['status', 'Status'],
+            ['appointments', 'Appointments'],
+        ],
+    },
+    {
+        key: 'doctorDepartmentPerformance',
+        title: 'Doctor and Department Performance',
+        description: 'Doctor and department activity with appointment counts and consultation revenue.',
+        preview: 'doctors',
+        columns: [
+            ['doctor', 'Doctor'],
+            ['appointments', 'Appointments'],
+            ['completed', 'Completed'],
+            ['cancelled', 'Cancelled'],
+            ['revenue', 'Revenue'],
+        ],
+    },
+    {
+        key: 'pharmacySummary',
+        title: 'Pharmacy Summary',
+        description: 'Prescription status, pharmacy revenue, top medicine sales, and low stock medicines.',
+        preview: 'topMedicineSales',
+        columns: [
+            ['medicine', 'Medicine'],
+            ['quantity', 'Quantity'],
+            ['revenue', 'Revenue'],
+        ],
+    },
+    {
+        key: 'labRadiologyPerformance',
+        title: 'Lab and Radiology Performance',
+        description: 'Laboratory and radiology requests grouped by status and payment progress.',
+        preview: 'labByStatus',
+        columns: [
+            ['status', 'Lab Status'],
+            ['requests', 'Requests'],
+        ],
+    },
 ];
 
 const moneyKeys = new Set([

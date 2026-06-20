@@ -132,6 +132,7 @@ const getComprehensiveReports = async (queryParams) => {
         bills,
         appointments,
         prescriptions,
+        medicines,
         labRequests,
         radiologyRequests,
         patients,
@@ -139,6 +140,7 @@ const getComprehensiveReports = async (queryParams) => {
         reportDao.getBillsForReport(billMatch),
         reportDao.getAppointmentsForReport(appointmentMatch),
         reportDao.getPrescriptionsForReport(createdMatch),
+        reportDao.getMedicinesForReport(),
         reportDao.getLabRequestsForReport(createdMatch),
         reportDao.getRadiologyRequestsForReport(createdMatch),
         reportDao.getPatientsForReport(createdMatch),
@@ -156,6 +158,15 @@ const getComprehensiveReports = async (queryParams) => {
                 radiologyRequests,
             ),
             patientRegistrationTrend: buildPatientRegistrationTrend(patients),
+            revenueSummary: buildRevenueSummary(bills),
+            appointmentPerformance: buildAppointmentPerformance(appointments),
+            doctorDepartmentPerformance: buildDoctorDepartmentPerformance(appointments, bills),
+            pharmacySummary: buildPharmacySummary(prescriptions, bills, medicines),
+            labRadiologyPerformance: buildLabRadiologyPerformance(
+                labRequests,
+                radiologyRequests,
+                bills,
+            ),
         },
     };
 };

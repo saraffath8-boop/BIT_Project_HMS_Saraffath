@@ -308,6 +308,195 @@ export const downloadAdminReportPdf = ({ key, report, filters }) => {
                 80,
             );
         }
+
+        if (key === 'revenueSummary') {
+            writer.section('Revenue by Bill Type');
+            writer.table(
+                [
+                    { label: 'Bill Type', key: 'billType' },
+                    { label: 'Bills', key: 'bills' },
+                    { label: 'Total', key: 'totalAmount' },
+                    { label: 'Paid', key: 'paidAmount' },
+                    { label: 'Outstanding', key: 'outstandingAmount' },
+                ],
+                report.byType || [],
+                80,
+            );
+            writer.section('Revenue by Status');
+            writer.table(
+                [
+                    { label: 'Status', key: 'status' },
+                    { label: 'Bills', key: 'bills' },
+                ],
+                report.byStatus || [],
+            );
+            writer.section('Payment Methods');
+            writer.table(
+                [
+                    { label: 'Method', key: 'method' },
+                    { label: 'Amount', key: 'amount' },
+                ],
+                report.paymentMethods || [],
+            );
+            writer.section('Bill Details');
+            writer.table(
+                [
+                    { label: 'Bill', key: 'billNumber' },
+                    { label: 'Date', key: 'date' },
+                    { label: 'Patient', key: 'patient' },
+                    { label: 'Type', key: 'type' },
+                    { label: 'Paid', key: 'paidAmount' },
+                    { label: 'Outstanding', key: 'outstandingAmount' },
+                ],
+                report.details || [],
+                60,
+            );
+        }
+
+        if (key === 'appointmentPerformance') {
+            writer.section('Appointments by Status');
+            writer.table(
+                [
+                    { label: 'Status', key: 'status' },
+                    { label: 'Appointments', key: 'appointments' },
+                ],
+                report.byStatus || [],
+            );
+            writer.section('Appointments by Payment Status');
+            writer.table(
+                [
+                    { label: 'Payment Status', key: 'paymentStatus' },
+                    { label: 'Appointments', key: 'appointments' },
+                ],
+                report.byPaymentStatus || [],
+            );
+            writer.section('Appointments by Department');
+            writer.table(
+                [
+                    { label: 'Department', key: 'department' },
+                    { label: 'Appointments', key: 'appointments' },
+                ],
+                report.byDepartment || [],
+            );
+            writer.section('Appointment Details');
+            writer.table(
+                [
+                    { label: 'Date', key: 'date' },
+                    { label: 'Patient', key: 'patient' },
+                    { label: 'Doctor', key: 'doctor' },
+                    { label: 'Department', key: 'department' },
+                    { label: 'Status', key: 'status' },
+                ],
+                report.details || [],
+                60,
+            );
+        }
+
+        if (key === 'doctorDepartmentPerformance') {
+            writer.section('Doctor Performance');
+            writer.table(
+                [
+                    { label: 'Doctor', key: 'doctor' },
+                    { label: 'Appointments', key: 'appointments' },
+                    { label: 'Completed', key: 'completed' },
+                    { label: 'Cancelled', key: 'cancelled' },
+                    { label: 'Revenue', key: 'revenue' },
+                ],
+                report.doctors || [],
+                80,
+            );
+            writer.section('Department Performance');
+            writer.table(
+                [
+                    { label: 'Department', key: 'department' },
+                    { label: 'Appointments', key: 'appointments' },
+                    { label: 'Completed', key: 'completed' },
+                    { label: 'Cancelled', key: 'cancelled' },
+                    { label: 'Revenue', key: 'revenue' },
+                ],
+                report.departments || [],
+                80,
+            );
+        }
+
+        if (key === 'pharmacySummary') {
+            writer.section('Prescription Status');
+            writer.table(
+                [
+                    { label: 'Status', key: 'status' },
+                    { label: 'Prescriptions', key: 'prescriptions' },
+                ],
+                report.byPrescriptionStatus || [],
+            );
+            writer.section('Top Medicine Sales');
+            writer.table(
+                [
+                    { label: 'Medicine', key: 'medicine' },
+                    { label: 'Quantity', key: 'quantity' },
+                    { label: 'Revenue', key: 'revenue' },
+                ],
+                report.topMedicineSales || [],
+                80,
+            );
+            writer.section('Low Stock Medicines');
+            writer.table(
+                [
+                    { label: 'Name', key: 'name' },
+                    { label: 'SKU', key: 'sku' },
+                    { label: 'Stock', key: 'stockQuantity' },
+                    { label: 'Reorder Level', key: 'reorderLevel' },
+                ],
+                report.lowStock || [],
+                80,
+            );
+            writer.section('Prescription Details');
+            writer.table(
+                [
+                    { label: 'Date', key: 'date' },
+                    { label: 'Patient', key: 'patient' },
+                    { label: 'Doctor', key: 'doctor' },
+                    { label: 'Status', key: 'status' },
+                    { label: 'Payment', key: 'paymentStatus' },
+                ],
+                report.details || [],
+                60,
+            );
+        }
+
+        if (key === 'labRadiologyPerformance') {
+            writer.section('Lab Requests by Status');
+            writer.table(
+                [
+                    { label: 'Status', key: 'status' },
+                    { label: 'Requests', key: 'requests' },
+                ],
+                report.labByStatus || [],
+            );
+            writer.section('Lab Requests by Payment');
+            writer.table(
+                [
+                    { label: 'Payment Status', key: 'paymentStatus' },
+                    { label: 'Requests', key: 'requests' },
+                ],
+                report.labByPayment || [],
+            );
+            writer.section('Radiology Requests by Status');
+            writer.table(
+                [
+                    { label: 'Status', key: 'status' },
+                    { label: 'Requests', key: 'requests' },
+                ],
+                report.radiologyByStatus || [],
+            );
+            writer.section('Radiology Requests by Payment');
+            writer.table(
+                [
+                    { label: 'Payment Status', key: 'paymentStatus' },
+                    { label: 'Requests', key: 'requests' },
+                ],
+                report.radiologyByPayment || [],
+            );
+        }
     });
 
     downloadPdf(`${key}-${new Date().toISOString().slice(0, 10)}.pdf`, pdf);
